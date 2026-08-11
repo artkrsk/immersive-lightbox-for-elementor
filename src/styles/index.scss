@@ -1,5 +1,5 @@
 // Everything the plugin ships lives in the `arts-lightbox` cascade layer so
-// unlayered site CSS always wins over it.
-@layer arts-lightbox {
-  // Populated from Task 9 on.
-}
+// unlayered site CSS always wins over it. Partials each declare their own
+// `@layer arts-lightbox { ... }` block (sass forbids @use inside @layer);
+// the blocks merge in the final cascade.
+@use 'photoswipe';

@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  photoswipe@5.4.4: 8189d440d01bc953e544e6efd34461240c32f576cfd69e977f96a77934df130e
+
 importers:
 
   .:
@@ -35,6 +38,9 @@ importers:
       lefthook:
         specifier: ^2.1.10
         version: 2.1.10
+      photoswipe:
+        specifier: 5.4.4
+        version: 5.4.4(patch_hash=8189d440d01bc953e544e6efd34461240c32f576cfd69e977f96a77934df130e)
       sass:
         specifier: ^1.101.0
         version: 1.102.0
@@ -1657,6 +1663,10 @@ packages:
 
   perfect-debounce@2.1.0:
     resolution: {integrity: sha512-LjgdTytVFXeUgtHZr9WYViYSM/g8MkcTPYDlPa3cDqMirHjKiSZPYd6DoL7pK8AJQr+uWkQvCjHNdiMqsrJs+g==}
+
+  photoswipe@5.4.4:
+    resolution: {integrity: sha512-WNFHoKrkZNnvFFhbHL93WDkW3ifwVOXSW3w1UuZZelSmgXpIGiZSNlZJq37rR8YejqME2rHs9EhH9ZvlvFH2NA==}
+    engines: {node: '>= 0.12.0'}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -3338,6 +3348,8 @@ snapshots:
   pathe@2.0.3: {}
 
   perfect-debounce@2.1.0: {}
+
+  photoswipe@5.4.4(patch_hash=8189d440d01bc953e544e6efd34461240c32f576cfd69e977f96a77934df130e): {}
 
   picocolors@1.1.1: {}
 
