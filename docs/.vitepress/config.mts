@@ -13,7 +13,24 @@ export default defineConfig({
   base: process.env.DOCS_BASE_PATH || '/',
   cleanUrls: true,
   themeConfig: {
-    nav: [{ text: 'Home', link: '/' }],
+    nav: [
+      { text: 'Transitions', link: '/transitions' },
+      { text: 'Galleries', link: '/gallery' },
+      { text: 'Content', link: '/content' },
+      { text: 'Developers', link: '/developers' }
+    ],
+    sidebar: [
+      {
+        text: 'Playground',
+        items: [
+          { text: 'Basic grid', link: '/' },
+          { text: 'Transitions', link: '/transitions' },
+          { text: 'Galleries', link: '/gallery' },
+          { text: 'Content types', link: '/content' }
+        ]
+      },
+      { text: 'Developers', link: '/developers' }
+    ],
     search: { provider: 'local' },
     footer: {
       message: 'Released under the GPL-3.0 License',

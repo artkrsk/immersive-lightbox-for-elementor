@@ -1,0 +1,32 @@
+<template id="demo-html-content">
+  <h3>An HTML slide</h3>
+  <p>Arbitrary markup, fit-only — gestures still swipe past it.</p>
+</template>
+
+<div class="demo-grid demo-grid_wide">
+  <a href="https://picsum.photos/id/1050/1200/1600" data-arts-lightbox>
+    <img src="https://picsum.photos/id/1050/600/800" width="600" height="800" alt="Image slide" />
+  </a>
+  <a
+    href="https://www.w3schools.com/html/mov_bbb.mp4"
+    data-arts-lightbox
+    data-arts-lightbox-width="1280"
+    data-arts-lightbox-height="720"
+  >
+    <span class="demo-tile">Self-hosted video</span>
+  </a>
+  <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" data-arts-lightbox>
+    <span class="demo-tile">YouTube embed</span>
+  </a>
+  <a href="https://vimeo.com/76979871" data-arts-lightbox>
+    <span class="demo-tile">Vimeo embed</span>
+  </a>
+  <a
+    href="#"
+    data-arts-lightbox
+    data-arts-lightbox-type="html"
+    data-arts-lightbox-html="#demo-html-content"
+  >
+    <span class="demo-tile">HTML slide</span>
+  </a>
+</div>
