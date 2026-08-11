@@ -1,4 +1,6 @@
 export type { ICandidate } from './ICandidate'
+export type { IGallery } from './IGallery'
 export type { ILightbox } from './ILightbox'
+export type { IOpenRequest } from './IOpenRequest'
 export type { IOptions } from './IOptions'
 export type { ISlideData } from './ISlideData'
