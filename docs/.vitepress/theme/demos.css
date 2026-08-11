@@ -1,0 +1,19 @@
+/* Presentation for demo fixtures — snippets show markup only, the look of
+   the demo stages lives here. */
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.demo-grid a {
+  display: block;
+}
+
+.demo-grid img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
