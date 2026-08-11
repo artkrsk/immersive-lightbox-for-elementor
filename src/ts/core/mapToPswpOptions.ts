@@ -31,6 +31,14 @@ export function mapToPswpOptions(
     zoom: false,
     arrowPrev: false,
     arrowNext: false,
-    close: false
+    close: false,
+    // Every close path must run OUR choreography — PhotoSwipe's own close is
+    // instant (opener disabled). Esc and backdrop clicks are re-routed by the
+    // composition root; drag/pinch closes are off until the playground phase
+    // finds a choreography for them.
+    escKey: false,
+    bgClickAction: false,
+    closeOnVerticalDrag: false,
+    pinchToClose: false
   }
 }

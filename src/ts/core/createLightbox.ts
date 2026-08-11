@@ -2,15 +2,21 @@ import { buildGalleries } from '../collector/buildGalleries'
 import { resolveOpenRequest } from '../collector/resolveOpenRequest'
 import { CANDIDATE_SELECTOR } from '../constants'
 import type { ILightbox, IOptions } from '../interfaces'
+import { attachOpenTransition } from '../transition/transitionEngine'
 import type { TDeepPartial } from '../types'
 import { engineState } from './engineState'
 import { mergeOptions } from './mergeOptions'
 import { createPswp } from './pswpFactory'
 
-/** Composition root: delegated click handling + the open path. */
+/** Composition root: delegated click handling, open path, close routing. */
 export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
   const opts: IOptions = mergeOptions(options)
   let clickHandler: ((e: MouseEvent) => void) | null = null
+  let keyHandler: ((e: KeyboardEvent) => void) | null = null
+
+  const close = (): void => {
+    void engineState.closeHandle?.close()
+  }
 
   const open = (el: HTMLElement): boolean => {
     if (engineState.pswp) {
@@ -23,7 +29,14 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
     if (!req) {
       return false
     }
-    createPswp(opts, req)
+    createPswp(opts, req, (pswp) => {
+      engineState.closeHandle = attachOpenTransition(pswp, opts, req)
+      // Clicking the backdrop closes through OUR choreography, not
+      // PhotoSwipe's instant close (its opener is disabled).
+      pswp.options.bgClickAction = () => {
+        close()
+      }
+    })
     return true
   }
 
@@ -44,12 +57,25 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
         e.preventDefault()
         open(el)
       }
+      keyHandler = (e: KeyboardEvent) => {
+        // Esc is ours: PhotoSwipe's own escKey path would close instantly,
+        // bypassing the curtain.
+        if (e.key === 'Escape' && engineState.pswp) {
+          e.preventDefault()
+          close()
+        }
+      }
       document.addEventListener('click', clickHandler, true)
+      document.addEventListener('keydown', keyHandler, true)
     },
     destroy: () => {
       if (clickHandler) {
         document.removeEventListener('click', clickHandler, true)
         clickHandler = null
+      }
+      if (keyHandler) {
+        document.removeEventListener('keydown', keyHandler, true)
+        keyHandler = null
       }
       engineState.pswp?.destroy()
     },

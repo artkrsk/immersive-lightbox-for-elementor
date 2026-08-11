@@ -2,7 +2,7 @@
 import DefaultTheme from 'vitepress/theme'
 import { onMounted } from 'vue'
 import { createLightbox } from '@engine'
-import type { ILightbox } from '@engine'
+import type { ILightbox, IOptions, TDeepPartial } from '@engine'
 
 const { Layout } = DefaultTheme
 
@@ -22,9 +22,18 @@ onMounted(() => {
     resolveReady = resolve
   })
   window.artsLightbox = { ready, get: () => instance, version: 'docs' }
-  instance = createLightbox()
-  instance.init()
-  resolveReady(instance)
+  const boot = (options?: TDeepPartial<IOptions>): void => {
+    instance?.destroy()
+    instance = createLightbox(options)
+    instance.init()
+  }
+  boot()
+  // Playground-only helper: flip options live from the console, e.g.
+  //   artsLightboxPlayground.reboot({ transition: { close: 'through' } })
+  ;(window as unknown as Record<string, unknown>).artsLightboxPlayground = { reboot: boot }
+  if (instance) {
+    resolveReady(instance)
+  }
 })
 </script>
 

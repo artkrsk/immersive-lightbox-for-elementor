@@ -1,4 +1,5 @@
 import type PhotoSwipe from 'photoswipe'
+import type { ITransitionHandle } from '../interfaces'
 
 /**
  * Engine-level persistence. PhotoSwipe destroys its core on every close by
@@ -8,6 +9,8 @@ import type PhotoSwipe from 'photoswipe'
  */
 export const engineState: {
   pswp: PhotoSwipe | null
+  closeHandle: ITransitionHandle | null
 } = {
-  pswp: null
+  pswp: null,
+  closeHandle: null
 }

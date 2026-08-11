@@ -32,6 +32,11 @@ describe('mapToPswpOptions', () => {
     expect(opts.arrowPrev).toBe(false)
     expect(opts.arrowNext).toBe(false)
     expect(opts.close).toBe(false)
+    // all close paths route through the transition engine
+    expect(opts.escKey).toBe(false)
+    expect(opts.bgClickAction).toBe(false)
+    expect(opts.closeOnVerticalDrag).toBe(false)
+    expect(opts.pinchToClose).toBe(false)
   })
 
   it('maps zoom and gallery behavior options', () => {

@@ -1,0 +1,51 @@
+@layer arts-lightbox {
+  // Our backdrop replaces PhotoSwipe's (bgOpacity is forced to 0, but the
+  // node still exists — keep it out of the paint entirely).
+  .pswp__bg {
+    display: none;
+  }
+
+  .arts-lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--arts-lightbox-backdrop-color, #121214);
+    will-change: clip-path, opacity;
+  }
+
+  // The promoted element that travels above everything during transitions.
+  .arts-lightbox-flight {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: calc(var(--pswp-root-z-index, 100000) + 1);
+    overflow: hidden;
+    pointer-events: none;
+    will-change: transform, width, height;
+  }
+
+  .arts-lightbox-flight img {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    width: 100%;
+    object-fit: cover;
+    will-change: transform, height;
+  }
+
+  // The real slide stays hidden until the flight lands exactly on it.
+  .pswp.arts-lightbox-transitioning .pswp__scroll-wrap {
+    opacity: 0;
+  }
+
+  // Chrome (counter, captions, our buttons) rides the shared clock.
+  .pswp {
+    --arts-lightbox-chrome: 1;
+  }
+
+  // Safari compositing quirk: without a paintable background the first
+  // loaded image can render truncated (upstream #1846, never fixed there).
+  .pswp img {
+    background: rgba(255, 255, 255, 0.01);
+  }
+}

@@ -3,3 +3,4 @@
 // `@layer arts-lightbox { ... }` block (sass forbids @use inside @layer);
 // the blocks merge in the final cascade.
 @use 'photoswipe';
+@use 'lightbox';
