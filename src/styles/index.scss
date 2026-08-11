@@ -1,0 +1,5 @@
+// Everything the plugin ships lives in the `arts-lightbox` cascade layer so
+// unlayered site CSS always wins over it.
+@layer arts-lightbox {
+  // Populated from Task 9 on.
+}

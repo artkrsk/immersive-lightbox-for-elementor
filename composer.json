@@ -1,0 +1,45 @@
+{
+  "name": "arts/better-lightbox",
+  "description": "PhotoSwipe-powered lightbox for Elementor.",
+  "version": "0.1.0",
+  "type": "wordpress-plugin",
+  "license": "GPL-3.0-or-later",
+  "authors": [
+    {
+      "name": "Artem Semkin",
+      "email": "me@artemsemkin.com",
+      "homepage": "https://artemsemkin.com"
+    }
+  ],
+  "homepage": "https://artemsemkin.com/plugins/better-lightbox-for-elementor/",
+  "wordpress": {
+    "Requires at least": "6.2",
+    "Tested up to": "7.0",
+    "Requires PHP": "8.0"
+  },
+  "plugin": {
+    "Plugin Name": "Arts Better Lightbox for Elementor",
+    "Plugin URI": "https://artemsemkin.com/plugins/better-lightbox-for-elementor/",
+    "Description": "PhotoSwipe-powered lightbox for Elementor.",
+    "Text Domain": "better-lightbox-for-elementor",
+    "License": "GPLv3",
+    "License URI": "https://www.gnu.org/licenses/gpl-3.0"
+  },
+  "require": {
+    "php": ">=8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Arts\\BetterLightbox\\": "src/php/"
+    }
+  },
+  "minimum-stability": "stable",
+  "config": {
+    "optimize-autoloader": true
+  },
+  "scripts": {
+    "pre-autoload-dump": [
+      "@php -r \"is_dir('vendor-prefixed') || mkdir('vendor-prefixed');\""
+    ]
+  }
+}
