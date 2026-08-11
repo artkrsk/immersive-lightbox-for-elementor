@@ -32,8 +32,9 @@ describe('mapToPswpOptions', () => {
     expect(opts.arrowPrev).toBe(false)
     expect(opts.arrowNext).toBe(false)
     expect(opts.close).toBe(false)
-    // all close paths route through the transition engine
+    // all close and nav paths route through the engine api
     expect(opts.escKey).toBe(false)
+    expect(opts.arrowKeys).toBe(false)
     expect(opts.bgClickAction).toBe(false)
     expect(opts.closeOnVerticalDrag).toBe(false)
     expect(opts.pinchToClose).toBe(false)

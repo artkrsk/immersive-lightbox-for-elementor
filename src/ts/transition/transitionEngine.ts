@@ -55,13 +55,14 @@ function findCloseSource(pswp: PhotoSwipe, req: IOpenRequest): HTMLElement | nul
 export function attachOpenTransition(
   pswp: PhotoSwipe,
   opts: IOptions,
-  req: IOpenRequest
+  req: IOpenRequest,
+  instant = false
 ): ITransitionHandle {
   const ease = EASINGS[opts.transition.easing]
   const duration = opts.transition.duration
   const flight = createFlightLayer()
   let backdrop: ReturnType<typeof createBackdrop> | null = null
-  let transitioning = true
+  let transitioning = !instant
   let closing = false
 
   // Captured synchronously at click time, before any layout work.
@@ -77,14 +78,23 @@ export function attachOpenTransition(
         }
 
   pswp.on('firstUpdate', () => {
-    pswp.element?.classList.add(TRANSITIONING_CLASS)
     if (pswp.element) {
-      setChrome(pswp.element, 0)
+      setChrome(pswp.element, instant ? 1 : 0)
       backdrop = createBackdrop(pswp.element, opts)
+      if (instant) {
+        // Pass-through gallery swap: the backdrop is already up — land fully
+        // open with no choreography.
+        backdrop.paint(1, false)
+      } else {
+        pswp.element.classList.add(TRANSITIONING_CLASS)
+      }
     }
   })
 
   pswp.on('afterInit', () => {
+    if (instant) {
+      return
+    }
     const target = currentSlideTarget(pswp)
     const flies = Boolean(target && openSource.src)
     if (flies && target) {

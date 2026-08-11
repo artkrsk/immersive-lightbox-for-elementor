@@ -1,22 +1,85 @@
-import { buildGalleries } from '../collector/buildGalleries'
+import { buildGalleries, neighborGallery } from '../collector/buildGalleries'
 import { resolveOpenRequest } from '../collector/resolveOpenRequest'
 import { CANDIDATE_SELECTOR } from '../constants'
 import { attachExploreMode } from '../interaction/exploreMode'
-import type { ILightbox, IOptions } from '../interfaces'
+import type { IGallery, ILightbox, ILightboxApi, IOpenRequest, IOptions } from '../interfaces'
 import { attachOpenTransition } from '../transition/transitionEngine'
 import type { TDeepPartial } from '../types'
+import { registerUi } from '../ui/registerUi'
 import { engineState } from './engineState'
 import { mergeOptions } from './mergeOptions'
 import { createPswp } from './pswpFactory'
 
-/** Composition root: delegated click handling, open path, close routing. */
+/** Composition root: delegated click handling, open path, close routing, nav. */
 export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
   const opts: IOptions = mergeOptions(options)
   let clickHandler: ((e: MouseEvent) => void) | null = null
   let keyHandler: ((e: KeyboardEvent) => void) | null = null
+  let current: { req: IOpenRequest; galleries: IGallery[] } | null = null
 
   const close = (): void => {
     void engineState.closeHandle?.close()
+  }
+
+  const openRequest = (req: IOpenRequest, galleries: IGallery[], instant: boolean): void => {
+    current = { req, galleries }
+    createPswp(opts, req, (pswp) => {
+      engineState.closeHandle = attachOpenTransition(pswp, opts, req, instant)
+      attachExploreMode(pswp, opts)
+      registerUi(pswp, req.gallery, opts, api)
+      // Clicking the backdrop closes through OUR choreography, not
+      // PhotoSwipe's instant close (its opener is disabled).
+      pswp.options.bgClickAction = () => {
+        close()
+      }
+      pswp.on('destroy', () => {
+        if (current?.req === req) {
+          current = null
+        }
+      })
+    })
+  }
+
+  /** Nav with pass-through: at a gallery boundary, jump to the neighbor. */
+  const nav = (dir: 1 | -1): void => {
+    const pswp = engineState.pswp
+    if (!pswp || !current) {
+      return
+    }
+    const { req, galleries } = current
+    const lastIndex = req.gallery.slides.length - 1
+    const atBoundary = dir === 1 ? pswp.currIndex >= lastIndex : pswp.currIndex <= 0
+    if (opts.gallery.passThrough && atBoundary) {
+      const neighbor = neighborGallery(req.gallery, galleries, dir)
+      const index = dir === 1 ? 0 : (neighbor?.slides.length ?? 1) - 1
+      const key = neighbor?.slides[index]?.key
+      const sourceElement = key ? neighbor?.elementsByKey.get(key)?.[0] : undefined
+      if (neighbor && sourceElement) {
+        // Instant swap: the backdrop stays visually continuous — the old core
+        // is destroyed without choreography and the neighbor opens fully up.
+        pswp.destroy()
+        openRequest({ gallery: neighbor, index, sourceElement }, galleries, true)
+        return
+      }
+    }
+    if (dir === 1) {
+      pswp.next()
+    } else {
+      pswp.prev()
+    }
+  }
+
+  const api: ILightboxApi = {
+    close,
+    next: () => {
+      nav(1)
+    },
+    prev: () => {
+      nav(-1)
+    },
+    goTo: (index) => {
+      engineState.pswp?.goTo(index)
+    }
   }
 
   const open = (el: HTMLElement): boolean => {
@@ -30,15 +93,7 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
     if (!req) {
       return false
     }
-    createPswp(opts, req, (pswp) => {
-      engineState.closeHandle = attachOpenTransition(pswp, opts, req)
-      attachExploreMode(pswp, opts)
-      // Clicking the backdrop closes through OUR choreography, not
-      // PhotoSwipe's instant close (its opener is disabled).
-      pswp.options.bgClickAction = () => {
-        close()
-      }
-    })
+    openRequest(req, galleries, false)
     return true
   }
 
@@ -60,11 +115,20 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
         open(el)
       }
       keyHandler = (e: KeyboardEvent) => {
-        // Esc is ours: PhotoSwipe's own escKey path would close instantly,
-        // bypassing the curtain.
-        if (e.key === 'Escape' && engineState.pswp) {
+        if (!engineState.pswp) {
+          return
+        }
+        // Esc and arrows are ours: PhotoSwipe's own paths would bypass the
+        // close choreography and pass-through navigation.
+        if (e.key === 'Escape') {
           e.preventDefault()
           close()
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault()
+          api.next()
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault()
+          api.prev()
         }
       }
       document.addEventListener('click', clickHandler, true)

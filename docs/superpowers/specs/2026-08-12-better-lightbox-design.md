@@ -18,8 +18,9 @@ PhotoSwipe 5.4.4 stays an unmodified npm dependency for what it does best: touch
 
 Patches, carried via `pnpm patch` (`patchedDependencies`) so they are declarative and loud on dependency updates:
 
-1. Remove the `allowPanToNext = false` gate for non-touch devices in `gestures/gestures.js` (3 lines) — enables desktop mouse-drag between slides. Verify drag-pan-vs-swipe axis hysteresis feels right with a mouse in the playground.
-2. Upstream PR #2166 (merged after 5.4.4, never released): placeholder removal synced to animation duration instead of a hardcoded 1000ms.
+1. Upstream PR #2166 (merged after 5.4.4, never released): placeholder removal synced to animation duration instead of a hardcoded 1000ms.
+
+(The desktop drag gate needs NO source patch — implementation research showed the `allowPanToNext = false` constructor gate's sole consumer reads the option live during drag, so a runtime re-enable after construction suffices. Verify drag-pan-vs-swipe axis hysteresis feels right with a mouse in the playground.)
 
 Escape hatch: if the wrap layer accumulates a third and fourth patch fighting the library, promote to a full fork under the `@arts` namespace — mechanical (vendor the files), not a rewrite. Upstream is dormant (last release 2024-05; three real commits since), so divergence risk is low either way.
 

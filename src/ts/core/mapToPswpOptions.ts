@@ -37,6 +37,7 @@ export function mapToPswpOptions(
     // composition root; drag/pinch closes are off until the playground phase
     // finds a choreography for them.
     escKey: false,
+    arrowKeys: false,
     bgClickAction: false,
     closeOnVerticalDrag: false,
     pinchToClose: false
