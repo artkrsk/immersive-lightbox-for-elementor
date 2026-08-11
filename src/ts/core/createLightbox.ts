@@ -1,6 +1,7 @@
 import { buildGalleries } from '../collector/buildGalleries'
 import { resolveOpenRequest } from '../collector/resolveOpenRequest'
 import { CANDIDATE_SELECTOR } from '../constants'
+import { attachExploreMode } from '../interaction/exploreMode'
 import type { ILightbox, IOptions } from '../interfaces'
 import { attachOpenTransition } from '../transition/transitionEngine'
 import type { TDeepPartial } from '../types'
@@ -31,6 +32,7 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
     }
     createPswp(opts, req, (pswp) => {
       engineState.closeHandle = attachOpenTransition(pswp, opts, req)
+      attachExploreMode(pswp, opts)
       // Clicking the backdrop closes through OUR choreography, not
       // PhotoSwipe's instant close (its opener is disabled).
       pswp.options.bgClickAction = () => {
