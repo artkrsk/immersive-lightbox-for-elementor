@@ -108,4 +108,19 @@
       display: none;
     }
   }
+
+  // Video/html slide content — PhotoSwipe positions it; we only paint.
+  .arts-lightbox-media {
+    display: block;
+    background: #000;
+  }
+
+  .arts-lightbox-html {
+    max-width: min(720px, 86vw);
+    max-height: 82vh;
+    padding: 32px;
+    overflow: auto;
+    background: var(--arts-lightbox-html-bg, #1c1c1f);
+    border-radius: 8px;
+  }
 }
