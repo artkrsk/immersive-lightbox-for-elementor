@@ -46,7 +46,7 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
       }
       attachZoomCursor(pswp)
       attachZoomMode(pswp, opts)
-      attachWheelNav(pswp, opts, api)
+      attachWheelNav(pswp, opts)
       registerContent(pswp)
       registerUi(pswp, req.gallery, opts, api)
       // Clicking the backdrop closes through OUR choreography, not
