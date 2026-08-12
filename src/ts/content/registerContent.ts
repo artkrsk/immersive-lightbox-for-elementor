@@ -1,9 +1,9 @@
 import type { IOptions, ISlideData } from '../interfaces'
 import type PhotoSwipe from '../photoswipe/photoswipe.js'
-import { cloneAndSeek } from '../video/adoption'
 import { audioFocus } from '../video/audioFocus'
+import { buildVideoElement } from '../video/buildVideoElement'
+import { cloneAndSeek } from '../video/cloneAndSeek'
 import { createPlayerBridge } from '../video/playerBridge'
-import { buildVideoElement } from './buildVideoElement'
 import { fitWithin } from './fitWithin'
 
 const DEFAULT_ASPECT = 16 / 9
