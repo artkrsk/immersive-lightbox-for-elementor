@@ -12,7 +12,8 @@
       "vitest.config.ts",
       "biome.json",
       "knip.json",
-      ".fallowrc.jsonc"
+      ".fallowrc.jsonc",
+      "!src/ts/photoswipe"
     ]
   },
   "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },

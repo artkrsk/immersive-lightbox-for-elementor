@@ -7,5 +7,3 @@ allowBuilds:
   lefthook: false
 minimumReleaseAgeExclude:
   - happy-dom@20.11.1
-patchedDependencies:
-  photoswipe@5.4.4: patches/photoswipe@5.4.4.patch

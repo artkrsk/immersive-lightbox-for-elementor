@@ -1,5 +1,5 @@
-import type { PhotoSwipeOptions, SlideData } from 'photoswipe'
 import type { IGallery, IOptions, ISlideData } from '../interfaces'
+import type { PhotoSwipeOptions, SlideData } from '../photoswipe/photoswipe.js'
 
 function toPswpSlide(slide: ISlideData): SlideData {
   // ISlideData is a field-compatible superset of PhotoSwipe's SlideData

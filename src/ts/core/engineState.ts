@@ -1,5 +1,5 @@
-import type PhotoSwipe from 'photoswipe'
 import type { ITransitionHandle } from '../interfaces'
+import type PhotoSwipe from '../photoswipe/photoswipe.js'
 
 /**
  * Engine-level persistence. PhotoSwipe destroys its core on every close by

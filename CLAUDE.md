@@ -18,15 +18,15 @@ Pre-commit (lefthook): Biome auto-fixes staged files, then typecheck, then the f
 
 ## Architecture invariants
 
-- **PhotoSwipe 5.4.4 is wrapped, not forked.** It supplies gestures, zoom/pan math, and image loading. We replace wholesale: the opener (`showHideAnimationType: 'none'`), the entire UI, and non-image content handling. One `pnpm patch` exists (upstream PR #2166, placeholder timing); do not add patches lightly — the escape hatch is a full vendored fork, and the bar for entering it is a third patch fighting the library.
-- **Desktop drag needs NO source patch.** The Gestures constructor force-disables `allowPanToNext` on non-touch, but its sole consumer reads the option live during drag — `pswpFactory` flips it back on `beforeOpen`. Don't "fix" this by patching the source.
+- **PhotoSwipe 5.4.4 is a vendored fork** at `src/ts/photoswipe/` (MIT, upstream PR #2166 baked in — see its README). Promoted from a wrap on 2026-08-12: upstream is dormant, the author has run it frozen across four themes, and the wrapper seam (dims recovery dance, un-animated `goTo`, un-interceptable close that forced disabling vertical-drag/pinch close) was where the bugs bred. The fork's `gestures/` and `util/spring-*` are the battle-tested touch physics — change only with on-device verification; everything else may be integrated first-class (animated `goTo`, dims API, interceptable close) instead of worked around.
+- **Desktop drag needs NO patching.** The Gestures constructor force-disables `allowPanToNext` on non-touch, but its sole consumer reads the option live during drag — `pswpFactory` flips it back on `beforeOpen`. (Now that the source is ours, this can become the default in a first-class pass.)
 - **PhotoSwipe's close always destroys its core** (listeners wiped). Persistence lives in OUR layer (`engineState`); a fresh cheap pswp core is created per open. Never reuse a closed pswp.
 - **Every close and nav path routes through the engine api** (`createLightbox`'s `close`/`nav`), never straight to pswp: `escKey`/`arrowKeys`/`bgClickAction` are disabled in `mapToPswpOptions` and reimplemented so the curtain choreography and pass-through navigation apply uniformly. `closeOnVerticalDrag`/`pinchToClose` are off until a touch-close choreography exists — revisit deliberately, not by flipping the flag.
 - **One clock per transition.** Backdrop `t`, flight interpolation, and chrome opacity all read one eased value (`transition/clock.ts`). No independently-timed tweens.
 - **Flight capture is geometric.** `captureFlightSource` measures the inner img rect vs frame rect — never parses transforms — so any parallax mechanism is captured identically. Close re-measures (scroll/slide may have changed) and targets the nearest visible clone via `gallery.elementsByKey`.
 - **The vendored curtain-mask must stay byte-identical to Velum's.** `tests/transition/curve.test.ts` carries exact-string parity vectors; a "refactor" that shifts any output string is a visual change in disguise.
 - **The collector always feeds PhotoSwipe an explicit dataSource** — PhotoSwipe never scans anchors (sidesteps its `<a>`-wrapper architecture constraint).
-- **Zero runtime dependencies** in package.json; photoswipe lives in devDependencies (exact-pinned — the patch binds to the version) and is bundled by esbuild.
+- **Zero dependencies, period** — the PhotoSwipe fork is repo source; nothing lightbox-related is installed from npm.
 
 ## Conventions
 

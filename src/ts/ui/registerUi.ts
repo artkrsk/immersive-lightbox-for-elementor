@@ -1,5 +1,5 @@
-import type PhotoSwipe from 'photoswipe'
 import type { IGallery, ILightboxApi, IOptions } from '../interfaces'
+import type PhotoSwipe from '../photoswipe/photoswipe.js'
 import { registerArrows } from './arrows'
 import { registerCaption } from './caption'
 import { registerCloseButton } from './closeButton'

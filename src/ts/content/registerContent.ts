@@ -1,5 +1,5 @@
-import type PhotoSwipe from 'photoswipe'
 import type { ISlideData } from '../interfaces'
+import type PhotoSwipe from '../photoswipe/photoswipe.js'
 import { buildVideoElement } from './buildVideoElement'
 import { fitWithin } from './fitWithin'
 

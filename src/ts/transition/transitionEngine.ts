@@ -1,4 +1,3 @@
-import type PhotoSwipe from 'photoswipe'
 import { EASINGS } from '../core/easings'
 import type {
   IFlightSource,
@@ -7,6 +6,7 @@ import type {
   IOptions,
   ITransitionHandle
 } from '../interfaces'
+import type PhotoSwipe from '../photoswipe/photoswipe.js'
 import { createBackdrop } from './backdrop'
 import { captureFlightSource } from './captureFlightSource'
 import { createClock } from './clock'

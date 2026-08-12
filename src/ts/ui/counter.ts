@@ -1,5 +1,5 @@
-import type PhotoSwipe from 'photoswipe'
 import type { IGallery } from '../interfaces'
+import type PhotoSwipe from '../photoswipe/photoswipe.js'
 
 const pad = (n: number): string => String(n).padStart(2, '0')
 

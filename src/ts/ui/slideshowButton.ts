@@ -1,4 +1,4 @@
-import type PhotoSwipe from 'photoswipe'
+import type PhotoSwipe from '../photoswipe/photoswipe.js'
 import type { createSlideshow } from './slideshow'
 
 const PLAY_SVG =

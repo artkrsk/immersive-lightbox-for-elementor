@@ -14,6 +14,19 @@ The two features that earn the "Better" name:
 
 ## Engine strategy (Approach A: wrap + surgical patches)
 
+> **Revision (2026-08-12, playground phase):** promoted to the escape hatch —
+> PhotoSwipe is now a **vendored fork** at `src/ts/photoswipe/` and the npm
+> dependency + pnpm patch are gone. Rationale: upstream is dormant (no update
+> flow to preserve), the author has effectively run PhotoSwipe frozen across
+> four shipped themes, and the first playground feedback round showed the
+> wrapper seam is where bugs breed — the dims recovery dance, un-animated
+> `goTo` (#2175), and an un-interceptable `close()→destroy()` that forced
+> disabling vertical-drag-close and pinch-close. Planned first-class
+> integrations in the fork: animated `goTo`, a dims-change API, an
+> interceptable close (unlocking gesture-driven curtain close), desktop
+> `allowPanToNext` by default. The wrap-era text below stands as the original
+> decision record.
+
 PhotoSwipe 5.4.4 stays an unmodified npm dependency for what it does best: touch gesture physics (pinch math, rubber-band friction, spring easer), pan-bounds/zoom-level math, image loading pipeline (Safari decode timing, srcset handling), main-scroll, keyboard/wheel, and its event/filter bus. We replace wholesale: the opener (open/close transitions), the default UI, and content handling for non-image slides.
 
 Patches, carried via `pnpm patch` (`patchedDependencies`) so they are declarative and loud on dependency updates:

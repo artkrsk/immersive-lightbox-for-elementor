@@ -1,5 +1,5 @@
-import type PhotoSwipe from 'photoswipe'
 import type { IOptions } from '../interfaces'
+import type PhotoSwipe from '../photoswipe/photoswipe.js'
 import { mapPointerToPan } from './mapPointerToPan'
 
 const FIT_EPSILON = 0.001

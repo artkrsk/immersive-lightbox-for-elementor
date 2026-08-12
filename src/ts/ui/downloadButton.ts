@@ -1,5 +1,5 @@
-import type PhotoSwipe from 'photoswipe'
 import type { IGallery } from '../interfaces'
+import type PhotoSwipe from '../photoswipe/photoswipe.js'
 
 const DOWNLOAD_SVG =
   '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 4v10m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'

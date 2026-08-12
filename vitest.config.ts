@@ -50,7 +50,14 @@ export default defineConfig({
       include: ['src/ts/**/*.ts'],
       // Spelled out rather than spread onto coverageConfigDefaults.exclude,
       // which is an empty array in v4 now that `include` does that job.
-      exclude: ['src/ts/**/*.d.ts', 'src/ts/interfaces/**', 'src/ts/types/**', 'src/ts/index.ts'],
+      exclude: [
+        'src/ts/**/*.d.ts',
+        'src/ts/interfaces/**',
+        'src/ts/types/**',
+        'src/ts/index.ts',
+        // the vendored fork keeps upstream's own quality regime
+        'src/ts/photoswipe/**'
+      ],
       // `json` is what writes coverage/coverage-final.json for fallow.
       reporter: ['text', 'html', 'json']
     }
