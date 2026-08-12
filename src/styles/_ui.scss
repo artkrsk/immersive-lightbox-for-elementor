@@ -5,6 +5,7 @@
   .arts-lightbox-close,
   .arts-lightbox-download,
   .arts-lightbox-slideshow,
+  .arts-lightbox-sound,
   .arts-lightbox-arrow,
   .arts-lightbox-thumbs {
     opacity: var(--arts-lightbox-chrome, 1);
@@ -31,7 +32,8 @@
 
   .arts-lightbox-close,
   .arts-lightbox-download,
-  .arts-lightbox-slideshow {
+  .arts-lightbox-slideshow,
+  .arts-lightbox-sound {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -40,6 +42,10 @@
     border: 0;
     background: transparent;
     cursor: pointer;
+  }
+
+  .arts-lightbox-sound_hidden {
+    display: none;
   }
 
   .arts-lightbox-arrow {
@@ -113,6 +119,14 @@
   .arts-lightbox-media {
     display: block;
     background: #000;
+  }
+
+  // Landing pad for an adopted page video (delivered by the flight).
+  .arts-lightbox-media_adopted video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   // Sized by PhotoSwipe to the slide box; the card look + scrolling live here.

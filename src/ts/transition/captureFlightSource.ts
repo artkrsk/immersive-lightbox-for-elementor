@@ -17,7 +17,7 @@ const CLIPS = /hidden|clip|scroll|auto/
  * captured identically.
  */
 export function captureFlightSource(sourceEl: HTMLElement): IFlightSource {
-  const img = sourceEl.querySelector('img')
+  const img = sourceEl.querySelector('img, video') as HTMLImageElement | HTMLVideoElement | null
 
   let frame: HTMLElement = sourceEl
   let radius = Number.parseFloat(getComputedStyle(sourceEl).borderRadius) || 0
@@ -46,12 +46,18 @@ export function captureFlightSource(sourceEl: HTMLElement): IFlightSource {
   }
 
   const frameRect = frame.getBoundingClientRect()
+  // An img-mode flight needs an IMAGE source: the img's own src, or a
+  // video's poster (a video file URL painted into an <img> shows nothing).
+  const src =
+    img instanceof HTMLVideoElement
+      ? img.poster || img.getAttribute('poster') || ''
+      : img?.currentSrc || img?.getAttribute('src') || ''
   const source: IFlightSource = {
     rect: { x: frameRect.left, y: frameRect.top, w: frameRect.width, h: frameRect.height },
     radius,
     innerHeightPct: 100,
     innerOffsetYPct: 0,
-    src: img?.currentSrc || img?.getAttribute('src') || ''
+    src
   }
   if (img && frameRect.height > 0) {
     const imgRect = img.getBoundingClientRect()

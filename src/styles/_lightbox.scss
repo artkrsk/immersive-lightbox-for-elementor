@@ -23,7 +23,8 @@
     will-change: transform, width, height;
   }
 
-  .arts-lightbox-flight img {
+  // Applies to both an img clone and a LIVE adopted video flying.
+  .arts-lightbox-flight__media {
     position: absolute;
     left: 0;
     top: 0;

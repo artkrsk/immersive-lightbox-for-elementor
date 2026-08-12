@@ -1,3 +1,4 @@
+import type { IMediaController } from '../content/registerContent'
 import type { IGallery, ILightboxApi, IOptions } from '../interfaces'
 import type PhotoSwipe from '../photoswipe/photoswipe.js'
 import { registerArrows } from './arrows'
@@ -7,6 +8,7 @@ import { registerCounter } from './counter'
 import { registerDownloadButton } from './downloadButton'
 import { createSlideshow } from './slideshow'
 import { registerSlideshowButton } from './slideshowButton'
+import { registerSoundButton } from './soundButton'
 import { registerThumbnailsStrip } from './thumbnailsStrip'
 
 /**
@@ -18,7 +20,8 @@ export function registerUi(
   pswp: PhotoSwipe,
   gallery: IGallery,
   opts: IOptions,
-  api: ILightboxApi
+  api: ILightboxApi,
+  media: IMediaController
 ): void {
   const slideshow = createSlideshow(opts.slideshow.interval, () => {
     api.next()
@@ -27,6 +30,7 @@ export function registerUi(
   pswp.on('uiRegister', () => {
     registerArrows(pswp, api)
     registerCloseButton(pswp, api)
+    registerSoundButton(pswp, media)
     if (opts.ui.counter) {
       registerCounter(pswp, gallery)
     }

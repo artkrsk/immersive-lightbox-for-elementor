@@ -1,3 +1,4 @@
+export type { IAdoptedVideo } from './IAdoptedVideo'
 export type { IArtsLightboxGlobal } from './IArtsLightboxGlobal'
 export type { ICandidate } from './ICandidate'
 export type { IFlightFrame } from './IFlightFrame'

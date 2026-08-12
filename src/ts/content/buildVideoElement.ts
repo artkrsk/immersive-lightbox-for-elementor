@@ -1,35 +1,36 @@
-import { VIMEO_PATTERN, YOUTUBE_PATTERN } from '../constants'
 import type { ISlideData } from '../interfaces'
+import { buildEmbedUrl } from '../video/buildEmbedUrl'
+import { parseVideoUrl } from '../video/parseVideoUrl'
 
 /**
- * The playable element for a video slide: a native `<video>` for self-hosted
- * files, a privacy-friendly provider iframe (with the JS API enabled so
- * activate/deactivate can drive play/pause) for embeds.
+ * Cold player builders (tier 3 — no page element to adopt or clone): a
+ * native `<video>` for self-hosted files, a privacy-first controllable
+ * iframe for embeds. `autoplay` only ever true for the actually-opened
+ * slide — never for preloaded neighbors (the AGC lesson).
  */
-export function buildVideoElement(data: ISlideData): HTMLElement {
+export function buildVideoElement(data: ISlideData, opts: { autoplay: boolean }): HTMLElement {
   const url = data.videoSrc ?? data.src
-  if (data.videoEmbed === 'youtube') {
-    const id = YOUTUBE_PATTERN.exec(url)?.[1] ?? ''
-    return buildIframe(`https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0`)
-  }
-  if (data.videoEmbed === 'vimeo') {
-    const id = VIMEO_PATTERN.exec(url)?.[1] ?? ''
-    // api=1 enables the postMessage play/pause control; dnt disables tracking.
-    return buildIframe(`https://player.vimeo.com/video/${id}?api=1&dnt=1`)
+  const parsed = parseVideoUrl(url)
+  if (parsed && (parsed.provider === 'youtube' || parsed.provider === 'vimeo')) {
+    const iframe = document.createElement('iframe')
+    iframe.src = buildEmbedUrl(parsed, { autoplay: opts.autoplay })
+    iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; encrypted-media')
+    iframe.setAttribute('allowfullscreen', '')
+    iframe.setAttribute('frameborder', '0')
+    return iframe
   }
   const video = document.createElement('video')
   video.src = url
+  if (data.msrc) {
+    video.poster = data.msrc
+  }
   video.setAttribute('controls', '')
   video.setAttribute('playsinline', '')
   video.preload = 'metadata'
+  if (opts.autoplay) {
+    // Watch intent: the user clicked a video link. Sound on — the click is
+    // the gesture. If policy still blocks it, the poster + controls remain.
+    video.autoplay = true
+  }
   return video
-}
-
-function buildIframe(src: string): HTMLIFrameElement {
-  const iframe = document.createElement('iframe')
-  iframe.src = src
-  iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture')
-  iframe.setAttribute('allowfullscreen', '')
-  iframe.setAttribute('frameborder', '0')
-  return iframe
 }

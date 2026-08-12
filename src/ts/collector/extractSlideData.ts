@@ -1,4 +1,12 @@
-import { ATTR_CAPTION, ATTR_HEIGHT, ATTR_HTML, ATTR_ID, ATTR_TYPE, ATTR_WIDTH } from '../constants'
+import {
+  ATTR_AUTOPLAY,
+  ATTR_CAPTION,
+  ATTR_HEIGHT,
+  ATTR_HTML,
+  ATTR_ID,
+  ATTR_TYPE,
+  ATTR_WIDTH
+} from '../constants'
 import type { ISlideData } from '../interfaces'
 import { normalizeUrlKey } from '../utils'
 import { parseVideoUrl } from '../video/parseVideoUrl'
@@ -89,6 +97,9 @@ export function extractSlideData(el: HTMLElement): ISlideData {
     }
     if (!href && containedVideo) {
       data.sourceVideo = true
+    }
+    if (el.getAttribute(ATTR_AUTOPLAY) === 'false') {
+      data.autoplay = false
     }
   }
   if (type === 'html') {

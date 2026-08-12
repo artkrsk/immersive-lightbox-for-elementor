@@ -32,6 +32,7 @@ describe('buildEmbedUrl — Vimeo', () => {
     const url = buildEmbedUrl(source)
     expect(url).toContain('player.vimeo.com/video/617673871')
     expect(url).toContain('h=701316cc64')
+    expect(url).toContain('api=1')
     expect(url).toContain('dnt=1')
     expect(url).toContain('playsinline=1')
     expect(url).not.toContain('autoplay')

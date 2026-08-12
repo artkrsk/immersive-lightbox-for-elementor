@@ -92,9 +92,12 @@ export function attachOpenTransition(
   let transitioning = !instant
   let closing = false
 
-  // Captured synchronously at click time, before any layout work.
+  // Captured synchronously at click time, before any layout work. Videos
+  // fly too: adopted ones as the LIVE element, others via their poster.
+  const openSlide = req.gallery.slides[req.index]
+  const adopted = openSlide?.adopted ?? null
   const openSource: IFlightSource =
-    req.gallery.slides[req.index]?.type === 'image'
+    openSlide?.type === 'image' || openSlide?.type === 'video'
       ? captureFlightSource(req.sourceElement)
       : {
           rect: { x: 0, y: 0, w: 0, h: 0 },
@@ -133,6 +136,11 @@ export function attachOpenTransition(
     hidden.clear()
   }
   pswp.on('destroy', restoreHidden)
+  // Whatever path led to destroy, an adopted video ALWAYS goes home
+  // (idempotent — the choreographed close already returned it).
+  pswp.on('destroy', () => {
+    adopted?.return()
+  })
 
   // Navigating away from a slide restores its hidden source right away —
   // the backdrop is fully opaque mid-session, so the restore is invisible.
@@ -154,9 +162,12 @@ export function attachOpenTransition(
       return
     }
     const initialTarget = currentSlideTarget(pswp)
-    const flies = Boolean(initialTarget && openSource.src)
+    const flies = Boolean(initialTarget && (adopted || openSource.src))
     if (flies && initialTarget) {
-      flight.mount(interpolateFlight(openSource, initialTarget, 0), openSource.src)
+      flight.mount(
+        interpolateFlight(openSource, initialTarget, 0),
+        adopted ? { kind: 'element', el: adopted.take() } : { kind: 'img', src: openSource.src }
+      )
       hide(req.sourceElement)
     }
     // The landing rect is LIVE: explore mode already pans the (hidden) slide
@@ -187,6 +198,18 @@ export function attachOpenTransition(
         }
       },
       () => {
+        // Adopted video hand-off: flight → slide container, same task, so
+        // playback never pauses. Controls appear only inside the lightbox.
+        if (adopted) {
+          const el = flight.extract()
+          const container = pswp.currSlide?.content?.element
+          if (el && container) {
+            container.appendChild(el)
+            adopted.element.controls = true
+          } else {
+            adopted.return()
+          }
+        }
         pswp.element?.classList.remove(TRANSITIONING_CLASS)
         requestAnimationFrame(() => {
           flight.unmount()
@@ -208,13 +231,32 @@ export function attachOpenTransition(
       // Fresh measure: the page may have scrolled and the slide may have
       // changed; the return flight re-applies the source's current parallax.
       const closeSource = sourceEl ? captureFlightSource(sourceEl) : null
-      const flies = Boolean(target && closeSource && slideData?.type === 'image')
+      // Closing on the adopted slide flies the LIVE element home; other
+      // videos fly their poster; images fly the full-size image.
+      const adoptedHere = slideData?.adopted ?? null
+      const flies = Boolean(
+        target &&
+          closeSource &&
+          sourceEl &&
+          (slideData?.type === 'image' ||
+            adoptedHere ||
+            (slideData?.type === 'video' && closeSource.src))
+      )
 
       if (flies && target && closeSource && sourceEl) {
-        // The full-size image is what's on screen — paint the flight with it
-        // so the swap is invisible; fall back to the thumb source.
-        const src = slideData?.src || closeSource.src
-        flight.mount(interpolateFlight(closeSource, target, 1), src)
+        if (adoptedHere) {
+          adoptedHere.element.controls = false
+          flight.mount(interpolateFlight(closeSource, target, 1), {
+            kind: 'element',
+            el: adoptedHere.element
+          })
+        } else {
+          // The full-size image is what's on screen — paint the flight with
+          // it so the swap is invisible; posters for videos, thumb fallback.
+          const src =
+            slideData?.type === 'image' ? slideData.src || closeSource.src : closeSource.src
+          flight.mount(interpolateFlight(closeSource, target, 1), { kind: 'img', src })
+        }
         // The landing spot hides until the flight settles on it (it may be a
         // different clone than the one the open launched from).
         hide(sourceEl)
@@ -236,9 +278,13 @@ export function attachOpenTransition(
           }
         },
         () => {
+          // The adopted video goes home BEFORE teardown: mute restored
+          // first inside return(), placement and styles after — the flight
+          // frame it leaves gets removed a frame later.
+          slideData?.adopted?.return()
           backdrop?.destroy()
           backdrop = null
-          pswp.destroy() // restores hidden sources via the destroy listener
+          pswp.destroy() // restores hidden sources + any un-returned adoptee
           requestAnimationFrame(() => {
             flight.unmount()
             resolve()

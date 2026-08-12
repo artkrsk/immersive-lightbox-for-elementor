@@ -21,7 +21,9 @@ export function buildEmbedUrl(source: TVideoSource, opts: { autoplay?: boolean }
     return `https://www.youtube-nocookie.com/embed/${source.id}?${params.toString()}`
   }
   if (source.provider === 'vimeo') {
-    const params = new URLSearchParams({ dnt: '1', playsinline: '1' })
+    // api=1 enables the postMessage control channel — without it the player
+    // ignores play/pause/mute commands entirely.
+    const params = new URLSearchParams({ api: '1', dnt: '1', playsinline: '1' })
     if (source.hash) {
       params.set('h', source.hash)
     }

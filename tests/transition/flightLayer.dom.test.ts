@@ -17,7 +17,7 @@ const frame: IFlightFrame = {
 describe('createFlightLayer', () => {
   it('mounts, paints and unmounts the promoted element', () => {
     const layer = createFlightLayer()
-    layer.mount(frame, '/thumb.jpg')
+    layer.mount(frame, { kind: 'img', src: '/thumb.jpg' })
     const el = document.querySelector<HTMLDivElement>('.arts-lightbox-flight')
     const img = el?.querySelector('img')
     expect(el).not.toBeNull()
@@ -40,8 +40,8 @@ describe('createFlightLayer', () => {
 
   it('replaces a stale element on re-mount', () => {
     const layer = createFlightLayer()
-    layer.mount(frame, '/a.jpg')
-    layer.mount(frame, '/b.jpg')
+    layer.mount(frame, { kind: 'img', src: '/a.jpg' })
+    layer.mount(frame, { kind: 'img', src: '/b.jpg' })
     const els = document.querySelectorAll('.arts-lightbox-flight')
     expect(els.length).toBe(1)
     expect(els[0]?.querySelector('img')?.getAttribute('src')).toBe('/b.jpg')

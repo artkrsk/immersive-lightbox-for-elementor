@@ -11,6 +11,8 @@ import type { IGallery, ILightbox, ILightboxApi, IOpenRequest, IOptions } from '
 import { attachOpenTransition } from '../transition/transitionEngine'
 import type { TDeepPartial } from '../types'
 import { registerUi } from '../ui/registerUi'
+import { adoptVideo, findAdoptableVideo } from '../video/adoption'
+import { audioFocus } from '../video/audioFocus'
 import { engineState } from './engineState'
 import { mergeOptions } from './mergeOptions'
 import { createPswp } from './pswpFactory'
@@ -24,6 +26,8 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
   let current: { req: IOpenRequest; galleries: IGallery[] } | null = null
 
   const close = (): void => {
+    // Sound never survives into the close choreography.
+    audioFocus.releaseAll()
     void engineState.closeHandle?.close()
   }
 
@@ -49,8 +53,8 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
         }
       }
       attachWheelNav(pswp, opts)
-      registerContent(pswp)
-      registerUi(pswp, req.gallery, opts, api)
+      const media = registerContent(pswp, opts, req.index)
+      registerUi(pswp, req.gallery, opts, api, media)
       // Clicking the backdrop closes through OUR choreography, not
       // PhotoSwipe's instant close (its opener is disabled).
       pswp.options.bgClickAction = () => {
@@ -117,6 +121,21 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
     const req = resolveOpenRequest(el, galleries)
     if (!req) {
       return false
+    }
+    // Resolve the video source tier for the opened slide: adopt the live
+    // background video when it's genuinely visible; remember hidden ones
+    // for clone-and-seek.
+    const slide = req.gallery.slides[req.index]
+    if (slide?.type === 'video' && slide.sourceVideo) {
+      const adoptable = findAdoptableVideo(req.sourceElement)
+      if (adoptable) {
+        slide.adopted = adoptVideo(adoptable)
+      } else {
+        const hidden = req.sourceElement.querySelector('video')
+        if (hidden) {
+          slide.cloneSource = hidden
+        }
+      }
     }
     openRequest(req, galleries, false, point)
     return true

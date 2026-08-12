@@ -43,5 +43,8 @@ export const DEFAULT_OPTIONS: IOptions = {
   prefetch: {
     onHover: true
   },
+  video: {
+    autoplay: true
+  },
   desktopDrag: true
 }

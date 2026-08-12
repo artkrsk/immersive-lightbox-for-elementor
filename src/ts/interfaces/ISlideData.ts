@@ -1,5 +1,6 @@
 import type { TSlideType } from '../types/TSlideType'
 import type { TVideoEmbed } from '../types/TVideoEmbed'
+import type { IAdoptedVideo } from './IAdoptedVideo'
 
 /**
  * The engine's slide model — a superset mapped onto PhotoSwipe's SlideData.
@@ -28,4 +29,10 @@ export interface ISlideData {
   videoStart?: number
   /** The src came from a <video> contained in the candidate element. */
   sourceVideo?: boolean
+  /** Per-slide autoplay opt-out (data-arts-lightbox-autoplay="false"). */
+  autoplay?: boolean
+  /** Resolved at open: the page video adopted for this slide (tier 1). */
+  adopted?: IAdoptedVideo
+  /** Resolved at open: hidden/managed page video to clone-and-seek (tier 2). */
+  cloneSource?: HTMLVideoElement
 }

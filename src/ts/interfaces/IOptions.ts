@@ -59,6 +59,11 @@ export interface IOptions {
     /** Warm the full-size image on thumbnail hover / press, pre-open. */
     onHover: boolean
   }
+  video: {
+    /** Video slides play on open/arrival (adopted ones continue muted;
+     *  watch-intent links autoplay with sound on the opened slide only). */
+    autoplay: boolean
+  }
   /** Mouse-drag swipes between slides on desktop. */
   desktopDrag: boolean
 }
