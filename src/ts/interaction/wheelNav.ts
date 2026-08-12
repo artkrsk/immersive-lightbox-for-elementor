@@ -1,18 +1,37 @@
 import type { IOptions } from '../interfaces'
 import type PhotoSwipe from '../photoswipe/photoswipe.js'
 
-/** A pause in wheel events longer than this ends the gesture. */
-const GESTURE_GAP_MS = 150
 /** Same velocity threshold the touch drag settle uses (px/ms). */
 const MIN_NEXT_SLIDE_SPEED = 0.5
+/** Coasting ends when the momentum tail goes quiet for this long. */
+const COAST_GAP_MS = 200
+/** Tracking safety net: a no-momentum lift with idle hands settles here. */
+const SAFETY_SETTLE_MS = 1200
+/** Fallback classifier: this many consecutive decaying deltas = momentum. */
+const DECAY_RUN = 3
+/** Fallback classifier: momentum events are frame-locked, gaps stay short. */
+const DECAY_MAX_GAP_MS = 40
 
 /**
- * Wheel policy for explore mode: mousemove owns panning, so a plain wheel
- * never pans. Horizontal two-finger swipes drive the main scroll
- * CONTINUOUSLY — the strip follows the gesture (and its momentum tail)
- * exactly like a touch drag, then settles with PhotoSwipe's own recipe:
- * velocity + visible-ratio decide next/prev/stay. Ctrl+wheel — the
- * trackpad pinch — stays PhotoSwipe's zoom.
+ * Photos.app-grade trackpad swipes, reconstructed from wheel events.
+ *
+ * Native apps see scroll *phases*: fingers-down events, an exact
+ * finger-lift moment, and a separate system-generated momentum stream.
+ * The web doesn't — so this state machine rebuilds them:
+ *
+ * - `tracking`: fingers on glass, the strip follows 1:1 (with mid-gesture
+ *   index commits so successive swipes chain). Silence means HOLDING, not
+ *   release — nothing settles while you rest your fingers.
+ * - Release evidence, in order of quality: a `WheelEvent.momentum` event
+ *   (Chrome 151+, ground truth: inertia only exists after a lift), the
+ *   decay-signature fallback elsewhere, a `mousemove` (impossible while
+ *   fingers are scrolling — a quiet lift reveals itself the moment the
+ *   cursor moves), or a long safety timeout.
+ * - `coasting`: the settle is committed; the momentum tail is swallowed.
+ *   A fresh finger gesture breaks through immediately and chains.
+ *
+ * Vertical wheel stays inert (mousemove owns panning); ctrl+wheel — the
+ * trackpad pinch — remains PhotoSwipe's zoom.
  */
 export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
   if (!opts.explore.enabled || opts.zoom.wheelToZoom) {
@@ -22,26 +41,48 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
     return
   }
 
-  let active = false
+  type TState = 'idle' | 'tracking' | 'coasting'
+  let state: TState = 'idle'
   let lastTime = 0
   let velocityX = 0
-  let settleTimer: ReturnType<typeof setTimeout> | null = null
+  let peakVelocityX = 0
+  let decays = 0
+  let prevAbsDelta = 0
+  let prevSign = 0
+  let timer: ReturnType<typeof setTimeout> | null = null
 
-  const settle = (): void => {
-    settleTimer = null
-    if (!active) {
-      return
+  const clearTimer = (): void => {
+    if (timer) {
+      clearTimeout(timer)
+      timer = null
     }
-    active = false
+  }
+  const arm = (ms: number, fn: () => void): void => {
+    clearTimer()
+    timer = setTimeout(fn, ms)
+  }
+
+  const toIdle = (): void => {
+    clearTimer()
+    state = 'idle'
+    velocityX = 0
+    peakVelocityX = 0
+    decays = 0
+    prevAbsDelta = 0
+    prevSign = 0
+  }
+
+  /** PhotoSwipe's touch-drag settle recipe, with the given release velocity. */
+  const settle = (releaseVelocity: number): void => {
     const { mainScroll, viewportSize } = pswp
+    clearTimer()
     if (!mainScroll.isShifted()) {
-      velocityX = 0
+      state = 'idle'
       return
     }
-    // PhotoSwipe's touch-drag settle recipe, verbatim semantics.
     const ratio = (mainScroll.x - mainScroll.getCurrSlideX()) / viewportSize.x
     let indexDiff = 0
-    let v = velocityX
+    let v = releaseVelocity
     if ((v < -MIN_NEXT_SLIDE_SPEED && ratio < 0) || (v < 0.1 && ratio < -0.5)) {
       indexDiff = 1
       v = Math.min(v, 0)
@@ -50,7 +91,36 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
       v = Math.max(v, 0)
     }
     mainScroll.moveIndexBy(indexDiff, true, v)
-    velocityX = 0
+    state = 'coasting'
+    arm(COAST_GAP_MS, toIdle)
+  }
+
+  /** Fingers left the glass without momentum — the cursor moving proves it. */
+  const onMouseMove = (): void => {
+    if (state === 'tracking') {
+      settle(velocityX)
+    }
+  }
+
+  /** Momentum classification: ground truth when the UA provides it. */
+  const isMomentum = (wheel: WheelEvent, dt: number): boolean => {
+    const native = (wheel as WheelEvent & { momentum?: boolean }).momentum
+    if (typeof native === 'boolean') {
+      return native
+    }
+    // Fallback signature: same-sign, non-increasing deltas at frame-locked
+    // gaps. Requires a run — a user slowing down looks similar briefly.
+    const absDelta = Math.abs(wheel.deltaX)
+    const sign = Math.sign(wheel.deltaX)
+    if (sign !== 0 && sign === prevSign && absDelta <= prevAbsDelta && dt <= DECAY_MAX_GAP_MS) {
+      decays++
+    } else {
+      decays = 0
+      peakVelocityX = velocityX
+    }
+    prevAbsDelta = absDelta
+    prevSign = sign
+    return decays >= DECAY_RUN
   }
 
   pswp.on('wheel', (e) => {
@@ -58,52 +128,71 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
     if (wheel.ctrlKey) {
       return // trackpad pinch → stock zoom
     }
-    e.preventDefault() // cancel PhotoSwipe's wheel pan/zoom handling
+    e.preventDefault() // wheel never pans; mousemove owns panning
 
-    const horizontal = Math.abs(wheel.deltaX) > Math.abs(wheel.deltaY)
     const now = performance.now()
-    if (!active) {
-      if (!horizontal) {
-        return // vertical scroll: swallowed, mousemove owns panning
+    const dt = Math.max(1, now - lastTime)
+    lastTime = now
+    const momentum = isMomentum(wheel, dt)
+    const horizontal = Math.abs(wheel.deltaX) > Math.abs(wheel.deltaY)
+
+    if (state === 'coasting') {
+      if (momentum) {
+        arm(COAST_GAP_MS, toIdle)
+        return // swallow the tail — the settle is already committed
       }
-      active = true
-      pswp.animations.stopMainScroll()
-      lastTime = now
+      toIdle() // fresh fingers broke through — fall into idle handling
     }
 
-    // The strip follows the fingers 1:1 (deltaX > 0 = swipe left = forward),
-    // clamped to one slide of displacement so a momentum flick can't
-    // overshoot past the settle logic's ±1 range.
+    if (state === 'idle') {
+      if (momentum || !horizontal) {
+        return // stray tails and vertical scroll own nothing
+      }
+      state = 'tracking'
+      velocityX = 0
+      peakVelocityX = 0
+      pswp.animations.stopMainScroll()
+    }
+
+    // state === 'tracking'
+    if (momentum) {
+      // Fingers are off the glass — this is the release moment. The
+      // fallback classifier consumed the first decaying events into the
+      // strip, so it settles with the velocity captured at the peak.
+      const native = typeof (wheel as WheelEvent & { momentum?: boolean }).momentum === 'boolean'
+      settle(native ? velocityX : peakVelocityX)
+      return
+    }
+
+    // Fingers on glass: the strip follows 1:1, clamped to one slide of
+    // displacement around the CURRENT index...
     const { mainScroll } = pswp
     const currX = mainScroll.getCurrSlideX()
     const nextX = Math.max(
       currX - mainScroll.slideWidth,
       Math.min(currX + mainScroll.slideWidth, mainScroll.x - wheel.deltaX)
     )
-    const dt = Math.max(1, now - lastTime)
-    lastTime = now
-    // Light smoothing — per-event instantaneous velocity is noisy.
     velocityX = velocityX * 0.7 + ((nextX - mainScroll.x) / dt) * 0.3
     mainScroll.moveTo(nextX, true)
 
-    // Commit mid-gesture once the strip fully reaches a neighbor: the index
-    // rebases immediately (zero-distance spring), so consecutive swipes in
-    // one continuous gesture chain through slides instead of piling into
-    // the one-slide clamp.
+    // ...and the index commits mid-gesture the moment the strip fully
+    // reaches a neighbor, rebasing the clamp so swipes chain fluidly.
     const shift = mainScroll.x - mainScroll.getCurrSlideX()
     if (Math.abs(shift) >= mainScroll.slideWidth - 1) {
       mainScroll.moveIndexBy(shift < 0 ? 1 : -1, true, velocityX)
     }
 
-    if (settleTimer) {
-      clearTimeout(settleTimer)
-    }
-    settleTimer = setTimeout(settle, GESTURE_GAP_MS)
+    // Holding still is NOT a release — no gap timer here. The safety net
+    // only catches a no-momentum lift followed by fully idle hands.
+    arm(SAFETY_SETTLE_MS, () => {
+      settle(velocityX)
+    })
   })
 
+  pswp.on('bindEvents', () => {
+    pswp.element?.addEventListener('mousemove', onMouseMove, { passive: true })
+  })
   pswp.on('destroy', () => {
-    if (settleTimer) {
-      clearTimeout(settleTimer)
-    }
+    clearTimer()
   })
 }
