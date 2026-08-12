@@ -1,47 +1,33 @@
 /**
- * Readiness-queued postMessage control for embed players — the layer the
- * old stack never had: commands sent before the player's message listener
- * is up are silently dropped (exactly the just-opened slide's case), so
- * everything queues until the provider confirms readiness.
- *
- * YouTube (IFrame API postMessage protocol): post the `listening`
- * handshake on iframe load; `onReady`/`initialDelivery`/`infoDelivery`
- * marks ready. Vimeo (player.js wire protocol): ping until the `ready`
- * event. Incoming messages are matched to this bridge's iframe by
- * `event.source`.
+ * Readiness-queued postMessage control for embed players — the layer the old
+ * stack never had. This is the transport: the iframe handshake, matching
+ * incoming messages to THIS bridge by `event.source`, and the reload reset.
+ * The wire formats live in playerProtocols, the buffering in createReadyQueue.
  */
 import type { IPlayerBridge } from '../interfaces'
+import { createReadyQueue } from './createReadyQueue'
+import { vimeoProtocol, youtubeProtocol } from './playerProtocols'
+
+/** Handshake cadence for providers with no load-time ready signal. */
+const PING_MS = 250
+
 export function createPlayerBridge(
   iframe: HTMLIFrameElement,
   provider: 'youtube' | 'vimeo'
 ): IPlayerBridge {
-  let ready = false
-  let queue: string[] = []
+  const protocol = provider === 'youtube' ? youtubeProtocol : vimeoProtocol
   let pingTimer: ReturnType<typeof setInterval> | null = null
 
   const post = (message: string): void => {
     iframe.contentWindow?.postMessage(message, '*')
   }
-  const send = (message: string): void => {
-    if (ready) {
-      post(message)
-    } else {
-      queue.push(message)
-    }
-  }
-  const markReady = (): void => {
-    if (ready) {
-      return
-    }
-    ready = true
+  const queue = createReadyQueue(post)
+
+  const stopPinging = (): void => {
     if (pingTimer) {
       clearInterval(pingTimer)
       pingTimer = null
     }
-    for (const message of queue) {
-      post(message)
-    }
-    queue = []
   }
 
   const onMessage = (e: MessageEvent): void => {
@@ -56,65 +42,45 @@ export function createPlayerBridge(
         return
       }
     }
-    const event = (data as { event?: string } | null)?.event
-    if (provider === 'youtube') {
-      if (event === 'onReady' || event === 'initialDelivery' || event === 'infoDelivery') {
-        markReady()
-      }
-    } else if (event === 'ready') {
-      markReady()
+    if (protocol.isReadyEvent((data as { event?: string } | null)?.event)) {
+      stopPinging()
+      queue.markReady()
     }
   }
   window.addEventListener('message', onMessage)
 
   const handshake = (): void => {
-    if (provider === 'youtube') {
-      post(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }))
-    } else {
-      const ping = (): void => {
-        post(JSON.stringify({ method: 'ping' }))
-      }
-      ping()
-      if (!pingTimer) {
-        pingTimer = setInterval(ping, 250)
-      }
+    post(protocol.handshake)
+    if (protocol.pingUntilReady && !pingTimer) {
+      pingTimer = setInterval(() => {
+        post(protocol.handshake)
+      }, PING_MS)
     }
   }
   // Every load is a FRESH player document (re-appended iframes reload) —
   // readiness starts over each time.
   const onLoad = (): void => {
-    ready = false
+    queue.reset()
     handshake()
   }
   iframe.addEventListener('load', onLoad)
   handshake() // in case the frame is already up
 
-  const yt = (func: string): string => JSON.stringify({ event: 'command', func, args: '' })
-  const vimeo = (method: string, value?: unknown): string =>
-    JSON.stringify(value === undefined ? { method } : { method, value })
-
   return {
     play: () => {
-      send(provider === 'youtube' ? yt('playVideo') : vimeo('play'))
+      queue.send(protocol.play())
     },
     pause: () => {
-      send(provider === 'youtube' ? yt('pauseVideo') : vimeo('pause'))
+      queue.send(protocol.pause())
     },
-    setMuted: (muted: boolean) => {
-      if (provider === 'youtube') {
-        send(yt(muted ? 'mute' : 'unMute'))
-      } else {
-        send(vimeo('setMuted', muted))
-      }
+    setMuted: (muted) => {
+      queue.send(protocol.setMuted(muted))
     },
     destroy: () => {
       window.removeEventListener('message', onMessage)
       iframe.removeEventListener('load', onLoad)
-      if (pingTimer) {
-        clearInterval(pingTimer)
-        pingTimer = null
-      }
-      queue = []
+      stopPinging()
+      queue.clear()
     }
   }
 }

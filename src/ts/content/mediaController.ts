@@ -1,12 +1,13 @@
 import type { IMediaController, IMediaState } from '../interfaces'
 import type PhotoSwipe from '../photoswipe/photoswipe'
-import { audioFocus } from '../video/audioFocus'
+import { bridgeSound } from './bridgeSound'
 import { slideData } from './slideData'
+import { videoElementSound } from './videoElementSound'
 
 /**
  * The UI-facing media surface: pause-everything for teardown paths, and the
- * ACTIVE slide's sound toggle across all tiers (adopted element, cold/cloned
- * element, or bridged embed). Unmuting claims the audio focus.
+ * ACTIVE slide's sound toggle resolved to its tier — adopted element,
+ * cold/cloned element, or bridged embed.
  */
 export function createMediaController(pswp: PhotoSwipe, state: IMediaState): IMediaController {
   const pauseAll = (): void => {
@@ -33,38 +34,10 @@ export function createMediaController(pswp: PhotoSwipe, state: IMediaState): IMe
     }
     const el = data.adopted?.element ?? slide.content?.element
     if (el instanceof HTMLVideoElement) {
-      return {
-        muted: el.muted,
-        setMuted: (muted) => {
-          el.muted = muted
-          if (!muted) {
-            audioFocus.claim(el, () => {
-              el.muted = true
-            })
-            void el.play().catch(() => {})
-          }
-        }
-      }
+      return videoElementSound(el)
     }
     if (el instanceof HTMLIFrameElement) {
-      const bridge = state.bridges.get(el)
-      if (!bridge) {
-        return null
-      }
-      return {
-        muted: state.bridgeMuted.get(el) ?? true,
-        setMuted: (muted) => {
-          bridge.setMuted(muted)
-          state.bridgeMuted.set(el, muted)
-          if (!muted) {
-            bridge.play()
-            audioFocus.claim(el, () => {
-              bridge.setMuted(true)
-              state.bridgeMuted.set(el, true)
-            })
-          }
-        }
-      }
+      return bridgeSound(el, state)
     }
     return null
   }
