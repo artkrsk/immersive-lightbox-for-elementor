@@ -17,6 +17,7 @@ export default defineConfig({
       { text: 'Transitions', link: '/transitions' },
       { text: 'Galleries', link: '/gallery' },
       { text: 'Content', link: '/content' },
+      { text: 'Video', link: '/videos' },
       { text: 'Developers', link: '/developers' }
     ],
     sidebar: [
@@ -26,7 +27,8 @@ export default defineConfig({
           { text: 'Basic grid', link: '/' },
           { text: 'Transitions', link: '/transitions' },
           { text: 'Galleries', link: '/gallery' },
-          { text: 'Content types', link: '/content' }
+          { text: 'Content types', link: '/content' },
+          { text: 'Video', link: '/videos' }
         ]
       },
       { text: 'Developers', link: '/developers' }

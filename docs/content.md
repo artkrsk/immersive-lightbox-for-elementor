@@ -4,9 +4,9 @@
 
 Images, self-hosted video, YouTube/Vimeo embeds, and arbitrary HTML — all
 first-class slide types in one gallery. Video plays on activation and pauses
-the moment you swipe away. Video/html slides are fit-only (no zoom/explore)
-and open with the backdrop only (no flight — there is no source image to
-promote).
+the moment you swipe away; the full video story (background-video adoption,
+sound policy, URL forms) lives on the [Video](/videos) page. Video/html
+slides are fit-only — zoom and explore stay image features.
 
 <script setup>
 import mixedContent from './demos/mixed-content.html?raw'

@@ -1,0 +1,128 @@
+<style>
+  /* Velum's background-video contract: same parallax wiring as the
+     true-parallax fixture, with a <video> as the inner medium. */
+  @keyframes arts-parallax-drift-video {
+    from {
+      translate: 0 calc(var(--arts-parallax-dy, 0) * -100%);
+    }
+    to {
+      translate: 0 calc(var(--arts-parallax-dy, 0) * 100%);
+    }
+  }
+
+  .demo-video-bg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .demo-video-bg [data-arts-lightbox] {
+    cursor: pointer;
+  }
+
+  .demo-video-parallax {
+    position: relative;
+    display: block;
+    view-timeline: --demo-video-parallax block;
+  }
+
+  .demo-video-parallax__frame {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    aspect-ratio: 16 / 9;
+  }
+
+  .demo-video-parallax__inner {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    scale: calc(1 + 2 * var(--arts-parallax-dy, 0));
+    translate: 0 0;
+    animation: arts-parallax-drift-video auto linear both;
+    animation-timeline: --demo-video-parallax;
+    animation-range: cover;
+  }
+
+  /* The WebGL-widget simulation: the page shows a stand-in face while the
+     playing <video> stays display:none (a texture source, like Velum's
+     distortion slider) — the lightbox clones it and seeks to the live
+     playhead instead of adopting. */
+  .demo-video-texture {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 16 / 9;
+    border-radius: 16px;
+    border: 1px solid var(--vp-c-divider);
+    background: radial-gradient(circle at 30% 20%, var(--vp-c-bg-soft), var(--vp-c-bg-alt));
+    font-size: 13px;
+    text-align: center;
+    color: var(--vp-c-text-2);
+  }
+
+  .demo-video-spacer {
+    display: grid;
+    place-items: center;
+    height: 24vh;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.4;
+  }
+</style>
+
+<div class="demo-video-spacer">scroll — the background video drifts, then click it</div>
+
+<div class="demo-video-bg">
+  <!-- Adoption: visible autoplaying background video. Opening reparents
+       THIS element into the lightbox — playback never restarts. -->
+  <div
+    class="demo-video-parallax"
+    data-arts-lightbox
+    data-arts-lightbox-type="video"
+    data-arts-lightbox-id="maison-sable-adopted"
+    data-arts-lightbox-caption="Maison Sable — adopted live, playhead continuous"
+  >
+    <span class="demo-video-parallax__frame">
+      <video
+        class="demo-video-parallax__inner"
+        src="https://velum.dev.artemsemkin.com/wp-content/uploads/2026/07/maison-sable-featured-video.mp4"
+        width="1920"
+        height="1080"
+        style="--arts-parallax-dy: 0.1"
+        autoplay
+        muted
+        loop
+        playsinline
+      ></video>
+    </span>
+  </div>
+
+  <!-- Clone-and-seek: the video plays hidden (WebGL texture source).
+       The lightbox builds a fresh player and syncs its playhead. -->
+  <div
+    data-arts-lightbox
+    data-arts-lightbox-type="video"
+    data-arts-lightbox-id="maison-sable-hidden"
+    data-arts-lightbox-caption="Maison Sable — cloned from a hidden texture video"
+  >
+    <span class="demo-video-texture">Hidden playing video<br />(clone-and-seek)</span>
+    <!-- Chrome skips the autoplay attribute on display:none media; real
+         WebGL widgets drive their texture videos from JS — mimicked here. -->
+    <video
+      src="https://velum.dev.artemsemkin.com/wp-content/uploads/2026/07/maison-sable-featured-video.mp4"
+      width="1920"
+      height="1080"
+      style="display: none"
+      onloadeddata="this.play()"
+      muted
+      loop
+      playsinline
+    ></video>
+  </div>
+</div>
+
+<div class="demo-video-spacer">click at different scroll positions — parallax pins, then restores</div>
