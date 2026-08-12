@@ -153,19 +153,34 @@ export function attachOpenTransition(
     if (instant) {
       return
     }
-    const target = currentSlideTarget(pswp)
-    const flies = Boolean(target && openSource.src)
-    if (flies && target) {
-      flight.mount(interpolateFlight(openSource, target, 0), openSource.src)
+    const initialTarget = currentSlideTarget(pswp)
+    const flies = Boolean(initialTarget && openSource.src)
+    if (flies && initialTarget) {
+      flight.mount(interpolateFlight(openSource, initialTarget, 0), openSource.src)
       hide(req.sourceElement)
+    }
+    // The landing rect is LIVE: explore mode already pans the (hidden) slide
+    // toward the mouse during the transition, so the flight re-reads the
+    // slide's actual pan every frame and lands wherever the pointer steered
+    // it — no snap at hand-off. Radius is cached; slide rect math is pure.
+    const radius = initialTarget?.radius ?? 0
+    const liveTarget = (): IFlightTarget | null => {
+      const slide = pswp.currSlide
+      if (!slide?.width || !slide.height) {
+        return initialTarget
+      }
+      return { rect: computeSlideRect(slide), radius }
     }
     createClock(
       duration,
       ease,
       (eased) => {
         backdrop?.paint(eased, false)
-        if (flies && target) {
-          flight.paint(interpolateFlight(openSource, target, eased))
+        if (flies) {
+          const target = liveTarget() ?? initialTarget
+          if (target) {
+            flight.paint(interpolateFlight(openSource, target, eased))
+          }
         }
         if (pswp.element) {
           setChrome(pswp.element, eased)
