@@ -40,23 +40,28 @@ function readCaption(el: HTMLElement, img: HTMLImageElement | null): string | un
   return alt || undefined
 }
 
-/** Reads one candidate element into the engine's slide model. */
-export function extractSlideData(el: HTMLElement): ISlideData {
-  const href = el.getAttribute('href') ?? ''
-  const img = el.querySelector('img')
-  const containedVideo = el.querySelector('video')
-  // Non-anchor candidates (background video widgets) carry no href — their
-  // source is the contained <video> element itself.
-  const src = href || containedVideo?.currentSrc || containedVideo?.getAttribute('src') || ''
-  const type = detectSlideType(src, el.getAttribute(ATTR_TYPE))
-  const data: ISlideData = {
-    key: el.getAttribute(ATTR_ID) ?? normalizeUrlKey(src, el.ownerDocument.baseURI),
-    type,
-    src
-  }
-  // Dims: explicit attrs win; then the thumb img; then the video element's
-  // intrinsic width/height attributes (Velum's media partial prints them).
-  const media: HTMLElement | null = img ?? containedVideo
+/** The low-res stand-in painted before the full source loads. */
+function readMsrc(
+  img: HTMLImageElement | null,
+  video: HTMLVideoElement | null
+): string | undefined {
+  return (
+    img?.currentSrc ||
+    img?.getAttribute('src') ||
+    video?.poster ||
+    video?.getAttribute('poster') ||
+    undefined
+  )
+}
+
+/**
+ * Dims: explicit attrs win; then the thumb img; then the video element's
+ * intrinsic width/height attributes (Velum's media partial prints them).
+ * Thumb attributes carry the right aspect but the WRONG scale for the
+ * full-size file — PhotoSwipe would cap zoom at "natural" thumb size, so
+ * guessed dims are flagged for the content layer's natural upgrade.
+ */
+function readDims(data: ISlideData, el: HTMLElement, media: HTMLElement | null): void {
   const explicitW = Number.parseInt(el.getAttribute(ATTR_WIDTH) ?? '', 10)
   const width = readDimension(el, ATTR_WIDTH, media, 'width')
   const height = readDimension(el, ATTR_HEIGHT, media, 'height')
@@ -66,18 +71,61 @@ export function extractSlideData(el: HTMLElement): ISlideData {
   if (height !== undefined) {
     data.height = height
   }
-  // Thumb attributes carry the right aspect but the WRONG scale for the
-  // full-size file — PhotoSwipe would cap zoom at "natural" thumb size.
-  // Flag it so the content layer upgrades to real naturals once loaded.
-  if (type === 'image' && width !== undefined && !(Number.isFinite(explicitW) && explicitW > 0)) {
+  if (
+    data.type === 'image' &&
+    width !== undefined &&
+    !(Number.isFinite(explicitW) && explicitW > 0)
+  ) {
     data.dimsGuessed = true
   }
-  const msrc =
-    img?.currentSrc ||
-    img?.getAttribute('src') ||
-    containedVideo?.poster ||
-    containedVideo?.getAttribute('poster') ||
-    undefined
+}
+
+function readVideoData(
+  data: ISlideData,
+  el: HTMLElement,
+  href: string,
+  containedVideo: HTMLVideoElement | null
+): void {
+  data.videoSrc = data.src
+  data.videoEmbed = detectVideoEmbed(data.src)
+  const parsed = parseVideoUrl(data.src)
+  if (parsed?.hash) {
+    data.videoHash = parsed.hash
+  }
+  if (parsed?.start !== undefined) {
+    data.videoStart = parsed.start
+  }
+  if (!href && containedVideo) {
+    data.sourceVideo = true
+  }
+  if (el.getAttribute(ATTR_AUTOPLAY) === 'false') {
+    data.autoplay = false
+  }
+}
+
+function readHtmlData(data: ISlideData, el: HTMLElement): void {
+  const selector = el.getAttribute(ATTR_HTML)
+  const source = selector ? el.ownerDocument.querySelector(selector) : null
+  if (source) {
+    data.html = source.innerHTML
+  }
+}
+
+/** Reads one candidate element into the engine's slide model. */
+export function extractSlideData(el: HTMLElement): ISlideData {
+  const href = el.getAttribute('href') ?? ''
+  const img = el.querySelector('img')
+  const containedVideo = el.querySelector('video')
+  // Non-anchor candidates (background video widgets) carry no href — their
+  // source is the contained <video> element itself.
+  const src = href || containedVideo?.currentSrc || containedVideo?.getAttribute('src') || ''
+  const data: ISlideData = {
+    key: el.getAttribute(ATTR_ID) ?? normalizeUrlKey(src, el.ownerDocument.baseURI),
+    type: detectSlideType(src, el.getAttribute(ATTR_TYPE)),
+    src
+  }
+  readDims(data, el, img ?? containedVideo)
+  const msrc = readMsrc(img, containedVideo)
   if (msrc) {
     data.msrc = msrc
   }
@@ -85,29 +133,11 @@ export function extractSlideData(el: HTMLElement): ISlideData {
   if (caption) {
     data.caption = caption
   }
-  if (type === 'video') {
-    data.videoSrc = src
-    data.videoEmbed = detectVideoEmbed(src)
-    const parsed = parseVideoUrl(src)
-    if (parsed?.hash) {
-      data.videoHash = parsed.hash
-    }
-    if (parsed?.start !== undefined) {
-      data.videoStart = parsed.start
-    }
-    if (!href && containedVideo) {
-      data.sourceVideo = true
-    }
-    if (el.getAttribute(ATTR_AUTOPLAY) === 'false') {
-      data.autoplay = false
-    }
+  if (data.type === 'video') {
+    readVideoData(data, el, href, containedVideo)
   }
-  if (type === 'html') {
-    const selector = el.getAttribute(ATTR_HTML)
-    const source = selector ? el.ownerDocument.querySelector(selector) : null
-    if (source) {
-      data.html = source.innerHTML
-    }
+  if (data.type === 'html') {
+    readHtmlData(data, el)
   }
   return data
 }

@@ -1,16 +1,12 @@
 import type { IOptions } from '../interfaces'
 import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import { createMomentumClassifier } from './createMomentumClassifier'
+import { settleStrip } from './settleStrip'
 
-/** Same velocity threshold the touch drag settle uses (px/ms). */
-const MIN_NEXT_SLIDE_SPEED = 0.5
 /** Coasting ends when the momentum tail goes quiet for this long. */
 const COAST_GAP_MS = 200
 /** Tracking safety net: a no-momentum lift with idle hands settles here. */
 const SAFETY_SETTLE_MS = 1200
-/** Fallback classifier: this many consecutive decaying deltas = momentum. */
-const DECAY_RUN = 3
-/** Fallback classifier: momentum events are frame-locked, gaps stay short. */
-const DECAY_MAX_GAP_MS = 40
 
 /**
  * Photos.app-grade trackpad swipes, reconstructed from wheel events.
@@ -22,9 +18,8 @@ const DECAY_MAX_GAP_MS = 40
  * - `tracking`: fingers on glass, the strip follows 1:1 (with mid-gesture
  *   index commits so successive swipes chain). Silence means HOLDING, not
  *   release — nothing settles while you rest your fingers.
- * - Release evidence, in order of quality: a `WheelEvent.momentum` event
- *   (Chrome 151+, ground truth: inertia only exists after a lift), the
- *   decay-signature fallback elsewhere, a `mousemove` (impossible while
+ * - Release evidence, in order of quality: the momentum classifier's
+ *   native bit or decay signature, a `mousemove` (impossible while
  *   fingers are scrolling — a quiet lift reveals itself the moment the
  *   cursor moves), or a long safety timeout.
  * - `coasting`: the settle is committed; the momentum tail is swallowed.
@@ -45,11 +40,8 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
   let state: TState = 'idle'
   let lastTime = 0
   let velocityX = 0
-  let peakVelocityX = 0
-  let decays = 0
-  let prevAbsDelta = 0
-  let prevSign = 0
   let timer: ReturnType<typeof setTimeout> | null = null
+  const classifier = createMomentumClassifier()
 
   const clearTimer = (): void => {
     if (timer) {
@@ -66,31 +58,15 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
     clearTimer()
     state = 'idle'
     velocityX = 0
-    peakVelocityX = 0
-    decays = 0
-    prevAbsDelta = 0
-    prevSign = 0
+    classifier.reset()
   }
 
-  /** PhotoSwipe's touch-drag settle recipe, with the given release velocity. */
   const settle = (releaseVelocity: number): void => {
-    const { mainScroll, viewportSize } = pswp
     clearTimer()
-    if (!mainScroll.isShifted()) {
+    if (!settleStrip(pswp, releaseVelocity)) {
       state = 'idle'
       return
     }
-    const ratio = (mainScroll.x - mainScroll.getCurrSlideX()) / viewportSize.x
-    let indexDiff = 0
-    let v = releaseVelocity
-    if ((v < -MIN_NEXT_SLIDE_SPEED && ratio < 0) || (v < 0.1 && ratio < -0.5)) {
-      indexDiff = 1
-      v = Math.min(v, 0)
-    } else if ((v > MIN_NEXT_SLIDE_SPEED && ratio > 0) || (v > -0.1 && ratio > 0.5)) {
-      indexDiff = -1
-      v = Math.max(v, 0)
-    }
-    mainScroll.moveIndexBy(indexDiff, true, v)
     state = 'coasting'
     arm(COAST_GAP_MS, toIdle)
   }
@@ -107,27 +83,6 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
     }
   }
 
-  /** Momentum classification: ground truth when the UA provides it. */
-  const isMomentum = (wheel: WheelEvent, dt: number): boolean => {
-    const native = (wheel as WheelEvent & { momentum?: boolean }).momentum
-    if (typeof native === 'boolean') {
-      return native
-    }
-    // Fallback signature: same-sign, non-increasing deltas at frame-locked
-    // gaps. Requires a run — a user slowing down looks similar briefly.
-    const absDelta = Math.abs(wheel.deltaX)
-    const sign = Math.sign(wheel.deltaX)
-    if (sign !== 0 && sign === prevSign && absDelta <= prevAbsDelta && dt <= DECAY_MAX_GAP_MS) {
-      decays++
-    } else {
-      decays = 0
-      peakVelocityX = velocityX
-    }
-    prevAbsDelta = absDelta
-    prevSign = sign
-    return decays >= DECAY_RUN
-  }
-
   pswp.on('wheel', (e) => {
     const wheel = e.originalEvent
     if (wheel.ctrlKey) {
@@ -138,7 +93,7 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
     const now = performance.now()
     const dt = Math.max(1, now - lastTime)
     lastTime = now
-    const momentum = isMomentum(wheel, dt)
+    const momentum = classifier.classify(wheel, dt, velocityX)
     const horizontal = Math.abs(wheel.deltaX) > Math.abs(wheel.deltaY)
 
     if (state === 'coasting') {
@@ -153,9 +108,11 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
       if (momentum || !horizontal) {
         return // stray tails and vertical scroll own nothing
       }
+      // The classifier's decay window deliberately carries over — idle
+      // events already fed it, so an early lift still classifies. Its peak
+      // is zero here by construction (velocity only accrues in tracking).
       state = 'tracking'
       velocityX = 0
-      peakVelocityX = 0
       pswp.animations.stopMainScroll()
     }
 
@@ -164,8 +121,7 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
       // Fingers are off the glass — this is the release moment. The
       // fallback classifier consumed the first decaying events into the
       // strip, so it settles with the velocity captured at the peak.
-      const native = typeof (wheel as WheelEvent & { momentum?: boolean }).momentum === 'boolean'
-      settle(native ? velocityX : peakVelocityX)
+      settle(momentum === 'native' ? velocityX : classifier.peakVelocity())
       return
     }
 
