@@ -4,6 +4,7 @@ import { CANDIDATE_SELECTOR } from '../constants'
 import { registerContent } from '../content/registerContent'
 import { attachExploreMode } from '../interaction/exploreMode'
 import { attachZoomCursor } from '../interaction/zoomCursor'
+import { attachZoomMode } from '../interaction/zoomMode'
 import type { IGallery, ILightbox, ILightboxApi, IOpenRequest, IOptions } from '../interfaces'
 import { attachOpenTransition } from '../transition/transitionEngine'
 import type { TDeepPartial } from '../types'
@@ -29,6 +30,7 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
       engineState.closeHandle = attachOpenTransition(pswp, opts, req, instant)
       attachExploreMode(pswp, opts)
       attachZoomCursor(pswp)
+      attachZoomMode(pswp, opts)
       registerContent(pswp)
       registerUi(pswp, req.gallery, opts, api)
       // Clicking the backdrop closes through OUR choreography, not

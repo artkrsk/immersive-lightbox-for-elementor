@@ -8,7 +8,7 @@ export const DEFAULT_OPTIONS: IOptions = {
     close: 'reverse',
     duration: 800,
     easing: 'power2.inOut',
-    bow: 0.12
+    bow: 0.05
   },
   // On by default: it's an enhancement, only active while zoomed beyond fit
   // on pointer-fine devices, and drag-pan keeps working alongside it.
