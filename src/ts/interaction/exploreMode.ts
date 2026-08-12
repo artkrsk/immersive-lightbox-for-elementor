@@ -70,6 +70,28 @@ export function attachExploreMode(
   let pointerDown = false
   let zoomClock: { cancel(): void } | null = null
 
+  /** Instantly aim a slide's pan at the pointer (no glide — for slides
+   *  nobody is watching yet). No-op below fit, where pan is degenerate. */
+  const aimSlide = (slide: NonNullable<PhotoSwipe['currSlide']>): void => {
+    if (slide.currZoomLevel <= slide.zoomLevels.fit + FIT_EPSILON) {
+      return
+    }
+    const aimed = mapPointerToPan(pointer01, slide.bounds)
+    slide.pan.x = aimed.x
+    slide.pan.y = aimed.y
+    slide.applyCurrentZoomPan()
+  }
+
+  /** Neighbors stay pre-aimed at the pointer, so a swipe lands on a slide
+   *  that already agrees with the mouse — no first-mousemove snap. */
+  const aimNeighbors = (): void => {
+    for (const holder of pswp.mainScroll.itemHolders) {
+      if (holder.slide && holder.slide !== pswp.currSlide) {
+        aimSlide(holder.slide)
+      }
+    }
+  }
+
   const step = (): void => {
     rafId = 0
     const slide = pswp.currSlide
@@ -106,6 +128,7 @@ export function attachExploreMode(
     if (!rafId) {
       rafId = requestAnimationFrame(step)
     }
+    aimNeighbors()
   }
 
   const toggleZoomAimed = (): void => {
@@ -164,7 +187,17 @@ export function attachExploreMode(
     pswp.element?.addEventListener('pointerdown', onDown)
     window.addEventListener('pointerup', onUp)
   })
-  pswp.on('change', cancelZoomClock)
+  // Arriving slides agree with the pointer immediately (registered after
+  // zoomMode's change sync so the aim wins over its centering), and freshly
+  // appended neighbors get aimed too.
+  pswp.on('change', () => {
+    cancelZoomClock()
+    const slide = pswp.currSlide
+    if (slide) {
+      aimSlide(slide)
+    }
+    aimNeighbors()
+  })
   pswp.on('destroy', () => {
     cancelZoomClock()
     if (rafId) {
