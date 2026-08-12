@@ -5,7 +5,20 @@ function toPswpSlide(slide: ISlideData): SlideData {
   // ISlideData is a field-compatible superset of PhotoSwipe's SlideData
   // (src/width/height/msrc/type match by name); custom fields ride along for
   // the content modules and UI.
-  return { ...slide, alt: slide.caption ?? '' }
+  const mapped: SlideData = { ...slide, alt: slide.caption ?? '' }
+  // PhotoSwipe centers content from slide dimensions — zeros break its math.
+  // Video/html slides rarely declare dims; give them a sane box (video gets
+  // aspect-fit by the content module on top).
+  if (!mapped.width || !mapped.height) {
+    if (slide.type === 'video') {
+      mapped.width = 1280
+      mapped.height = 720
+    } else if (slide.type === 'html') {
+      mapped.width = 900
+      mapped.height = 600
+    }
+  }
+  return mapped
 }
 
 /**

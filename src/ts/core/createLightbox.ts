@@ -64,11 +64,9 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
         return
       }
     }
-    if (dir === 1) {
-      pswp.next()
-    } else {
-      pswp.prev()
-    }
+    // pswp.next()/goTo() hard-cut (upstream #2175) — the animated path is the
+    // main scroll's own spring, the same one drag gestures use.
+    pswp.mainScroll.moveIndexBy(dir, true)
   }
 
   const api: ILightboxApi = {
@@ -80,7 +78,10 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
       nav(-1)
     },
     goTo: (index) => {
-      engineState.pswp?.goTo(index)
+      const pswp = engineState.pswp
+      if (pswp) {
+        pswp.mainScroll.moveIndexBy(index - pswp.currIndex, true)
+      }
     }
   }
 
@@ -105,8 +106,11 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
         return
       }
       clickHandler = (e: MouseEvent) => {
-        // Modifier clicks keep their native meaning (new tab etc.).
-        if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+        // Modifier clicks keep their native meaning (new tab etc.). We do NOT
+        // back off on defaultPrevented: data-arts-lightbox is explicit opt-in
+        // markup, and router layers (VitePress, SPA themes) preventDefault
+        // href="#" links in window-capture before we ever see the event.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
           return
         }
         const el = (e.target as Element | null)?.closest<HTMLElement>(CANDIDATE_SELECTOR)

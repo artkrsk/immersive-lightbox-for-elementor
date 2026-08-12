@@ -1,11 +1,11 @@
 import { mapPointerToPan } from '@ts/interaction/mapPointerToPan'
 import { describe, expect, it } from 'vitest'
 
-// PhotoSwipe pan-bounds naming: max = left/top-most translate value (image
-// shifted to reveal its left/top edge), min = right/bottom-most.
+// PhotoSwipe pan-bounds as observed live: min = larger translate (0, reveals
+// the image's top/left), max = smaller/negative (reveals bottom/right).
 const bounds = {
-  max: { x: 0, y: 0 },
-  min: { x: -400, y: -300 }
+  max: { x: -400, y: -300 },
+  min: { x: 0, y: 0 }
 }
 
 describe('mapPointerToPan', () => {
@@ -22,5 +22,12 @@ describe('mapPointerToPan', () => {
 
   it('clamps pointer input outside 0..1', () => {
     expect(mapPointerToPan({ x: -0.5, y: 1.5 }, bounds)).toEqual({ x: 0, y: -300 })
+  })
+
+  it('matches the live-engine orientation: pointer at top reveals the image top', () => {
+    // Captured from the playground: tall image at zoom 1, viewport 1058 high.
+    const live = { max: { x: 578, y: -1342 }, min: { x: 578, y: 0 } }
+    expect(mapPointerToPan({ x: 0.5, y: 0 }, live)).toEqual({ x: 578, y: 0 })
+    expect(mapPointerToPan({ x: 0.5, y: 1 }, live)).toEqual({ x: 578, y: -1342 })
   })
 })

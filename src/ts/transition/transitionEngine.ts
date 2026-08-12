@@ -15,7 +15,10 @@ import { createFlightLayer } from './flightLayer'
 import { interpolateFlight } from './interpolateFlight'
 
 const TRANSITIONING_CLASS = 'arts-lightbox-transitioning'
-const SLIDE_RADIUS = 6
+// The real slide has square corners — the flight must land exactly on it,
+// otherwise every hand-off pops. (An earlier 6px "looked nice" but made the
+// radius travel nearly invisible for subtly-rounded thumbs.)
+const SLIDE_RADIUS = 0
 const clamp01 = (v: number): number => Math.min(1, Math.max(0, v))
 
 function setChrome(root: HTMLElement, t: number): void {
@@ -31,17 +34,29 @@ function currentSlideTarget(pswp: PhotoSwipe): IFlightTarget | null {
   return { rect: computeSlideRect(slide), radius: SLIDE_RADIUS }
 }
 
-/** Nearest on-screen DOM instance of the current slide's key, for the return flight. */
+function isOnScreen(el: HTMLElement): boolean {
+  const rect = el.getBoundingClientRect()
+  return rect.bottom > 0 && rect.top < window.innerHeight && rect.width > 0
+}
+
+/**
+ * The element the return flight lands on. The element the user actually
+ * opened from wins while it still shows the current slide (several clones
+ * can be on screen at once — landing on a sibling clone while the original
+ * sits hidden reads as closing "to the wrong image"). Fallback: the first
+ * on-screen instance of the current slide's key.
+ */
 function findCloseSource(pswp: PhotoSwipe, req: IOpenRequest): HTMLElement | null {
   const key = req.gallery.slides[pswp.currIndex]?.key
-  const instances = key ? (req.gallery.elementsByKey.get(key) ?? []) : []
-  for (const el of instances) {
-    const rect = el.getBoundingClientRect()
-    if (rect.bottom > 0 && rect.top < window.innerHeight && rect.width > 0) {
-      return el
-    }
+  if (!key) {
+    return null
   }
-  return null
+  const instances = req.gallery.elementsByKey.get(key) ?? []
+  const original = req.sourceElement
+  if (instances.includes(original) && original.isConnected && isOnScreen(original)) {
+    return original
+  }
+  return instances.find((el) => el.isConnected && isOnScreen(el)) ?? null
 }
 
 /**
@@ -91,6 +106,22 @@ export function attachOpenTransition(
     }
   })
 
+  // The clicked element hides while its flight clone flies — otherwise the
+  // "cloning" is visible (original still sitting on the page). Restored on
+  // destroy, whatever path led there.
+  const hidden = new Set<HTMLElement>()
+  const hide = (el: HTMLElement): void => {
+    el.style.visibility = 'hidden'
+    hidden.add(el)
+  }
+  const restoreHidden = (): void => {
+    for (const el of hidden) {
+      el.style.visibility = ''
+    }
+    hidden.clear()
+  }
+  pswp.on('destroy', restoreHidden)
+
   pswp.on('afterInit', () => {
     if (instant) {
       return
@@ -99,6 +130,7 @@ export function attachOpenTransition(
     const flies = Boolean(target && openSource.src)
     if (flies && target) {
       flight.mount(interpolateFlight(openSource, target, 0), openSource.src)
+      hide(req.sourceElement)
     }
     createClock(
       duration,
@@ -136,11 +168,14 @@ export function attachOpenTransition(
       const closeSource = sourceEl ? captureFlightSource(sourceEl) : null
       const flies = Boolean(target && closeSource && slideData?.type === 'image')
 
-      if (flies && target && closeSource) {
+      if (flies && target && closeSource && sourceEl) {
         // The full-size image is what's on screen — paint the flight with it
         // so the swap is invisible; fall back to the thumb source.
         const src = slideData?.src || closeSource.src
         flight.mount(interpolateFlight(closeSource, target, 1), src)
+        // The landing spot hides until the flight settles on it (it may be a
+        // different clone than the one the open launched from).
+        hide(sourceEl)
       }
       pswp.element?.classList.add(TRANSITIONING_CLASS)
       backdrop?.beginClose()
@@ -161,7 +196,7 @@ export function attachOpenTransition(
         () => {
           backdrop?.destroy()
           backdrop = null
-          pswp.destroy()
+          pswp.destroy() // restores hidden sources via the destroy listener
           requestAnimationFrame(() => {
             flight.unmount()
             resolve()

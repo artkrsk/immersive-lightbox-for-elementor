@@ -13,6 +13,8 @@ export interface ISlideData {
   src: string
   width?: number
   height?: number
+  /** Dims came from the thumb's attributes — upgrade from naturals on load. */
+  dimsGuessed?: boolean
   /** Thumbnail currentSrc, used as the PhotoSwipe placeholder. */
   msrc?: string
   caption?: string

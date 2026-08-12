@@ -115,9 +115,8 @@
     background: #000;
   }
 
+  // Sized by PhotoSwipe to the slide box; the card look + scrolling live here.
   .arts-lightbox-html {
-    max-width: min(720px, 86vw);
-    max-height: 82vh;
     padding: 32px;
     overflow: auto;
     background: var(--arts-lightbox-html-bg, #1c1c1f);

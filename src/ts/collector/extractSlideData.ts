@@ -41,6 +41,7 @@ export function extractSlideData(el: HTMLElement): ISlideData {
     type,
     src: href
   }
+  const explicitW = Number.parseInt(el.getAttribute(ATTR_WIDTH) ?? '', 10)
   const width = readDimension(el, ATTR_WIDTH, img, 'width')
   const height = readDimension(el, ATTR_HEIGHT, img, 'height')
   if (width !== undefined) {
@@ -48,6 +49,12 @@ export function extractSlideData(el: HTMLElement): ISlideData {
   }
   if (height !== undefined) {
     data.height = height
+  }
+  // Thumb attributes carry the right aspect but the WRONG scale for the
+  // full-size file — PhotoSwipe would cap zoom at "natural" thumb size.
+  // Flag it so the content layer upgrades to real naturals once loaded.
+  if (type === 'image' && width !== undefined && !(Number.isFinite(explicitW) && explicitW > 0)) {
+    data.dimsGuessed = true
   }
   const msrc = img?.currentSrc || img?.getAttribute('src') || undefined
   if (msrc) {

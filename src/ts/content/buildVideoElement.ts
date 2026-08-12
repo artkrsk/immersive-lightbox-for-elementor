@@ -14,7 +14,8 @@ export function buildVideoElement(data: ISlideData): HTMLElement {
   }
   if (data.videoEmbed === 'vimeo') {
     const id = VIMEO_PATTERN.exec(url)?.[1] ?? ''
-    return buildIframe(`https://player.vimeo.com/video/${id}`)
+    // api=1 enables the postMessage play/pause control; dnt disables tracking.
+    return buildIframe(`https://player.vimeo.com/video/${id}?api=1&dnt=1`)
   }
   const video = document.createElement('video')
   video.src = url
