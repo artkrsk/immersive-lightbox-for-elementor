@@ -6,28 +6,7 @@ import type { IOptions, ISlideData } from '@ts/interfaces'
 import type PhotoSwipe from '@ts/photoswipe/photoswipe.js'
 import { audioFocus } from '@ts/video/audioFocus'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-type THandler = (e: never) => void
-
-/** The slice of the pswp surface registerContent actually touches. */
-function fakePswp() {
-  const handlers = new Map<string, THandler[]>()
-  return {
-    on(name: string, fn: THandler) {
-      const list = handlers.get(name) ?? []
-      list.push(fn)
-      handlers.set(name, list)
-    },
-    addFilter(_name: string, _fn: unknown) {},
-    emit(name: string, e: unknown) {
-      for (const fn of handlers.get(name) ?? []) {
-        fn(e as never)
-      }
-    },
-    mainScroll: { itemHolders: [] as { slide?: unknown }[] },
-    currSlide: undefined as unknown
-  }
-}
+import { fakePswp } from '../helpers/fakePswp'
 
 function opts(video: Partial<IOptions['video']> = {}): IOptions {
   return { ...DEFAULT_OPTIONS, video: { ...DEFAULT_OPTIONS.video, ...video } }

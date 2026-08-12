@@ -1,4 +1,5 @@
-import type { IFlightFrame } from '../interfaces'
+import type { IFlightFrame, IFlightLayer } from '../interfaces'
+import { snapshotVideoFrame } from './snapshotVideoFrame'
 
 const LAYER_CLASS = 'arts-lightbox-flight'
 const MEDIA_CLASS = 'arts-lightbox-flight__media'
@@ -7,26 +8,7 @@ const MEDIA_CLASS = 'arts-lightbox-flight__media'
  *  adopted video keeps playing while it flies). */
 export type TFlightMedia = { kind: 'img'; src: string } | { kind: 'element'; el: HTMLElement }
 
-/**
- * The promoted element that travels above the curtain. A fixed-position
- * frame with overflow hidden; the inner media repaints from the
- * interpolated overscan/offset percentages each frame.
- */
-export function createFlightLayer(): {
-  mount(frame: IFlightFrame, media: TFlightMedia): void
-  paint(frame: IFlightFrame): void
-  /** Element mode: hand the live media out (to the slide / the page slot)
-   *  without destroying it. */
-  extract(): HTMLElement | null
-  /** Element mode: overlay a snapshot of the video's current frame — a
-   *  reparented <video> re-attaches its compositor texture and can present
-   *  blank for a frame; the snapshot covers that gap. */
-  freeze(): void
-  unmount(): void
-  /** Unmount after N painted frames — aborts if the layer was remounted
-   *  meanwhile (an instant close can overlap the open's deferred cleanup). */
-  unmountLater(frames: number): void
-} {
+export function createFlightLayer(): IFlightLayer {
   let el: HTMLDivElement | null = null
   let mediaEl: HTMLElement | null = null
   let owned = false // img clones are ours to destroy; live elements are not
@@ -85,37 +67,11 @@ export function createFlightLayer(): {
       return media
     },
     freeze: () => {
-      if (!el || owned || !(mediaEl instanceof HTMLVideoElement) || mediaEl.readyState < 2) {
+      if (!el || owned || !(mediaEl instanceof HTMLVideoElement)) {
         return
       }
-      const box = mediaEl.getBoundingClientRect()
-      const canvas = document.createElement('canvas')
-      canvas.width = Math.round(box.width * devicePixelRatio)
-      canvas.height = Math.round(box.height * devicePixelRatio)
-      const ctx = canvas.getContext('2d')
-      if (!ctx || !canvas.width || !canvas.height) {
-        return
-      }
-      // Replicate object-fit: cover — scale the intrinsic frame to fill the
-      // box, cropping the overflow around the center.
-      const vw = mediaEl.videoWidth
-      const vh = mediaEl.videoHeight
-      const scale = Math.max(canvas.width / vw, canvas.height / vh)
-      const sw = canvas.width / scale
-      const sh = canvas.height / scale
-      try {
-        ctx.drawImage(
-          mediaEl,
-          (vw - sw) / 2,
-          (vh - sh) / 2,
-          sw,
-          sh,
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        )
-      } catch {
+      const canvas = snapshotVideoFrame(mediaEl)
+      if (!canvas) {
         return // no snapshot, no cover — degrades to the bare reparent
       }
       canvas.className = MEDIA_CLASS

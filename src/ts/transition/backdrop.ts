@@ -1,4 +1,4 @@
-import type { IOptions } from '../interfaces'
+import type { IBackdrop, IOptions } from '../interfaces'
 import { bellBow, CurtainMask } from './curtainMask'
 
 let maskSeq = 0
@@ -8,14 +8,7 @@ let maskSeq = 0
  * preset clips the element with the vendored mask (bow bends mid-flight);
  * fade preset drives opacity. `backdropOpacity` applies to both.
  */
-export function createBackdrop(
-  pswpRoot: HTMLElement,
-  opts: IOptions
-): {
-  paint(t: number, closing: boolean): void
-  beginClose(): void
-  destroy(): void
-} {
+export function createBackdrop(pswpRoot: HTMLElement, opts: IOptions): IBackdrop {
   const { preset, edge, close, bow } = opts.transition
   const el = document.createElement('div')
   el.className = 'arts-lightbox-backdrop'

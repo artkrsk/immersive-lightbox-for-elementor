@@ -2,6 +2,50 @@ import type { IFlightSource } from '../interfaces'
 
 const CLIPS = /hidden|clip|scroll|auto/
 
+/** Nearest clipping ancestor from `walkStart` up to and including
+ *  `sourceEl` — the box the user actually SEES. */
+function findClipBox(walkStart: HTMLElement, sourceEl: HTMLElement): HTMLElement | null {
+  let el: HTMLElement | null = walkStart
+  while (el) {
+    if (CLIPS.test(getComputedStyle(el).overflow)) {
+      return el
+    }
+    if (el === sourceEl) {
+      return null
+    }
+    el = el.parentElement
+  }
+  return null
+}
+
+/** An img-mode flight needs an IMAGE source: the img's own src, or a
+ *  video's poster (a video file URL painted into an <img> shows nothing). */
+function mediaSrc(img: HTMLImageElement | HTMLVideoElement | null): string {
+  if (img instanceof HTMLVideoElement) {
+    return img.poster || img.getAttribute('poster') || ''
+  }
+  return img?.currentSrc || img?.getAttribute('src') || ''
+}
+
+/** The inner media's geometry relative to the frame — parallax measured as
+ *  rects, so any mechanism (transform, translate/scale properties, inline
+ *  styles) is captured identically. */
+function measureInner(
+  img: HTMLElement | null,
+  frameRect: DOMRect
+): { innerHeightPct: number; innerOffsetYPct: number } {
+  if (img && frameRect.height > 0) {
+    const imgRect = img.getBoundingClientRect()
+    if (imgRect.height > 0) {
+      return {
+        innerHeightPct: (imgRect.height / frameRect.height) * 100,
+        innerOffsetYPct: ((imgRect.top - frameRect.top) / frameRect.height) * 100
+      }
+    }
+  }
+  return { innerHeightPct: 100, innerOffsetYPct: 0 }
+}
+
 /**
  * Captures the clicked element's visual state for the flight.
  *
@@ -11,10 +55,6 @@ const CLIPS = /hidden|clip|scroll|auto/
  * intermediate frame (Velum's .arts-parallax__frame), not on the anchor.
  * Without a clipping ancestor, the visible rounding is the img's own (plain
  * grids) or the clicked element's.
- *
- * Parallax is measured geometrically — inner img rect vs frame rect — so
- * any mechanism (transform, translate/scale properties, inline styles) is
- * captured identically.
  */
 export function captureFlightSource(
   sourceEl: HTMLElement,
@@ -31,18 +71,7 @@ export function captureFlightSource(
   const walkStart =
     img?.parentElement ?? (innerHome && sourceEl.contains(innerHome) ? innerHome : null)
   if (walkStart) {
-    let clipBox: HTMLElement | null = null
-    let el: HTMLElement | null = walkStart
-    while (el) {
-      if (CLIPS.test(getComputedStyle(el).overflow)) {
-        clipBox = el
-        break
-      }
-      if (el === sourceEl) {
-        break
-      }
-      el = el.parentElement
-    }
+    const clipBox = findClipBox(walkStart, sourceEl)
     if (clipBox) {
       frame = clipBox
       radius = Number.parseFloat(getComputedStyle(clipBox).borderRadius) || 0
@@ -54,25 +83,10 @@ export function captureFlightSource(
   }
 
   const frameRect = frame.getBoundingClientRect()
-  // An img-mode flight needs an IMAGE source: the img's own src, or a
-  // video's poster (a video file URL painted into an <img> shows nothing).
-  const src =
-    img instanceof HTMLVideoElement
-      ? img.poster || img.getAttribute('poster') || ''
-      : img?.currentSrc || img?.getAttribute('src') || ''
-  const source: IFlightSource = {
+  return {
     rect: { x: frameRect.left, y: frameRect.top, w: frameRect.width, h: frameRect.height },
     radius,
-    innerHeightPct: 100,
-    innerOffsetYPct: 0,
-    src
+    src: mediaSrc(img),
+    ...measureInner(img, frameRect)
   }
-  if (img && frameRect.height > 0) {
-    const imgRect = img.getBoundingClientRect()
-    if (imgRect.height > 0) {
-      source.innerHeightPct = (imgRect.height / frameRect.height) * 100
-      source.innerOffsetYPct = ((imgRect.top - frameRect.top) / frameRect.height) * 100
-    }
-  }
-  return source
 }

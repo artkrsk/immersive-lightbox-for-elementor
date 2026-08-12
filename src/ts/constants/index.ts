@@ -11,5 +11,6 @@ export {
   ATTR_TYPE,
   ATTR_WIDTH
 } from './attributes'
+export { TRANSITIONING_CLASS } from './classNames'
 export { DEFAULT_OPTIONS } from './defaults'
 export { CANDIDATE_SELECTOR } from './selectors'
