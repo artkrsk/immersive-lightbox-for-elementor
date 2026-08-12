@@ -1,5 +1,7 @@
 # Content types
 
+> Reboot recipes persist for this tab across reloads — `artsLightboxPlayground.reboot()` (no arguments) resets to defaults.
+
 Images, self-hosted video, YouTube/Vimeo embeds, and arbitrary HTML — all
 first-class slide types in one gallery. Video plays on activation and pauses
 the moment you swipe away. Video/html slides are fit-only (no zoom/explore)

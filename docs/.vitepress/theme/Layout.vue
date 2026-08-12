@@ -22,15 +22,40 @@ onMounted(() => {
     resolveReady = resolve
   })
   window.artsLightbox = { ready, get: () => instance, version: 'docs' }
+  const STORAGE_KEY = 'arts-lightbox-playground-options'
   const boot = (options?: TDeepPartial<IOptions>): void => {
     instance?.destroy()
     instance = createLightbox(options)
     instance.init()
   }
-  boot()
+  let stored: TDeepPartial<IOptions> | undefined
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY)
+    stored = raw ? (JSON.parse(raw) as TDeepPartial<IOptions>) : undefined
+  } catch {
+    stored = undefined
+  }
+  boot(stored)
+  if (stored) {
+    console.info('[arts-lightbox playground] active reboot options:', stored)
+  }
   // Playground-only helper: flip options live from the console, e.g.
   //   artsLightboxPlayground.reboot({ transition: { close: 'through' } })
-  ;(window as unknown as Record<string, unknown>).artsLightboxPlayground = { reboot: boot }
+  // Options persist for this tab across reloads; reboot() resets to defaults.
+  ;(window as unknown as Record<string, unknown>).artsLightboxPlayground = {
+    reboot: (options?: TDeepPartial<IOptions>) => {
+      try {
+        if (options) {
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(options))
+        } else {
+          sessionStorage.removeItem(STORAGE_KEY)
+        }
+      } catch {
+        // storage unavailable — reboot still applies for this page view
+      }
+      boot(options)
+    }
+  }
   if (instance) {
     resolveReady(instance)
   }

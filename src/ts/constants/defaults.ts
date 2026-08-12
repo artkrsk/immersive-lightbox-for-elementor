@@ -10,8 +10,10 @@ export const DEFAULT_OPTIONS: IOptions = {
     easing: 'power2.inOut',
     bow: 0.12
   },
+  // On by default: it's an enhancement, only active while zoomed beyond fit
+  // on pointer-fine devices, and drag-pan keeps working alongside it.
   explore: {
-    enabled: false,
+    enabled: true,
     smoothing: 0.12
   },
   zoom: {
