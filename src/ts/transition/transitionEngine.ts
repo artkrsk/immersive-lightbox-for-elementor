@@ -228,12 +228,20 @@ export function attachOpenTransition(
       const target = currentSlideTarget(pswp)
       const sourceEl = findCloseSource(pswp, req)
       const slideData = req.gallery.slides[pswp.currIndex]
-      // Fresh measure: the page may have scrolled and the slide may have
-      // changed; the return flight re-applies the source's current parallax.
-      const closeSource = sourceEl ? captureFlightSource(sourceEl) : null
       // Closing on the adopted slide flies the LIVE element home; other
       // videos fly their poster; images fly the full-size image.
       const adoptedHere = slideData?.adopted ?? null
+      // Fresh measure: the page may have scrolled and the slide may have
+      // changed; the return flight re-applies the source's current parallax.
+      // The adopted video is NOT in its page slot right now — the recorded
+      // home slot stands in for the clip-box walk, and the drift geometry
+      // carries over from the open capture (the page behind the open
+      // lightbox doesn't scroll, so the drift hasn't moved).
+      const closeSource = sourceEl ? captureFlightSource(sourceEl, adoptedHere?.home) : null
+      if (adoptedHere && closeSource) {
+        closeSource.innerHeightPct = openSource.innerHeightPct
+        closeSource.innerOffsetYPct = openSource.innerOffsetYPct
+      }
       const flies = Boolean(
         target &&
           closeSource &&

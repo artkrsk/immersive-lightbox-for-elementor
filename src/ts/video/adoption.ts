@@ -43,6 +43,7 @@ export function adoptVideo(video: HTMLVideoElement): IAdoptedVideo {
 
   return {
     element: video,
+    home: parent instanceof HTMLElement ? parent : null,
     take: () => {
       // The Velum scroll-driven parallax contract leaves live values on the
       // translate/scale PROPERTIES — pinned here so the video doesn't carry

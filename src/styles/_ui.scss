@@ -116,9 +116,13 @@
   }
 
   // Video/html slide content — PhotoSwipe positions it; we only paint.
+  // Same designed corner radius as .pswp__img: the flight lands on it and
+  // launches from it, so a square media box pops at both hand-offs.
   .arts-lightbox-media {
     display: block;
+    overflow: hidden;
     background: #000;
+    border-radius: var(--arts-lightbox-slide-radius);
   }
 
   // Landing pad for an adopted page video (delivered by the flight).

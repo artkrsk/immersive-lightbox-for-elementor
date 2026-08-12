@@ -16,15 +16,23 @@ const CLIPS = /hidden|clip|scroll|auto/
  * any mechanism (transform, translate/scale properties, inline styles) is
  * captured identically.
  */
-export function captureFlightSource(sourceEl: HTMLElement): IFlightSource {
+export function captureFlightSource(
+  sourceEl: HTMLElement,
+  innerHome?: HTMLElement | null
+): IFlightSource {
   const img = sourceEl.querySelector('img, video') as HTMLImageElement | HTMLVideoElement | null
 
   let frame: HTMLElement = sourceEl
   let radius = Number.parseFloat(getComputedStyle(sourceEl).borderRadius) || 0
 
-  if (img) {
+  // Walk start: the inner media's parent — or, when the media is absent
+  // (adopted into the lightbox mid-close), its recorded home slot, which is
+  // itself a clip-box candidate.
+  const walkStart =
+    img?.parentElement ?? (innerHome && sourceEl.contains(innerHome) ? innerHome : null)
+  if (walkStart) {
     let clipBox: HTMLElement | null = null
-    let el: HTMLElement | null = img.parentElement
+    let el: HTMLElement | null = walkStart
     while (el) {
       if (CLIPS.test(getComputedStyle(el).overflow)) {
         clipBox = el
@@ -38,7 +46,7 @@ export function captureFlightSource(sourceEl: HTMLElement): IFlightSource {
     if (clipBox) {
       frame = clipBox
       radius = Number.parseFloat(getComputedStyle(clipBox).borderRadius) || 0
-    } else if (!radius) {
+    } else if (!radius && img) {
       // Nothing clips and the clicked element is square — the visible
       // rounding, if any, is the img's own.
       radius = Number.parseFloat(getComputedStyle(img).borderRadius) || 0
