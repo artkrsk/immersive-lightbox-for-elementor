@@ -15,11 +15,23 @@ import { createFlightLayer } from './flightLayer'
 import { interpolateFlight } from './interpolateFlight'
 
 const TRANSITIONING_CLASS = 'arts-lightbox-transitioning'
-// The real slide has square corners — the flight must land exactly on it,
-// otherwise every hand-off pops. (An earlier 6px "looked nice" but made the
-// radius travel nearly invisible for subtly-rounded thumbs.)
-const SLIDE_RADIUS = 0
 const clamp01 = (v: number): number => Math.min(1, Math.max(0, v))
+
+/**
+ * The slide's designed corner radius — the flight must land exactly on it
+ * or every hand-off pops. Read from the themable custom property that also
+ * paints .pswp__img.
+ */
+function readSlideRadius(pswpRoot: HTMLElement | undefined): number {
+  if (!pswpRoot) {
+    return 0
+  }
+  return (
+    Number.parseFloat(
+      getComputedStyle(pswpRoot).getPropertyValue('--arts-lightbox-slide-radius')
+    ) || 0
+  )
+}
 
 function setChrome(root: HTMLElement, t: number): void {
   root.style.setProperty('--arts-lightbox-chrome', String(clamp01((t - 0.65) / 0.35)))
@@ -31,7 +43,7 @@ function currentSlideTarget(pswp: PhotoSwipe): IFlightTarget | null {
   if (!slide?.width || !slide.height) {
     return null
   }
-  return { rect: computeSlideRect(slide), radius: SLIDE_RADIUS }
+  return { rect: computeSlideRect(slide), radius: readSlideRadius(pswp.element) }
 }
 
 function isOnScreen(el: HTMLElement): boolean {

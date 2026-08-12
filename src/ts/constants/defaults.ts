@@ -16,7 +16,8 @@ export const DEFAULT_OPTIONS: IOptions = {
   },
   zoom: {
     imageClickAction: 'zoom',
-    wheelToZoom: false
+    wheelToZoom: false,
+    initialLevel: 'fit'
   },
   slideChange: 'slide',
   gallery: {

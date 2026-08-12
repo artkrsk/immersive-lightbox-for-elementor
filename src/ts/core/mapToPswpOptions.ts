@@ -18,8 +18,24 @@ function toPswpSlide(slide: ISlideData): SlideData {
       mapped.height = 600
     }
   }
+  // Dims guessed from thumb attributes carry the right ASPECT but a tiny
+  // scale, and PhotoSwipe's fit/fill never upscale past "natural" — the
+  // slide would first render at thumb size and snap once the load-complete
+  // upgrade lands. Scaling the guess up makes the initial layout correct
+  // from the first frame (fit depends only on aspect); the upgrade then
+  // only corrects the zoom caps, invisibly.
+  if (slide.dimsGuessed && mapped.width && mapped.height) {
+    const factor = GUESSED_DIMS_TARGET / Math.max(mapped.width, mapped.height)
+    if (factor > 1) {
+      mapped.width = Math.round(mapped.width * factor)
+      mapped.height = Math.round(mapped.height * factor)
+    }
+  }
   return mapped
 }
+
+/** Long side guessed dims are normalized to — comfortably above any viewport. */
+const GUESSED_DIMS_TARGET = 3200
 
 /**
  * PhotoSwipe construction options from the engine options + a gallery.
@@ -39,6 +55,9 @@ export function mapToPswpOptions(
     bgOpacity: 0,
     imageClickAction: opts.zoom.imageClickAction === 'none' ? false : opts.zoom.imageClickAction,
     wheelToZoom: opts.zoom.wheelToZoom,
+    // 'fill' opens already zoomed (full width or height, whichever covers) —
+    // pairs with explore mode for the mousemove-pan browsing experience.
+    initialZoomLevel: opts.zoom.initialLevel,
     loop: opts.gallery.loop,
     counter: false,
     zoom: false,

@@ -22,6 +22,12 @@ mouse. The pan glides toward the pointer, no dragging:
 
 ```js
 artsLightboxPlayground.reboot({ explore: { enabled: true } })
+
+// the asmobius experience: open ALREADY zoomed to cover, mouse explores
+artsLightboxPlayground.reboot({
+  explore: { enabled: true },
+  zoom: { initialLevel: 'fill' }
+})
 ```
 
 <LightboxDemo :html="tallExplore" />

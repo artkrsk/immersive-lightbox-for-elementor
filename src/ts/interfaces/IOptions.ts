@@ -2,6 +2,7 @@ import type { TCloseDirection } from '../types/TCloseDirection'
 import type { TCurtainEdge } from '../types/TCurtainEdge'
 import type { TEasingName } from '../types/TEasingName'
 import type { TImageClickAction } from '../types/TImageClickAction'
+import type { TInitialZoomLevel } from '../types/TInitialZoomLevel'
 import type { TSlideChangeStyle } from '../types/TSlideChangeStyle'
 import type { TTransitionPreset } from '../types/TTransitionPreset'
 
@@ -30,6 +31,8 @@ export interface IOptions {
   zoom: {
     imageClickAction: TImageClickAction
     wheelToZoom: boolean
+    /** 'fill' opens slides already zoomed to cover — pairs with explore. */
+    initialLevel: TInitialZoomLevel
   }
   slideChange: TSlideChangeStyle
   gallery: {

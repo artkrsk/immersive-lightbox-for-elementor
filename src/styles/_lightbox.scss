@@ -39,8 +39,15 @@
   }
 
   // Chrome (counter, captions, our buttons) rides the shared clock.
+  // The slide radius is the design default the flight lands on — themable
+  // via the custom property; the transition engine reads it per open.
   .pswp {
     --arts-lightbox-chrome: 1;
+    --arts-lightbox-slide-radius: 6px;
+  }
+
+  .pswp__img {
+    border-radius: var(--arts-lightbox-slide-radius);
   }
 
   // Safari compositing quirk: without a paintable background the first
