@@ -5,43 +5,18 @@ const EPSILON = 0.001
 
 /**
  * Zoom as a session MODE, not a per-slide state: zooming out to fit means
- * the next slides also arrive at fit; toggling back to fill restores the
- * mode. The user's last explicit choice wins until they change it again.
+ * the next slides also arrive at fit; back to fill restores the mode.
+ *
+ * Threshold-based on the LIVE zoom level (zoomPanUpdate), so every input —
+ * click toggle, trackpad pinch, wheel — updates the mode the moment the
+ * level settles at fit or fill. On a mode change, already-appended
+ * neighbor slides sync immediately while offscreen; a slide arriving
+ * mismatched mid-swipe would otherwise visibly snap.
  */
 export function attachZoomMode(pswp: PhotoSwipe, opts: IOptions): void {
   let mode: 'fit' | 'fill' = opts.zoom.initialLevel
 
-  // A zoom that lands exactly on fit or fill is an explicit mode choice
-  // (click toggles, double-tap); arbitrary wheel levels leave the mode as is.
-  pswp.on('beforeZoomTo', (e) => {
-    const slide = pswp.currSlide
-    if (!slide) {
-      return
-    }
-    const { fit, fill } = slide.zoomLevels
-    if (typeof fit !== 'number' || typeof fill !== 'number') {
-      return
-    }
-    const dest = e.destZoomLevel
-    if (Math.abs(dest - fit) < EPSILON && fit < fill - EPSILON) {
-      mode = 'fit'
-    } else if (Math.abs(dest - fill) < EPSILON) {
-      mode = 'fill'
-    } else {
-      return
-    }
-    // Future slides parse their levels from the shared options object.
-    pswp.options.initialZoomLevel = mode
-    pswp.options.secondaryZoomLevel = mode === 'fill' ? 'fit' : 'fill'
-  })
-
-  // Slides created before the mode changed still carry their old initial —
-  // snap the arriving slide to the mode (instant, mid slide-change).
-  pswp.on('change', () => {
-    const slide = pswp.currSlide
-    if (!slide) {
-      return
-    }
+  const syncSlide = (slide: NonNullable<PhotoSwipe['currSlide']>): void => {
     const target = slide.zoomLevels[mode]
     if (typeof target !== 'number' || Math.abs(slide.currZoomLevel - target) < EPSILON) {
       return
@@ -50,5 +25,46 @@ export function attachZoomMode(pswp: PhotoSwipe, opts: IOptions): void {
     slide.pan.x = slide.bounds.center.x
     slide.pan.y = slide.bounds.center.y
     slide.applyCurrentZoomPan()
+  }
+
+  const syncNeighbors = (): void => {
+    for (const holder of pswp.mainScroll.itemHolders) {
+      if (holder.slide && holder.slide !== pswp.currSlide) {
+        syncSlide(holder.slide)
+      }
+    }
+  }
+
+  const setMode = (next: 'fit' | 'fill'): void => {
+    if (next === mode) {
+      return
+    }
+    mode = next
+    // Future slides parse their levels from the shared options object.
+    pswp.options.initialZoomLevel = mode
+    pswp.options.secondaryZoomLevel = mode === 'fill' ? 'fit' : 'fill'
+    // Already-appended neighbors sync now, offscreen — never mid-swipe.
+    syncNeighbors()
+  }
+
+  pswp.on('zoomPanUpdate', (e) => {
+    const slide = e.slide
+    const { fit, fill } = slide.zoomLevels
+    if (typeof fit !== 'number' || typeof fill !== 'number' || fill - fit < EPSILON) {
+      return
+    }
+    if (slide.currZoomLevel <= fit + EPSILON) {
+      setMode('fit')
+    } else if (slide.currZoomLevel >= fill - EPSILON) {
+      setMode('fill')
+    }
+  })
+
+  // Fallback for slides that appended before a mode change reached them.
+  pswp.on('change', () => {
+    const slide = pswp.currSlide
+    if (slide) {
+      syncSlide(slide)
+    }
   })
 }

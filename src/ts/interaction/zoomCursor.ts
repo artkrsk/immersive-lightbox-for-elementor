@@ -1,12 +1,15 @@
 import type PhotoSwipe from '../photoswipe/photoswipe.js'
 
+const CAN_ZOOM_CLASS = 'arts-lightbox-can-zoom'
 const AT_MAX_CLASS = 'arts-lightbox-at-max-zoom'
 const EPSILON = 0.001
 
 /**
- * Reflects "no further zoom-in possible" as a root class so the cursor can
- * say zoom-out instead of zoom-in (PhotoSwipe's own cursor logic only knows
- * zoom-in). Relevant with the fill-as-ceiling model where slides OPEN at max.
+ * Owns the zoom cursor state. PhotoSwipe's own cursor classes require
+ * `imageClickAction === 'zoom'` literally (ours is a function) and exact
+ * zoom-level equality — both too fragile. We derive from live state:
+ * can-zoom = the slide has meaningful zoom range; at-max = no further
+ * zoom-in possible (cursor flips to zoom-out).
  */
 export function attachZoomCursor(pswp: PhotoSwipe): void {
   const update = (): void => {
@@ -14,8 +17,15 @@ export function attachZoomCursor(pswp: PhotoSwipe): void {
     if (!slide || !pswp.element) {
       return
     }
-    const atMax = slide.currZoomLevel >= slide.zoomLevels.max - EPSILON
-    pswp.element.classList.toggle(AT_MAX_CLASS, atMax)
+    const { fit, fill, max } = slide.zoomLevels
+    const canZoom =
+      slide.isZoomable() &&
+      typeof fit === 'number' &&
+      typeof fill === 'number' &&
+      fill - fit > EPSILON
+    const atMax = typeof max === 'number' && slide.currZoomLevel >= max - EPSILON
+    pswp.element.classList.toggle(CAN_ZOOM_CLASS, canZoom)
+    pswp.element.classList.toggle(AT_MAX_CLASS, canZoom && atMax)
   }
   pswp.on('zoomPanUpdate', update)
   pswp.on('change', update)

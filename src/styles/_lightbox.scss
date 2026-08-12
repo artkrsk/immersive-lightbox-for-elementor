@@ -50,9 +50,13 @@
     border-radius: var(--arts-lightbox-slide-radius);
   }
 
-  // At the zoom ceiling the only zoom action left is out (fill-as-max opens
-  // slides already at max — a zoom-in cursor there promises the impossible).
-  .pswp--zoom-allowed.arts-lightbox-at-max-zoom .pswp__img {
+  // Zoom cursor is fully ours (stock logic needs imageClickAction === 'zoom'
+  // literally; ours is a function). At the ceiling the only action is out.
+  .pswp.arts-lightbox-can-zoom .pswp__img {
+    cursor: zoom-in;
+  }
+
+  .pswp.arts-lightbox-can-zoom.arts-lightbox-at-max-zoom .pswp__img {
     cursor: zoom-out;
   }
 
