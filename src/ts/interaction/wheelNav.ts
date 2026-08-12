@@ -86,6 +86,15 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
     velocityX = velocityX * 0.7 + ((nextX - mainScroll.x) / dt) * 0.3
     mainScroll.moveTo(nextX, true)
 
+    // Commit mid-gesture once the strip fully reaches a neighbor: the index
+    // rebases immediately (zero-distance spring), so consecutive swipes in
+    // one continuous gesture chain through slides instead of piling into
+    // the one-slide clamp.
+    const shift = mainScroll.x - mainScroll.getCurrSlideX()
+    if (Math.abs(shift) >= mainScroll.slideWidth - 1) {
+      mainScroll.moveIndexBy(shift < 0 ? 1 : -1, true, velocityX)
+    }
+
     if (settleTimer) {
       clearTimeout(settleTimer)
     }
