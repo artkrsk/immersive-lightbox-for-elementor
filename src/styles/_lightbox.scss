@@ -51,12 +51,13 @@
   }
 
   // Zoom cursor is fully ours (stock logic needs imageClickAction === 'zoom'
-  // literally; ours is a function). At the ceiling the only action is out.
+  // literally; ours is a function). The cursor promises what the click
+  // toggle does: out from anywhere beyond fit, in only at fit.
   .pswp.arts-lightbox-can-zoom .pswp__img {
     cursor: zoom-in;
   }
 
-  .pswp.arts-lightbox-can-zoom.arts-lightbox-at-max-zoom .pswp__img {
+  .pswp.arts-lightbox-can-zoom.arts-lightbox-zoomed-in .pswp__img {
     cursor: zoom-out;
   }
 
