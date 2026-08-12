@@ -24,6 +24,27 @@ export function attachExploreMode(
     return
   }
 
+  // Seed the initial pan from the opening click (viewport-normalized, the
+  // same mapping onMove uses). The fork's zoomAndPanToInitial honors this on
+  // every re-init — image appends and resizes keep aiming at it — until the
+  // user takes over with a mousemove or changes slides.
+  const options = pswp.options as typeof pswp.options & {
+    artsSeedPan?: { x: number; y: number }
+  }
+  const clearSeed = (): void => {
+    if (options.artsSeedPan) {
+      Reflect.deleteProperty(options, 'artsSeedPan')
+    }
+  }
+  if (seedPoint) {
+    const clamp01 = (v: number): number => Math.min(1, Math.max(0, v))
+    options.artsSeedPan = {
+      x: clamp01(seedPoint.x / window.innerWidth),
+      y: clamp01(seedPoint.y / window.innerHeight)
+    }
+    pswp.on('change', clearSeed)
+  }
+
   let target: { x: number; y: number } | null = null
   let rafId = 0
   let pointerDown = false
@@ -55,6 +76,8 @@ export function attachExploreMode(
       target = null
       return
     }
+    // The user took over — initial-pan re-inits stop aiming at the seed.
+    clearSeed()
     target = mapPointerToPan(
       { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight },
       slide.bounds
@@ -72,20 +95,6 @@ export function attachExploreMode(
   }
 
   pswp.on('bindEvents', () => {
-    // Seed the pan from the click that opened the lightbox — the SAME
-    // viewport mapping onMove uses, so the first mousemove continues
-    // seamlessly from here. The open flight's live target picks this up
-    // and flies straight toward the clicked region.
-    if (seedPoint) {
-      const slide = pswp.currSlide
-      if (slide && slide.currZoomLevel > slide.zoomLevels.fit + FIT_EPSILON) {
-        const seeded = mapPointerToPan(
-          { x: seedPoint.x / window.innerWidth, y: seedPoint.y / window.innerHeight },
-          slide.bounds
-        )
-        slide.panTo(seeded.x, seeded.y)
-      }
-    }
     pswp.element?.addEventListener('mousemove', onMove)
     pswp.element?.addEventListener('pointerdown', onDown)
     window.addEventListener('pointerup', onUp)

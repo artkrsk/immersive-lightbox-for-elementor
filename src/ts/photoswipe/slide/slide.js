@@ -440,6 +440,23 @@ class Slide {
     // pan according to the zoom level
     this.bounds.update(this.currZoomLevel);
     equalizePoints(this.pan, this.bounds.center);
+
+    // @arts fork: a viewport-normalized pan seed (the click that opened the
+    // lightbox, mapped like explore mode maps the mouse) overrides the
+    // centered default whenever the initial pan is (re)applied — content
+    // appends and resizes keep aiming at the seed until the consumer clears
+    // it (first mousemove / slide change).
+    const seed = this.pswp.options.artsSeedPan;
+    if (
+      seed
+      && this === this.pswp.currSlide
+      && this.currZoomLevel > this.zoomLevels.fit + 0.001
+    ) {
+      const { min, max } = this.bounds;
+      this.pan.x = min.x + (max.x - min.x) * seed.x;
+      this.pan.y = min.y + (max.y - min.y) * seed.y;
+    }
+
     this.pswp.dispatch('initialZoomPan', { slide: this });
   }
 
