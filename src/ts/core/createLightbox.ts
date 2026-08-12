@@ -4,6 +4,7 @@ import { CANDIDATE_SELECTOR } from '../constants'
 import { registerContent } from '../content/registerContent'
 import { attachExploreMode } from '../interaction/exploreMode'
 import { attachHoverPrefetch } from '../interaction/hoverPrefetch'
+import { attachWheelNav } from '../interaction/wheelNav'
 import { attachZoomCursor } from '../interaction/zoomCursor'
 import { attachZoomMode } from '../interaction/zoomMode'
 import type { IGallery, ILightbox, ILightboxApi, IOpenRequest, IOptions } from '../interfaces'
@@ -45,6 +46,7 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
       }
       attachZoomCursor(pswp)
       attachZoomMode(pswp, opts)
+      attachWheelNav(pswp, opts, api)
       registerContent(pswp)
       registerUi(pswp, req.gallery, opts, api)
       // Clicking the backdrop closes through OUR choreography, not
