@@ -95,8 +95,13 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
     arm(COAST_GAP_MS, toIdle)
   }
 
-  /** Fingers left the glass without momentum — the cursor moving proves it. */
-  const onMouseMove = (): void => {
+  /**
+   * Fingers left the glass without momentum — any non-wheel input proves
+   * it: the cursor can't move and keys/pointers can't act while two
+   * fingers are scrolling. With these, the safety timeout only covers
+   * "quiet lift, then hands fully off everything".
+   */
+  const onOtherInput = (): void => {
     if (state === 'tracking') {
       settle(velocityX)
     }
@@ -190,9 +195,13 @@ export function attachWheelNav(pswp: PhotoSwipe, opts: IOptions): void {
   })
 
   pswp.on('bindEvents', () => {
-    pswp.element?.addEventListener('mousemove', onMouseMove, { passive: true })
+    pswp.element?.addEventListener('mousemove', onOtherInput, { passive: true })
+    document.addEventListener('keydown', onOtherInput, { capture: true, passive: true })
+    document.addEventListener('pointerdown', onOtherInput, { capture: true, passive: true })
   })
   pswp.on('destroy', () => {
     clearTimer()
+    document.removeEventListener('keydown', onOtherInput, { capture: true })
+    document.removeEventListener('pointerdown', onOtherInput, { capture: true })
   })
 }
