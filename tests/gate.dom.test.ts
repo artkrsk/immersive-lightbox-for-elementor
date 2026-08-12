@@ -91,7 +91,8 @@ describe('gate', () => {
     )
     await Promise.resolve()
     await Promise.resolve()
-    expect(lightbox.open).toHaveBeenCalledWith(a)
+    // the held click's viewport point rides along to seed the initial pan
+    expect(lightbox.open).toHaveBeenCalledWith(a, { x: 0, y: 0 })
   })
 
   it('pre-warms assets on pointerover without holding anything', async () => {

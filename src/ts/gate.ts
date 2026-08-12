@@ -84,14 +84,17 @@ if (!window.artsLightbox) {
       if (!el) {
         return
       }
-      // Hold the click: the engine replays it as an open once ready.
+      // Hold the click: the engine replays it as an open once ready —
+      // including the click point, so even the cold-load first open aims
+      // the pan at the cursor.
       e.preventDefault()
       e.stopPropagation()
       heldHref = el.getAttribute('href')
+      const point = { x: e.clientX, y: e.clientY }
       load()
       void ready.then((lightbox) => {
         heldHref = null
-        lightbox.open(el)
+        lightbox.open(el, point)
       })
     }
 

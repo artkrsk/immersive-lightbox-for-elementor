@@ -12,7 +12,11 @@ const IDLE_DELTA = 0.5
  * tracking 1:1; drag-pan keeps working (the loop pauses while a pointer is
  * down so the gesture engine owns the frame).
  */
-export function attachExploreMode(pswp: PhotoSwipe, opts: IOptions): void {
+export function attachExploreMode(
+  pswp: PhotoSwipe,
+  opts: IOptions,
+  seedPoint?: { x: number; y: number }
+): void {
   if (!opts.explore.enabled) {
     return
   }
@@ -68,6 +72,20 @@ export function attachExploreMode(pswp: PhotoSwipe, opts: IOptions): void {
   }
 
   pswp.on('bindEvents', () => {
+    // Seed the pan from the click that opened the lightbox — the SAME
+    // viewport mapping onMove uses, so the first mousemove continues
+    // seamlessly from here. The open flight's live target picks this up
+    // and flies straight toward the clicked region.
+    if (seedPoint) {
+      const slide = pswp.currSlide
+      if (slide && slide.currZoomLevel > slide.zoomLevels.fit + FIT_EPSILON) {
+        const seeded = mapPointerToPan(
+          { x: seedPoint.x / window.innerWidth, y: seedPoint.y / window.innerHeight },
+          slide.bounds
+        )
+        slide.panTo(seeded.x, seeded.y)
+      }
+    }
     pswp.element?.addEventListener('mousemove', onMove)
     pswp.element?.addEventListener('pointerdown', onDown)
     window.addEventListener('pointerup', onUp)

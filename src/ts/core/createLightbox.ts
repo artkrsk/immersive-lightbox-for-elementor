@@ -24,11 +24,16 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
     void engineState.closeHandle?.close()
   }
 
-  const openRequest = (req: IOpenRequest, galleries: IGallery[], instant: boolean): void => {
+  const openRequest = (
+    req: IOpenRequest,
+    galleries: IGallery[],
+    instant: boolean,
+    point?: { x: number; y: number }
+  ): void => {
     current = { req, galleries }
     createPswp(opts, req, (pswp) => {
       engineState.closeHandle = attachOpenTransition(pswp, opts, req, instant)
-      attachExploreMode(pswp, opts)
+      attachExploreMode(pswp, opts, point)
       attachZoomCursor(pswp)
       attachZoomMode(pswp, opts)
       registerContent(pswp)
@@ -89,7 +94,7 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
     }
   }
 
-  const open = (el: HTMLElement): boolean => {
+  const open = (el: HTMLElement, point?: { x: number; y: number }): boolean => {
     if (engineState.pswp) {
       return false
     }
@@ -100,7 +105,7 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
     if (!req) {
       return false
     }
-    openRequest(req, galleries, false)
+    openRequest(req, galleries, false, point)
     return true
   }
 
@@ -122,7 +127,7 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
           return
         }
         e.preventDefault()
-        open(el)
+        open(el, { x: e.clientX, y: e.clientY })
       }
       keyHandler = (e: KeyboardEvent) => {
         if (!engineState.pswp) {
