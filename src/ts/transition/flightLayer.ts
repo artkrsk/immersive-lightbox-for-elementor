@@ -18,7 +18,14 @@ export function createFlightLayer(): {
   /** Element mode: hand the live media out (to the slide / the page slot)
    *  without destroying it. */
   extract(): HTMLElement | null
+  /** Element mode: overlay a snapshot of the video's current frame — a
+   *  reparented <video> re-attaches its compositor texture and can present
+   *  blank for a frame; the snapshot covers that gap. */
+  freeze(): void
   unmount(): void
+  /** Unmount after N painted frames — aborts if the layer was remounted
+   *  meanwhile (an instant close can overlap the open's deferred cleanup). */
+  unmountLater(frames: number): void
 } {
   let el: HTMLDivElement | null = null
   let mediaEl: HTMLElement | null = null
@@ -34,6 +41,12 @@ export function createFlightLayer(): {
     el.style.borderRadius = `${frame.radius}px`
     mediaEl.style.height = `${frame.innerHeightPct}%`
     mediaEl.style.transform = `translateY(${(frame.innerOffsetYPct / frame.innerHeightPct) * 100}%)`
+  }
+
+  const unmount = (): void => {
+    el?.remove()
+    el = null
+    mediaEl = null
   }
 
   return {
@@ -71,10 +84,61 @@ export function createFlightLayer(): {
       mediaEl = null
       return media
     },
-    unmount: () => {
-      el?.remove()
-      el = null
-      mediaEl = null
+    freeze: () => {
+      if (!el || owned || !(mediaEl instanceof HTMLVideoElement) || mediaEl.readyState < 2) {
+        return
+      }
+      const box = mediaEl.getBoundingClientRect()
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(box.width * devicePixelRatio)
+      canvas.height = Math.round(box.height * devicePixelRatio)
+      const ctx = canvas.getContext('2d')
+      if (!ctx || !canvas.width || !canvas.height) {
+        return
+      }
+      // Replicate object-fit: cover — scale the intrinsic frame to fill the
+      // box, cropping the overflow around the center.
+      const vw = mediaEl.videoWidth
+      const vh = mediaEl.videoHeight
+      const scale = Math.max(canvas.width / vw, canvas.height / vh)
+      const sw = canvas.width / scale
+      const sh = canvas.height / scale
+      try {
+        ctx.drawImage(
+          mediaEl,
+          (vw - sw) / 2,
+          (vh - sh) / 2,
+          sw,
+          sh,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        )
+      } catch {
+        return // no snapshot, no cover — degrades to the bare reparent
+      }
+      canvas.className = MEDIA_CLASS
+      canvas.style.height = mediaEl.style.height
+      canvas.style.transform = mediaEl.style.transform
+      el.appendChild(canvas)
+    },
+    unmount,
+    unmountLater: (frames) => {
+      const current = el
+      const step = (n: number): void => {
+        if (!current || el !== current) {
+          return
+        }
+        if (n <= 0) {
+          unmount()
+          return
+        }
+        requestAnimationFrame(() => {
+          step(n - 1)
+        })
+      }
+      step(frames)
     }
   }
 }

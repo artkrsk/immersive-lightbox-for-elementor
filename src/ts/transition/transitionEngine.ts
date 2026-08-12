@@ -211,9 +211,7 @@ export function attachOpenTransition(
           }
         }
         pswp.element?.classList.remove(TRANSITIONING_CLASS)
-        requestAnimationFrame(() => {
-          flight.unmount()
-        })
+        flight.unmountLater(1)
         transitioning = false
       }
     )
@@ -287,14 +285,17 @@ export function attachOpenTransition(
         },
         () => {
           // The adopted video goes home BEFORE teardown: mute restored
-          // first inside return(), placement and styles after — the flight
-          // frame it leaves gets removed a frame later.
+          // first inside return(), placement and styles after. Its last
+          // frame stays painted in the flight (the reparented element
+          // re-attaches its compositor texture and can blank briefly) —
+          // the cover lifts two frames later.
+          flight.freeze()
           slideData?.adopted?.return()
           backdrop?.destroy()
           backdrop = null
           pswp.destroy() // restores hidden sources + any un-returned adoptee
+          flight.unmountLater(2)
           requestAnimationFrame(() => {
-            flight.unmount()
             resolve()
           })
         }
