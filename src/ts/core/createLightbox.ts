@@ -3,6 +3,7 @@ import { resolveOpenRequest } from '../collector/resolveOpenRequest'
 import { CANDIDATE_SELECTOR } from '../constants'
 import { registerContent } from '../content/registerContent'
 import { attachExploreMode } from '../interaction/exploreMode'
+import { attachHoverPrefetch } from '../interaction/hoverPrefetch'
 import { attachZoomCursor } from '../interaction/zoomCursor'
 import { attachZoomMode } from '../interaction/zoomMode'
 import type { IGallery, ILightbox, ILightboxApi, IOpenRequest, IOptions } from '../interfaces'
@@ -18,6 +19,7 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
   const opts: IOptions = mergeOptions(options)
   let clickHandler: ((e: MouseEvent) => void) | null = null
   let keyHandler: ((e: KeyboardEvent) => void) | null = null
+  let disposePrefetch: (() => void) | null = null
   let current: { req: IOpenRequest; galleries: IGallery[] } | null = null
 
   const close = (): void => {
@@ -155,6 +157,7 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
       }
       document.addEventListener('click', clickHandler, true)
       document.addEventListener('keydown', keyHandler, true)
+      disposePrefetch = attachHoverPrefetch(opts)
     },
     destroy: () => {
       if (clickHandler) {
@@ -165,6 +168,8 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
         document.removeEventListener('keydown', keyHandler, true)
         keyHandler = null
       }
+      disposePrefetch?.()
+      disposePrefetch = null
       engineState.pswp?.destroy()
     },
     open,

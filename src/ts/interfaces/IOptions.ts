@@ -55,6 +55,10 @@ export interface IOptions {
     /** Milliseconds between auto-advances. */
     interval: number
   }
+  prefetch: {
+    /** Warm the full-size image on thumbnail hover / press, pre-open. */
+    onHover: boolean
+  }
   /** Mouse-drag swipes between slides on desktop. */
   desktopDrag: boolean
 }

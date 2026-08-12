@@ -40,5 +40,8 @@ export const DEFAULT_OPTIONS: IOptions = {
     enabled: false,
     interval: 5000
   },
+  prefetch: {
+    onHover: true
+  },
   desktopDrag: true
 }
