@@ -71,19 +71,27 @@ export function createPlayerBridge(
   }
   window.addEventListener('message', onMessage)
 
-  if (provider === 'youtube') {
-    const handshake = (): void => {
+  const handshake = (): void => {
+    if (provider === 'youtube') {
       post(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }))
+    } else {
+      const ping = (): void => {
+        post(JSON.stringify({ method: 'ping' }))
+      }
+      ping()
+      if (!pingTimer) {
+        pingTimer = setInterval(ping, 250)
+      }
     }
-    iframe.addEventListener('load', handshake)
-    handshake() // in case the frame is already up
-  } else {
-    const ping = (): void => {
-      post(JSON.stringify({ method: 'ping' }))
-    }
-    ping()
-    pingTimer = setInterval(ping, 250)
   }
+  // Every load is a FRESH player document (re-appended iframes reload) —
+  // readiness starts over each time.
+  const onLoad = (): void => {
+    ready = false
+    handshake()
+  }
+  iframe.addEventListener('load', onLoad)
+  handshake() // in case the frame is already up
 
   const yt = (func: string): string => JSON.stringify({ event: 'command', func, args: '' })
   const vimeo = (method: string, value?: unknown): string =>
@@ -105,6 +113,7 @@ export function createPlayerBridge(
     },
     destroy: () => {
       window.removeEventListener('message', onMessage)
+      iframe.removeEventListener('load', onLoad)
       if (pingTimer) {
         clearInterval(pingTimer)
         pingTimer = null

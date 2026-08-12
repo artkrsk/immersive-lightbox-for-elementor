@@ -33,6 +33,11 @@ export function registerContent(
   const bridges = new Map<HTMLIFrameElement, ReturnType<typeof createPlayerBridge>>()
   // The bridge protocol has no queryable mute state — track what we set.
   const bridgeMuted = new Map<HTMLIFrameElement, boolean>()
+  // Watch intent is ONE-SHOT: PhotoSwipe rebuilds evicted content as you
+  // traverse, and the opened slide re-entering the preload window as a
+  // NEIGHBOR must come back as a plain paused player — never with an
+  // autoplay=1 embed URL (the AGC production bug).
+  let watchIntentIndex = openedIndex
 
   const slideAutoplay = (data: ISlideData): boolean =>
     opts.video.autoplay && data.autoplay !== false
@@ -69,7 +74,10 @@ export function registerContent(
         clone.controls = true
         e.content.element = clone as unknown as HTMLDivElement
       } else {
-        const autoplay = slideAutoplay(data) && e.content.index === openedIndex
+        const autoplay = slideAutoplay(data) && e.content.index === watchIntentIndex
+        if (autoplay) {
+          watchIntentIndex = -1
+        }
         const el = buildVideoElement(data, { autoplay })
         el.classList.add('arts-lightbox-media')
         if (el instanceof HTMLIFrameElement && data.videoEmbed) {
@@ -77,7 +85,7 @@ export function registerContent(
           bridgeMuted.set(el, !autoplay)
           if (autoplay) {
             // Sound-autoplay (watch intent) holds the audio focus.
-            audioFocus.claim(() => {
+            audioFocus.claim(el, () => {
               bridges.get(el)?.setMuted(true)
               bridgeMuted.set(el, true)
             })
@@ -87,7 +95,7 @@ export function registerContent(
           // actually producing sound.
           el.addEventListener('play', () => {
             if (!el.muted) {
-              audioFocus.claim(() => {
+              audioFocus.claim(el, () => {
                 el.muted = true
               })
             }
@@ -101,6 +109,22 @@ export function registerContent(
       wrap.className = 'arts-lightbox-html'
       wrap.innerHTML = data.html ?? ''
       e.content.element = wrap
+    }
+  })
+
+  // PhotoSwipe re-appends CACHED content as slides re-enter the preload
+  // window, and re-appending an iframe reloads it. The first append is the
+  // watch-intent one (armed URL welcome); every later one must load the
+  // disarmed URL — set BEFORE insertion, so there is exactly one load.
+  pswp.on('contentAppend', (e) => {
+    const el = e.content.element
+    if (!(el instanceof HTMLIFrameElement) || !el.dataset.artsCleanSrc) {
+      return
+    }
+    if (el.dataset.artsServed) {
+      el.src = el.dataset.artsCleanSrc
+    } else {
+      el.dataset.artsServed = '1'
     }
   })
 
@@ -215,7 +239,7 @@ export function registerContent(
         setMuted: (muted) => {
           el.muted = muted
           if (!muted) {
-            audioFocus.claim(() => {
+            audioFocus.claim(el, () => {
               el.muted = true
             })
             void el.play().catch(() => {})
@@ -235,7 +259,7 @@ export function registerContent(
           bridgeMuted.set(el, muted)
           if (!muted) {
             bridge.play()
-            audioFocus.claim(() => {
+            audioFocus.claim(el, () => {
               bridge.setMuted(true)
               bridgeMuted.set(el, true)
             })

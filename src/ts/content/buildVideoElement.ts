@@ -14,6 +14,12 @@ export function buildVideoElement(data: ISlideData, opts: { autoplay: boolean })
   if (parsed && (parsed.provider === 'youtube' || parsed.provider === 'vimeo')) {
     const iframe = document.createElement('iframe')
     iframe.src = buildEmbedUrl(parsed, { autoplay: opts.autoplay })
+    if (opts.autoplay) {
+      // Re-appending an iframe RELOADS it — an armed URL would blast sound
+      // from a preloaded neighbor. The content layer swaps to this disarmed
+      // URL before any re-append (the AGC bug, iframe flavor).
+      iframe.dataset.artsCleanSrc = buildEmbedUrl(parsed, { autoplay: false })
+    }
     iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; encrypted-media')
     iframe.setAttribute('allowfullscreen', '')
     iframe.setAttribute('frameborder', '0')
@@ -27,10 +33,9 @@ export function buildVideoElement(data: ISlideData, opts: { autoplay: boolean })
   video.setAttribute('controls', '')
   video.setAttribute('playsinline', '')
   video.preload = 'metadata'
-  if (opts.autoplay) {
-    // Watch intent: the user clicked a video link. Sound on — the click is
-    // the gesture. If policy still blocks it, the poster + controls remain.
-    video.autoplay = true
-  }
+  // NO autoplay property, even for the opened slide: it sticks to the
+  // element and re-fires on every re-append/rebuild — including when this
+  // slide later re-enters the preload window as a NEIGHBOR (the AGC bug).
+  // The opened slide plays via contentActivate, inside the click's gesture.
   return video
 }
