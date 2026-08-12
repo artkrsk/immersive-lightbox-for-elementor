@@ -1,9 +1,9 @@
-import { createElement, isSafari, LOAD_STATE, setWidthHeight } from '../util/util.js';
-import Placeholder from './placeholder.js';
-import type PhotoSwipeBase from '../core/base.js';
-import type Slide from './slide.js';
-import type { SlideData } from './slide.js';
-import type { LoadState } from '../util/util.js';
+import { createElement, isSafari, LOAD_STATE, setWidthHeight } from '../util/util';
+import Placeholder from './placeholder';
+import type PhotoSwipeBase from '../core/base';
+import type Slide from './slide';
+import type { SlideData } from './slide';
+import type { LoadState } from '../util/util';
 
 class Content {
   declare instance: PhotoSwipeBase;

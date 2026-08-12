@@ -1,12 +1,12 @@
 import {
   equalizePoints, pointsEqual, getDistanceBetween
-} from '../util/util.js';
+} from '../util/util';
 
-import DragHandler from './drag-handler.js';
-import ZoomHandler from './zoom-handler.js';
-import TapHandler from './tap-handler.js';
-import type PhotoSwipe from '../photoswipe.js';
-import type { Point } from '../types.js';
+import DragHandler from './drag-handler';
+import ZoomHandler from './zoom-handler';
+import TapHandler from './tap-handler';
+import type PhotoSwipe from '../photoswipe';
+import type { Point } from '../types';
 
 // How far should user should drag
 // until we can determine that the gesture is swipe and its direction

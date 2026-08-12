@@ -4,7 +4,7 @@ import { DEFAULT_OPTIONS } from '@ts/constants'
 import { createNavigator } from '@ts/core/createNavigator'
 import { engineState } from '@ts/core/engineState'
 import type { IGallery, IOpenRequest, IOptions } from '@ts/interfaces'
-import type PhotoSwipe from '@ts/photoswipe/photoswipe.js'
+import type PhotoSwipe from '@ts/photoswipe/photoswipe'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 function gallery(id: string, keys: string[]): IGallery {

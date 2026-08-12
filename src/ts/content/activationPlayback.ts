@@ -1,5 +1,5 @@
 import type { IMediaState } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 import { slideData } from './slideData'
 
 /**

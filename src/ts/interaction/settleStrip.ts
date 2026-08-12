@@ -1,4 +1,4 @@
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 
 /** Same velocity threshold the touch drag settle uses (px/ms). */
 const MIN_NEXT_SLIDE_SPEED = 0.5

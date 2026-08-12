@@ -1,6 +1,6 @@
-import { specialKeyUsed } from './util/util.js';
-import type PhotoSwipe from './photoswipe.js';
-import type { Methods } from './types.js';
+import { specialKeyUsed } from './util/util';
+import type PhotoSwipe from './photoswipe';
+import type { Methods } from './types';
 
 const KeyboardKeyCodesMap = {
   Escape: 27,

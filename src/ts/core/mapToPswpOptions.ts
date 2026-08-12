@@ -1,5 +1,5 @@
 import type { IGallery, IOptions, ISlideData } from '../interfaces'
-import type { PhotoSwipeOptions, SlideData } from '../photoswipe/photoswipe.js'
+import type { PhotoSwipeOptions, SlideData } from '../photoswipe/photoswipe'
 
 function toPswpSlide(slide: ISlideData): SlideData {
   // ISlideData is a field-compatible superset of PhotoSwipe's SlideData
@@ -48,7 +48,7 @@ export function mapToPswpOptions(
   gallery: IGallery,
   index: number
 ): PhotoSwipeOptions {
-  const options: PhotoSwipeOptions & { artsMouseDragNavigates: boolean } = {
+  const options: PhotoSwipeOptions = {
     dataSource: gallery.slides.map(toPswpSlide),
     index,
     showHideAnimationType: 'none',

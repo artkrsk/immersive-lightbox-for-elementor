@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import type { IGallery, IOpenRequest } from '@ts/interfaces'
-import type PhotoSwipe from '@ts/photoswipe/photoswipe.js'
+import type PhotoSwipe from '@ts/photoswipe/photoswipe'
 import { findCloseSource } from '@ts/transition/findCloseSource'
 import { beforeEach, describe, expect, it } from 'vitest'
 

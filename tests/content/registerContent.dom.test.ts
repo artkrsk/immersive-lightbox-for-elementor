@@ -3,7 +3,7 @@
 import { DEFAULT_OPTIONS } from '@ts/constants'
 import { registerContent } from '@ts/content/registerContent'
 import type { IOptions, ISlideData } from '@ts/interfaces'
-import type PhotoSwipe from '@ts/photoswipe/photoswipe.js'
+import type PhotoSwipe from '@ts/photoswipe/photoswipe'
 import { audioFocus } from '@ts/video/audioFocus'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fakePswp } from '../helpers/fakePswp'

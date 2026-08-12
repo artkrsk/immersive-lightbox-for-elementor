@@ -5,14 +5,14 @@ import {
   roundPoint,
   toTransformString,
   clamp,
-} from '../util/util.js';
+} from '../util/util';
 
-import PanBounds from './pan-bounds.js';
-import ZoomLevel from './zoom-level.js';
-import { getPanAreaSize } from '../util/viewport-size.js';
-import type PhotoSwipe from '../photoswipe.js';
-import type { Point } from '../types.js';
-import type { Content } from '../core/eventable.js';
+import PanBounds from './pan-bounds';
+import ZoomLevel from './zoom-level';
+import { getPanAreaSize } from '../util/viewport-size';
+import type PhotoSwipe from '../photoswipe';
+import type { Point } from '../types';
+import type { Content } from '../core/eventable';
 
 interface _SlideData {
   /** thumbnail element */

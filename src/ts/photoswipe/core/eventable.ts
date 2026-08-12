@@ -1,12 +1,12 @@
-import type PhotoSwipeBase from './base.js';
-import type PhotoSwipe from '../photoswipe.js';
-import type { DataSource, PhotoSwipeOptions } from '../types.js';
-import type { UIElementData } from '../ui/ui-element.js';
-import type ContentDefault from '../slide/content.js';
-import type Slide from '../slide/slide.js';
-import type { SlideData } from '../slide/slide.js';
-import type ZoomLevel from '../slide/zoom-level.js';
-import type { Bounds } from '../slide/get-thumb-bounds.js';
+import type PhotoSwipeBase from './base';
+import type PhotoSwipe from '../photoswipe';
+import type { DataSource, PhotoSwipeOptions } from '../types';
+import type { UIElementData } from '../ui/ui-element';
+import type ContentDefault from '../slide/content';
+import type Slide from '../slide/slide';
+import type { SlideData } from '../slide/slide';
+import type ZoomLevel from '../slide/zoom-level';
+import type { Bounds } from '../slide/get-thumb-bounds';
 
 /**
  * Allow adding an arbitrary props to the Content

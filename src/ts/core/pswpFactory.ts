@@ -1,5 +1,5 @@
 import type { IOpenRequest, IOptions } from '../interfaces'
-import PhotoSwipe from '../photoswipe/photoswipe.js'
+import PhotoSwipe from '../photoswipe/photoswipe'
 import { engineState } from './engineState'
 import { mapToPswpOptions } from './mapToPswpOptions'
 

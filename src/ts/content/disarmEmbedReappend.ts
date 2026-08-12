@@ -1,4 +1,4 @@
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 
 /**
  * PhotoSwipe re-appends CACHED content as slides re-enter the preload

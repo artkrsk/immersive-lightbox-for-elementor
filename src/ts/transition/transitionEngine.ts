@@ -6,7 +6,7 @@ import type {
   ITransitionContext,
   ITransitionHandle
 } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 import { createBackdrop } from './backdrop'
 import { captureFlightSource } from './captureFlightSource'
 import { runCloseChoreography } from './closeChoreography'

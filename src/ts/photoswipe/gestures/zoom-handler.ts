@@ -1,8 +1,8 @@
 import {
   equalizePoints, getDistanceBetween, clamp, pointsEqual
-} from '../util/util.js';
-import type Gestures from './gestures.js';
-import type { Point } from '../types.js';
+} from '../util/util';
+import type Gestures from './gestures';
+import type { Point } from '../types';
 
 const UPPER_ZOOM_FRICTION = 0.05;
 const LOWER_ZOOM_FRICTION = 0.15;

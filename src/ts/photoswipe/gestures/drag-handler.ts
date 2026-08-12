@@ -1,9 +1,9 @@
 import {
   equalizePoints, roundPoint, clamp
-} from '../util/util.js';
-import type Gestures from './gestures.js';
-import type PhotoSwipe from '../photoswipe.js';
-import type { Point } from '../types.js';
+} from '../util/util';
+import type Gestures from './gestures';
+import type PhotoSwipe from '../photoswipe';
+import type { Point } from '../types';
 
 const PAN_END_FRICTION = 0.35;
 const VERTICAL_DRAG_FRICTION = 0.6;

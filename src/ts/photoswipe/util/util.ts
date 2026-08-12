@@ -1,4 +1,4 @@
-import type { ElementProvider, Point } from '../types.js';
+import type { ElementProvider, Point } from '../types';
 
 export function createElement<T extends keyof HTMLElementTagNameMap>(
   className: string,

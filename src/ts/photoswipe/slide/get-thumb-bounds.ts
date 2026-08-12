@@ -1,5 +1,5 @@
-import type PhotoSwipe from '../photoswipe.js';
-import type { SlideData } from './slide.js';
+import type PhotoSwipe from '../photoswipe';
+import type { SlideData } from './slide';
 
 export interface Bounds {
   x: number;

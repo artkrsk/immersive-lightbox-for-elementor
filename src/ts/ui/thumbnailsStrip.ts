@@ -1,5 +1,5 @@
 import type { IGallery, ILightboxApi } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 
 const ACTIVE_CLASS = 'arts-lightbox-thumbs__item_active'
 

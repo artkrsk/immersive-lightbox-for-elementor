@@ -1,8 +1,8 @@
-import type PhotoSwipeBase from './core/base.js'
-import type PhotoSwipe from './photoswipe.js'
-import type { Bounds } from './slide/get-thumb-bounds.js'
-import type { SlideData } from './slide/slide.js'
-import type { ZoomLevelOption } from './slide/zoom-level.js'
+import type PhotoSwipeBase from './core/base'
+import type PhotoSwipe from './photoswipe'
+import type { Bounds } from './slide/get-thumb-bounds'
+import type { SlideData } from './slide/slide'
+import type { ZoomLevelOption } from './slide/zoom-level'
 
 export type Methods<T> = {[M in keyof T]: T[M] extends (...a: any) => any ? M : never}[keyof T]
 

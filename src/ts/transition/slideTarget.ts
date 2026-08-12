@@ -1,5 +1,5 @@
 import type { IFlightTarget } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 import { computeSlideRect } from './computeSlideRect'
 
 /**

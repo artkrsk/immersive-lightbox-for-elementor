@@ -1,6 +1,6 @@
-import type PhotoSwipeBase from '../core/base.js';
-import type { PhotoSwipeOptions, Point } from '../types.js';
-import type { SlideData } from '../slide/slide.js';
+import type PhotoSwipeBase from '../core/base';
+import type { PhotoSwipeOptions, Point } from '../types';
+import type { SlideData } from '../slide/slide';
 
 export function getViewportSize(options: PhotoSwipeOptions, pswp: PhotoSwipeBase): Point {
   if (options.getViewportSizeFn) {

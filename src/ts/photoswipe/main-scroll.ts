@@ -1,9 +1,9 @@
 import {
   setTransform,
   createElement,
-} from './util/util.js';
-import type PhotoSwipe from './photoswipe.js';
-import type Slide from './slide/slide.js';
+} from './util/util';
+import type PhotoSwipe from './photoswipe';
+import type Slide from './slide/slide';
 
 export interface ItemHolder {
   el: HTMLDivElement;

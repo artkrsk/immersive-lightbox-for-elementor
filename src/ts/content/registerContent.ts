@@ -1,5 +1,5 @@
 import type { IMediaController, IMediaState, IOptions, ISlideData } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 import { registerActivationPlayback } from './activationPlayback'
 import { registerSlideContentBuilder } from './buildSlideContent'
 import { registerEmbedDisarm } from './disarmEmbedReappend'

@@ -1,7 +1,7 @@
-import CSSAnimation from './css-animation.js';
-import SpringAnimation from './spring-animation.js';
-import type { CssAnimationProps } from './css-animation.js';
-import type { SpringAnimationProps } from './spring-animation.js';
+import CSSAnimation from './css-animation';
+import SpringAnimation from './spring-animation';
+import type { CssAnimationProps } from './css-animation';
+import type { SpringAnimationProps } from './spring-animation';
 
 export interface SharedAnimationProps {
   name?: string;

@@ -1,5 +1,5 @@
 import type { IMediaState, ISlideData } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 import { audioFocus } from '../video/audioFocus'
 import { buildVideoElement } from '../video/buildVideoElement'
 import { cloneAndSeek } from '../video/cloneAndSeek'

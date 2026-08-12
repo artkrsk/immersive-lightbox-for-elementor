@@ -1,4 +1,4 @@
-import type PhotoSwipe from './photoswipe.js';
+import type PhotoSwipe from './photoswipe';
 
 /**
  * Handles scroll wheel.

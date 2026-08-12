@@ -4,10 +4,6 @@
     "lib": ["ES2022", "ESNext.Disposable", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    // The vendored PhotoSwipe fork is plain JS with JSDoc types: allowJs lets
-    // tsc infer its types for our imports; checkJs stays off so upstream code
-    // is not held to our strict rules.
-    "allowJs": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,

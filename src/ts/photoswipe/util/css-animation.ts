@@ -1,5 +1,5 @@
-import { setTransitionStyle, removeTransitionStyle } from './util.js';
-import type { SharedAnimationProps } from './animations.js';
+import { setTransitionStyle, removeTransitionStyle } from './util';
+import type { SharedAnimationProps } from './animations';
 
 const DEFAULT_EASING = 'cubic-bezier(.4,0,.22,1)';
 

@@ -1,5 +1,5 @@
 import type { IGallery } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 
 /** Bottom-left caption from the slide model, synced on slide change. */
 export function registerCaption(pswp: PhotoSwipe, gallery: IGallery): void {

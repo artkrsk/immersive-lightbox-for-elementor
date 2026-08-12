@@ -1,5 +1,5 @@
-import SpringEaser from './spring-easer.js';
-import type { SharedAnimationProps } from './animations.js';
+import SpringEaser from './spring-easer';
+import type { SharedAnimationProps } from './animations';
 
 export interface DefaultSpringAnimationProps {
   start: number;

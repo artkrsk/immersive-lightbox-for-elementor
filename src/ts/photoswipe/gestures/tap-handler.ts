@@ -1,5 +1,5 @@
-import type Gestures from './gestures.js';
-import type { AddPostfix, Point } from '../types.js';
+import type Gestures from './gestures';
+import type { AddPostfix, Point } from '../types';
 
 type Actions = 'imageClick' | 'bgClick' | 'tap' | 'doubleTap';
 

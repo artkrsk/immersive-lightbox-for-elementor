@@ -1,6 +1,6 @@
-import { clamp } from '../util/util.js';
-import { parsePaddingOption } from '../util/viewport-size.js';
-import type Slide from './slide.js';
+import { clamp } from '../util/util';
+import { parsePaddingOption } from '../util/viewport-size';
+import type Slide from './slide';
 
 export type Axis = 'x' | 'y';
 

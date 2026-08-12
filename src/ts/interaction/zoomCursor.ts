@@ -1,4 +1,4 @@
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 
 const CAN_ZOOM_CLASS = 'arts-lightbox-can-zoom'
 const ZOOMED_IN_CLASS = 'arts-lightbox-zoomed-in'

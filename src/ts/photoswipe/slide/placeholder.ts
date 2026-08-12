@@ -1,4 +1,4 @@
-import { createElement, setWidthHeight, toTransformString } from '../util/util.js';
+import { createElement, setWidthHeight, toTransformString } from '../util/util';
 
 class Placeholder {
   declare element: HTMLImageElement | HTMLDivElement | null;

@@ -1,4 +1,4 @@
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 import type { IAdoptedVideo } from './IAdoptedVideo'
 import type { IBackdrop } from './IBackdrop'
 import type { IFlightLayer } from './IFlightLayer'

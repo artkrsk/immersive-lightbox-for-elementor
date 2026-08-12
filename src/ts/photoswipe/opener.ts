@@ -3,10 +3,10 @@ import {
   equalizePoints,
   decodeImage,
   toTransformString
-} from './util/util.js';
-import type PhotoSwipe from './photoswipe.js';
-import type { Bounds } from './slide/get-thumb-bounds.js';
-import type { AnimationProps } from './util/animations.js';
+} from './util/util';
+import type PhotoSwipe from './photoswipe';
+import type { Bounds } from './slide/get-thumb-bounds';
+import type { AnimationProps } from './util/animations';
 
 // some browsers do not paint
 // elements which opacity is set to 0,

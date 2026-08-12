@@ -1,5 +1,5 @@
 import type { IOptions } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 
 const EPSILON = 0.001
 

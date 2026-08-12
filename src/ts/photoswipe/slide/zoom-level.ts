@@ -1,6 +1,6 @@
-import type PhotoSwipe from '../photoswipe.js';
-import type { PhotoSwipeOptions, Point } from '../types.js';
-import type { SlideData } from './slide.js';
+import type PhotoSwipe from '../photoswipe';
+import type { PhotoSwipeOptions, Point } from '../types';
+import type { SlideData } from './slide';
 
 const MAX_IMAGE_WIDTH = 4000;
 

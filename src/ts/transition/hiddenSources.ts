@@ -1,5 +1,5 @@
 import type { IOpenRequest } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 
 /**
  * Tracks page elements hidden while their flight clone flies — otherwise

@@ -1,5 +1,5 @@
 import type { ILightboxApi } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 
 const ARROW_SVG = (flipped: boolean): string =>
   `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"${

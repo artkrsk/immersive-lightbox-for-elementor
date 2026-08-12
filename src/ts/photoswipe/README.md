@@ -5,20 +5,35 @@ Forked from photoswipe@5.4.4 (MIT, see LICENSE — Dmytro Semenov) at the
 is dormant; this copy is the maintained source of truth for the engine's
 gesture physics, zoom/pan math, main scroll and image loading.
 
+Converted to TypeScript from upstream's JS+JSDoc — a pure annotation
+migration, verified emit-equal: a whitespace-minified bundle diff against
+the pre-conversion baseline was byte-identical at every step.
+
 Deviations from upstream 5.4.4:
 
 - `lightbox/` (the PhotoSwipeLightbox lazy-loader wrapper) is removed — the
   engine constructs the core directly with an explicit dataSource and owns
-  its own lazy gate (`gate.ts`), so the wrapper was 300 dead lines.
+  its own lazy gate (`gate.ts`).
+- The language is TypeScript under the repo's strict tsconfig. `types.ts`
+  is the canonical home of the options/geometry surface (photoswipe.ts
+  re-exports it), including the `arts*` fork options as first-class API.
+- `@arts fork` comments mark behavioral patches: `artsSeedPan`
+  (slide.ts — click-seeded initial pan), `artsMouseDragNavigates` +
+  `isMousePointer` (gestures/ — mouse drags navigate, never pan, while
+  explore mode owns panning).
 
 Ground rules:
 
 - `gestures/`, `util/spring-*` are the battle-tested touch physics — change
   them only with on-device verification.
-- Files stay plain JS with JSDoc types (tsc `allowJs` infers the types;
-  the code itself is not strict-checked).
-- Excluded from Biome, knip and coverage — upstream style is preserved to
-  keep diffs against 5.4.4 reviewable.
+- Instance properties use the `declare` modifier with constructor
+  assignment (upstream's shape): real field declarations would emit field
+  definitions under ES2022 `useDefineForClassFields` and change
+  own-property semantics. Keep annotation changes emit-neutral; anything
+  that alters emitted JS is a behavior change and reviews as one.
+- Upstream `_underscore` member names stay (greppable against upstream
+  issues/docs); access control is enforced by real `private` modifiers.
 - Planned first-class integrations (in place of the old wrapper fights):
   animated `goTo`, a dims-change API, an interceptable close for the curtain
-  choreography, gesture-driven close, desktop `allowPanToNext` default.
+  choreography, gesture-driven close, desktop `allowPanToNext` default,
+  optional stock UI.

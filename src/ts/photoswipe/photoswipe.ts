@@ -3,63 +3,46 @@ import {
   equalizePoints,
   pointsEqual,
   clamp,
-} from './util/util.js';
+} from './util/util';
 
-import DOMEvents from './util/dom-events.js';
-import Slide from './slide/slide.js';
-import Gestures from './gestures/gestures.js';
-import MainScroll from './main-scroll.js';
+import DOMEvents from './util/dom-events';
+import Slide from './slide/slide';
+import Gestures from './gestures/gestures';
+import MainScroll from './main-scroll';
 
-import Keyboard from './keyboard.js';
-import Animations from './util/animations.js';
-import ScrollWheel from './scroll-wheel.js';
-import UI from './ui/ui.js';
-import { getViewportSize } from './util/viewport-size.js';
-import { getThumbBounds } from './slide/get-thumb-bounds.js';
-import PhotoSwipeBase from './core/base.js';
-import Opener from './opener.js';
-import ContentLoader from './slide/loader.js';
+import Keyboard from './keyboard';
+import Animations from './util/animations';
+import ScrollWheel from './scroll-wheel';
+import UI from './ui/ui';
+import { getViewportSize } from './util/viewport-size';
+import { getThumbBounds } from './slide/get-thumb-bounds';
+import PhotoSwipeBase from './core/base';
+import Opener from './opener';
+import ContentLoader from './slide/loader';
+import type { Bounds } from './slide/get-thumb-bounds';
+import type { ItemHolder } from './main-scroll';
+import type { SlideData } from './slide/slide';
+import type { PhotoSwipeOptions, Point, PreparedPhotoSwipeOptions } from './types';
 
-/**
- * @template T
- * @typedef {import('./types.js').Type<T>} Type<T>
- */
+/* The types module is the canonical home of the options/geometry surface —
+   re-exported here so consumers keep their photoswipe.js import path. */
+export type {
+  ActionFn,
+  ActionType,
+  DataSource,
+  DataSourceArray,
+  DataSourceObject,
+  ElementProvider,
+  Padding,
+  PhotoSwipeModule,
+  PhotoSwipeModuleOption,
+  PhotoSwipeOptions,
+  Point,
+  PreparedPhotoSwipeOptions
+} from './types';
+export type { SlideData } from './slide/slide';
 
-/** @typedef {import('./slide/slide.js').SlideData} SlideData */
-/** @typedef {import('./slide/zoom-level.js').ZoomLevelOption} ZoomLevelOption */
-/** @typedef {import('./ui/ui-element.js').UIElementData} UIElementData */
-/** @typedef {import('./main-scroll.js').ItemHolder} ItemHolder */
-/** @typedef {import('./core/eventable.js').PhotoSwipeEventsMap} PhotoSwipeEventsMap */
-/** @typedef {import('./core/eventable.js').PhotoSwipeFiltersMap} PhotoSwipeFiltersMap */
-/** @typedef {import('./slide/get-thumb-bounds').Bounds} Bounds */
-/**
- * @template {keyof PhotoSwipeEventsMap} T
- * @typedef {import('./core/eventable.js').EventCallback<T>} EventCallback<T>
- */
-/**
- * @template {keyof PhotoSwipeEventsMap} T
- * @typedef {import('./core/eventable.js').AugmentedEvent<T>} AugmentedEvent<T>
- */
-
-/* Canonical definitions live in types.ts (the fork's types module); these
-   re-export typedefs keep every existing `import('../photoswipe.js').X`
-   alias across the fork working until each file's own conversion. */
-/** @typedef {import('./types.js').Point} Point */
-/** @typedef {import('./types.js').Padding} Padding */
-/** @typedef {import('./types.js').DataSourceArray} DataSourceArray */
-/** @typedef {import('./types.js').DataSourceObject} DataSourceObject */
-/** @typedef {import('./types.js').DataSource} DataSource */
-/** @typedef {import('./types.js').ActionFn} ActionFn */
-/** @typedef {import('./types.js').ActionType} ActionType */
-/** @typedef {import('./types.js').PhotoSwipeModule} PhotoSwipeModule */
-/** @typedef {import('./types.js').PhotoSwipeModuleOption} PhotoSwipeModuleOption */
-/** @typedef {import('./types.js').ElementProvider} ElementProvider */
-
-/** @typedef {import('./types.js').PhotoSwipeOptions} PhotoSwipeOptions */
-/** @typedef {import('./types.js').PreparedPhotoSwipeOptions} PreparedPhotoSwipeOptions */
-
-/** @type {PreparedPhotoSwipeOptions} */
-const defaultOptions = {
+const defaultOptions: PreparedPhotoSwipeOptions = {
   allowPanToNext: true,
   spacing: 0.1,
   loop: true,
@@ -92,31 +75,49 @@ const defaultOptions = {
  * PhotoSwipe Core
  */
 class PhotoSwipe extends PhotoSwipeBase {
-  /**
-   * @param {PhotoSwipeOptions} [options]
-   */
-  constructor(options) {
+  declare options: PreparedPhotoSwipeOptions;
+  declare offset: Point;
+  declare viewportSize: Point;
+  declare bgOpacity: number;
+  declare currIndex: number;
+  declare potentialIndex: number;
+  declare isOpen: boolean;
+  declare isDestroying: boolean;
+  declare hasMouse: boolean;
+  declare topBar: HTMLDivElement | undefined;
+  declare element: HTMLDivElement | undefined;
+  declare template: HTMLDivElement | undefined;
+  declare container: HTMLDivElement | undefined;
+  declare scrollWrap: HTMLElement | undefined;
+  declare currSlide: Slide | undefined;
+  declare events: DOMEvents;
+  declare animations: Animations;
+  declare mainScroll: MainScroll;
+  declare gestures: Gestures;
+  declare opener: Opener;
+  declare keyboard: Keyboard;
+  declare contentLoader: ContentLoader;
+  declare scrollWheel: ScrollWheel | undefined;
+  declare ui: UI | undefined;
+  declare bg: HTMLDivElement | undefined;
+  declare private _prevViewportSize: Point;
+  declare private _initialItemData: SlideData;
+  declare _initialThumbBounds: Bounds | undefined;
+
+  constructor(options?: PhotoSwipeOptions) {
     super();
 
     this.options = this._prepareOptions(options || {});
 
     /**
      * offset of viewport relative to document
-     *
-     * @type {Point}
      */
     this.offset = { x: 0, y: 0 };
 
-    /**
-     * @type {Point}
-     * @private
-     */
     this._prevViewportSize = { x: 0, y: 0 };
 
     /**
      * Size of scrollable PhotoSwipe viewport
-     *
-     * @type {Point}
      */
     this.viewportSize = { x: 0, y: 0 };
 
@@ -130,25 +131,14 @@ class PhotoSwipe extends PhotoSwipeBase {
     this.isDestroying = false;
     this.hasMouse = false;
 
-    /**
-     * @private
-     * @type {SlideData}
-     */
     this._initialItemData = {};
-    /** @type {Bounds | undefined} */
     this._initialThumbBounds = undefined;
 
-    /** @type {HTMLDivElement | undefined} */
     this.topBar = undefined;
-    /** @type {HTMLDivElement | undefined} */
     this.element = undefined;
-    /** @type {HTMLDivElement | undefined} */
     this.template = undefined;
-    /** @type {HTMLDivElement | undefined} */
     this.container = undefined;
-    /** @type {HTMLElement | undefined} */
     this.scrollWrap = undefined;
-    /** @type {Slide | undefined} */
     this.currSlide = undefined;
 
     this.events = new DOMEvents();
@@ -160,8 +150,7 @@ class PhotoSwipe extends PhotoSwipeBase {
     this.contentLoader = new ContentLoader(this);
   }
 
-  /** @returns {boolean} */
-  init() {
+  init(): boolean {
     if (this.isOpen || this.isDestroying) {
       return false;
     }
@@ -257,11 +246,8 @@ class PhotoSwipe extends PhotoSwipeBase {
   /**
    * Get looped slide index
    * (for example, -1 will return the last slide)
-   *
-   * @param {number} index
-   * @returns {number}
    */
-  getLoopedIndex(index) {
+  getLoopedIndex(index: number): number {
     const numSlides = this.getNumItems();
 
     if (this.options.loop) {
@@ -277,7 +263,7 @@ class PhotoSwipe extends PhotoSwipeBase {
     return clamp(index, 0, numSlides - 1);
   }
 
-  appendHeavy() {
+  appendHeavy(): void {
     this.mainScroll.itemHolders.forEach((itemHolder) => {
       itemHolder.slide?.appendHeavy();
     });
@@ -285,9 +271,9 @@ class PhotoSwipe extends PhotoSwipeBase {
 
   /**
    * Change the slide
-   * @param {number} index New index
+   * @param index New index
    */
-  goTo(index) {
+  goTo(index: number): void {
     this.mainScroll.moveIndexBy(
       this.getLoopedIndex(index) - this.potentialIndex
     );
@@ -296,30 +282,28 @@ class PhotoSwipe extends PhotoSwipeBase {
   /**
    * Go to the next slide.
    */
-  next() {
+  next(): void {
     this.goTo(this.potentialIndex + 1);
   }
 
   /**
    * Go to the previous slide.
    */
-  prev() {
+  prev(): void {
     this.goTo(this.potentialIndex - 1);
   }
 
   /**
-   * @see slide/slide.js zoomTo
-   *
-   * @param {Parameters<Slide['zoomTo']>} args
+   * @see slide/slide.ts zoomTo
    */
-  zoomTo(...args) {
+  zoomTo(...args: Parameters<Slide['zoomTo']>): void {
     this.currSlide?.zoomTo(...args);
   }
 
   /**
-   * @see slide/slide.js toggleZoom
+   * @see slide/slide.ts toggleZoom
    */
-  toggleZoom() {
+  toggleZoom(): void {
     this.currSlide?.toggleZoom();
   }
 
@@ -327,7 +311,7 @@ class PhotoSwipe extends PhotoSwipeBase {
    * Close the gallery.
    * After closing transition ends - destroy it
    */
-  close() {
+  close(): void {
     if (!this.opener.isOpen || this.isDestroying) {
       return;
     }
@@ -347,7 +331,7 @@ class PhotoSwipe extends PhotoSwipeBase {
    * - cleans intervals and timeouts
    * - removes elements from DOM
    */
-  destroy() {
+  destroy(): void {
     if (!this.isDestroying) {
       this.options.showHideAnimationType = 'none';
       this.close();
@@ -375,10 +359,8 @@ class PhotoSwipe extends PhotoSwipeBase {
 
   /**
    * Refresh/reload content of a slide by its index
-   *
-   * @param {number} slideIndex
    */
-  refreshSlideContent(slideIndex) {
+  refreshSlideContent(slideIndex: number): void {
     this.contentLoader.removeByIndex(slideIndex);
     this.mainScroll.itemHolders.forEach((itemHolder, i) => {
       let potentialHolderIndex = (this.currSlide?.index ?? 0) - 1 + i;
@@ -404,11 +386,11 @@ class PhotoSwipe extends PhotoSwipeBase {
   /**
    * Set slide content
    *
-   * @param {ItemHolder} holder mainScroll.itemHolders array item
-   * @param {number} index Slide index
-   * @param {boolean} [force] If content should be set even if index wasn't changed
+   * @param holder mainScroll.itemHolders array item
+   * @param index Slide index
+   * @param force If content should be set even if index wasn't changed
    */
-  setContent(holder, index, force) {
+  setContent(holder: ItemHolder, index: number, force?: boolean): void {
     if (this.canLoop()) {
       index = this.getLoopedIndex(index);
     }
@@ -441,8 +423,7 @@ class PhotoSwipe extends PhotoSwipeBase {
     holder.slide.append(holder.el);
   }
 
-  /** @returns {Point} */
-  getViewportCenterPoint() {
+  getViewportCenterPoint(): Point {
     return {
       x: this.viewportSize.x / 2,
       y: this.viewportSize.y / 2
@@ -453,9 +434,9 @@ class PhotoSwipe extends PhotoSwipeBase {
    * Update size of all elements.
    * Executed on init and on page resize.
    *
-   * @param {boolean} [force] Update size even if size of viewport was not changed.
+   * @param force Update size even if size of viewport was not changed.
    */
-  updateSize(force) {
+  updateSize(force?: boolean): void {
     // let item;
     // let itemIndex;
 
@@ -498,10 +479,7 @@ class PhotoSwipe extends PhotoSwipeBase {
     this.dispatch('resize');
   }
 
-  /**
-   * @param {number} opacity
-   */
-  applyBgOpacity(opacity) {
+  applyBgOpacity(opacity: number): void {
     this.bgOpacity = Math.max(opacity, 0);
     if (this.bg) {
       this.bg.style.opacity = String(this.bgOpacity * this.options.bgOpacity);
@@ -511,7 +489,7 @@ class PhotoSwipe extends PhotoSwipeBase {
   /**
    * Whether mouse is detected
    */
-  mouseDetected() {
+  mouseDetected(): void {
     if (!this.hasMouse) {
       this.hasMouse = true;
       this.element?.classList.add('pswp--has_mouse');
@@ -520,10 +498,8 @@ class PhotoSwipe extends PhotoSwipeBase {
 
   /**
    * Page resize event handler
-   *
-   * @private
    */
-  _handlePageResize() {
+  private _handlePageResize(): void {
     this.updateSize();
 
     // In iOS webview, if element size depends on document size,
@@ -542,18 +518,12 @@ class PhotoSwipe extends PhotoSwipeBase {
    * Page scroll offset is used
    * to get correct coordinates
    * relative to PhotoSwipe viewport.
-   *
-   * @private
    */
-  _updatePageScrollOffset() {
+  private _updatePageScrollOffset(): void {
     this.setScrollOffset(0, window.pageYOffset);
   }
 
-  /**
-   * @param {number} x
-   * @param {number} y
-   */
-  setScrollOffset(x, y) {
+  setScrollOffset(x: number, y: number): void {
     this.offset.x = x;
     this.offset.y = y;
     this.dispatch('updateScrollOffset');
@@ -562,10 +532,8 @@ class PhotoSwipe extends PhotoSwipeBase {
   /**
    * Create main HTML structure of PhotoSwipe,
    * and add it to DOM
-   *
-   * @private
    */
-  _createMainStructure() {
+  private _createMainStructure(): void {
     // root DOM element of PhotoSwipe (.pswp)
     this.element = createElement('pswp', 'div');
     this.element.setAttribute('tabindex', '-1');
@@ -600,10 +568,8 @@ class PhotoSwipe extends PhotoSwipeBase {
    *   {x:,y:,w:}
    *
    * Height is optional (calculated based on the large image)
-   *
-   * @returns {Bounds | undefined}
    */
-  getThumbBounds() {
+  getThumbBounds(): Bounds | undefined {
     return getThumbBounds(
       this.currIndex,
       this.currSlide ? this.currSlide.data : this._initialItemData,
@@ -613,24 +579,17 @@ class PhotoSwipe extends PhotoSwipeBase {
 
   /**
    * If the PhotoSwipe can have continuous loop
-   * @returns Boolean
    */
-  canLoop() {
+  canLoop(): boolean {
     return (this.options.loop && this.getNumItems() > 2);
   }
 
-  /**
-   * @private
-   * @param {PhotoSwipeOptions} options
-   * @returns {PreparedPhotoSwipeOptions}
-   */
-  _prepareOptions(options) {
+  private _prepareOptions(options: PhotoSwipeOptions): PreparedPhotoSwipeOptions {
     if (window.matchMedia('(prefers-reduced-motion), (update: slow)').matches) {
       options.showHideAnimationType = 'none';
       options.zoomAnimationDuration = 0;
     }
 
-    /** @type {PreparedPhotoSwipeOptions} */
     return {
       ...defaultOptions,
       ...options

@@ -1,5 +1,5 @@
 import { EASINGS } from '../core/easings'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 import { createClock } from '../transition/clock'
 import { mapPointerToPan } from './mapPointerToPan'
 

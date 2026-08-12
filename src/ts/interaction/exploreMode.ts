@@ -1,5 +1,5 @@
 import type { IOptions } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 import { createAimedZoomToggle } from './createAimedZoomToggle'
 import { mapPointerToPan } from './mapPointerToPan'
 
@@ -45,9 +45,7 @@ export function attachExploreMode(
   // zoomAndPanToInitial honors this on every re-init — image appends and
   // resizes keep aiming at it — until the user takes over with a mousemove
   // or changes slides.
-  const options = pswp.options as typeof pswp.options & {
-    artsSeedPan?: { x: number; y: number }
-  }
+  const options = pswp.options
   const clearSeed = (): void => {
     if (options.artsSeedPan) {
       Reflect.deleteProperty(options, 'artsSeedPan')

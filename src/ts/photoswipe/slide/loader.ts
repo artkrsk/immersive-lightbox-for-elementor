@@ -1,11 +1,11 @@
-import { getViewportSize, getPanAreaSize } from '../util/viewport-size.js';
-import ZoomLevel from './zoom-level.js';
-import type Content from './content.js';
-import type PhotoSwipeBase from '../core/base.js';
-import type PhotoSwipe from '../photoswipe.js';
-import type Slide from './slide.js';
-import type { SlideData } from './slide.js';
-import type { Point } from '../types.js';
+import { getViewportSize, getPanAreaSize } from '../util/viewport-size';
+import ZoomLevel from './zoom-level';
+import type Content from './content';
+import type PhotoSwipeBase from '../core/base';
+import type PhotoSwipe from '../photoswipe';
+import type Slide from './slide';
+import type { SlideData } from './slide';
+import type { Point } from '../types';
 
 const MIN_SLIDES_TO_CACHE = 5;
 

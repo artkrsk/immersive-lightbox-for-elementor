@@ -1,5 +1,5 @@
 import { settleStrip } from '@ts/interaction/settleStrip'
-import type PhotoSwipe from '@ts/photoswipe/photoswipe.js'
+import type PhotoSwipe from '@ts/photoswipe/photoswipe'
 import { describe, expect, it, vi } from 'vitest'
 
 function strip(shiftPx: number) {

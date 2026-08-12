@@ -1,8 +1,8 @@
-import Eventable from './eventable.js';
-import { getElementsFromOption } from '../util/util.js';
-import Content from '../slide/content.js';
-import { lazyLoadData } from '../slide/loader.js';
-import type { SlideData } from '../slide/slide.js';
+import Eventable from './eventable';
+import { getElementsFromOption } from '../util/util';
+import Content from '../slide/content';
+import { lazyLoadData } from '../slide/loader';
+import type { SlideData } from '../slide/slide';
 
 /**
  * PhotoSwipe base class that can retrieve data about every slide.

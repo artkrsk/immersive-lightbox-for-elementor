@@ -1,5 +1,5 @@
 import type { IOptions } from '../interfaces'
-import type PhotoSwipe from '../photoswipe/photoswipe.js'
+import type PhotoSwipe from '../photoswipe/photoswipe'
 import { createMomentumClassifier } from './createMomentumClassifier'
 import { settleStrip } from './settleStrip'
 

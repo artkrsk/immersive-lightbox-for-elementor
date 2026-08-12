@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import type { IGallery, IOpenRequest } from '@ts/interfaces'
-import type PhotoSwipe from '@ts/photoswipe/photoswipe.js'
+import type PhotoSwipe from '@ts/photoswipe/photoswipe'
 import { createHiddenSources } from '@ts/transition/hiddenSources'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { fakePswp } from '../helpers/fakePswp'
