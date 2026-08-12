@@ -134,6 +134,21 @@ export function attachOpenTransition(
   }
   pswp.on('destroy', restoreHidden)
 
+  // Navigating away from a slide restores its hidden source right away —
+  // the backdrop is fully opaque mid-session, so the restore is invisible.
+  // Without this, closing from another slide reveals a hole where the
+  // originally-clicked element still sat hidden.
+  pswp.on('change', () => {
+    const key = req.gallery.slides[pswp.currIndex]?.key
+    const instances = key ? (req.gallery.elementsByKey.get(key) ?? []) : []
+    for (const el of hidden) {
+      if (!instances.includes(el)) {
+        el.style.visibility = ''
+        hidden.delete(el)
+      }
+    }
+  })
+
   pswp.on('afterInit', () => {
     if (instant) {
       return
