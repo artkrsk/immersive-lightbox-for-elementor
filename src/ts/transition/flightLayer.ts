@@ -1,12 +1,10 @@
 import type { IFlightFrame, IFlightLayer } from '../interfaces'
+import { createFlightMedia } from './createFlightMedia'
+import { flightFrameStyles } from './flightFrameStyles'
 import { snapshotVideoFrame } from './snapshotVideoFrame'
 
 const LAYER_CLASS = 'arts-lightbox-flight'
 const MEDIA_CLASS = 'arts-lightbox-flight__media'
-
-/** What the flight carries: a fresh img clone, or a LIVE element (an
- *  adopted video keeps playing while it flies). */
-export type TFlightMedia = { kind: 'img'; src: string } | { kind: 'element'; el: HTMLElement }
 
 export function createFlightLayer(): IFlightLayer {
   let el: HTMLDivElement | null = null
@@ -17,12 +15,13 @@ export function createFlightLayer(): IFlightLayer {
     if (!el || !mediaEl) {
       return
     }
-    el.style.transform = `translate(${frame.x}px, ${frame.y}px)`
-    el.style.width = `${frame.w}px`
-    el.style.height = `${frame.h}px`
-    el.style.borderRadius = `${frame.radius}px`
-    mediaEl.style.height = `${frame.innerHeightPct}%`
-    mediaEl.style.transform = `translateY(${(frame.innerOffsetYPct / frame.innerHeightPct) * 100}%)`
+    const style = flightFrameStyles(frame)
+    el.style.transform = style.transform
+    el.style.width = style.width
+    el.style.height = style.height
+    el.style.borderRadius = style.borderRadius
+    mediaEl.style.height = style.innerHeight
+    mediaEl.style.transform = style.innerTransform
   }
 
   const unmount = (): void => {
@@ -38,16 +37,9 @@ export function createFlightLayer(): IFlightLayer {
       }
       el = document.createElement('div')
       el.className = LAYER_CLASS
-      if (media.kind === 'img') {
-        const img = document.createElement('img')
-        img.alt = ''
-        img.src = media.src
-        mediaEl = img
-        owned = true
-      } else {
-        mediaEl = media.el
-        owned = false
-      }
+      const inner = createFlightMedia(media)
+      mediaEl = inner.el
+      owned = inner.owned
       mediaEl.classList.add(MEDIA_CLASS)
       el.appendChild(mediaEl)
       document.body.appendChild(el)

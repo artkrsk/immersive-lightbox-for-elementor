@@ -1,4 +1,4 @@
-import type { TFlightMedia } from '../transition/flightLayer'
+import type { TFlightMedia } from '../types/TFlightMedia'
 import type { IFlightFrame } from './IFlightFrame'
 
 /**
