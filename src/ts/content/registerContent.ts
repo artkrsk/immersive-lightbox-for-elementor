@@ -42,6 +42,17 @@ export function registerContent(
     return type === 'video' || type === 'html' ? false : zoomable
   })
 
+  // Video/html slides are FIT-only: the global fill-first zoom model would
+  // open them cropped (and clip a video's controls) with no way to pan out.
+  pswp.on('zoomLevelsUpdate', (e) => {
+    const type = (e.slideData as ISlideData).type
+    if (type === 'video' || type === 'html') {
+      e.zoomLevels.initial = e.zoomLevels.fit
+      e.zoomLevels.secondary = e.zoomLevels.fit
+      e.zoomLevels.max = e.zoomLevels.fit
+    }
+  })
+
   pswp.on('contentLoad', (e) => {
     const data = slideData(e.content)
     if (data.type === 'video') {

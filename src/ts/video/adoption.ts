@@ -50,6 +50,12 @@ export function adoptVideo(video: HTMLVideoElement): IAdoptedVideo {
       video.style.setProperty('translate', '0 0')
       video.style.setProperty('scale', '1')
       video.style.setProperty('transform', 'none')
+      // CSS animations OVERRIDE inline pins, and a scroll-driven one whose
+      // view-timeline ancestor stayed in the page turns into a finished
+      // fill-forwards animation inside the lightbox — permanently offsetting
+      // the element. Transitions would lag the flight's per-frame painting.
+      video.style.setProperty('animation', 'none')
+      video.style.setProperty('transition', 'none')
       return video
     },
     return: () => {
