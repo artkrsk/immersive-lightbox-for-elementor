@@ -12,4 +12,4 @@ export {
 } from './attributes'
 export { DEFAULT_OPTIONS } from './defaults'
 export { CANDIDATE_SELECTOR } from './selectors'
-export { VIDEO_FILE_PATTERN, VIMEO_PATTERN, YOUTUBE_PATTERN } from './urlPatterns'
+export { VIMEO_PATTERN, YOUTUBE_PATTERN } from './urlPatterns'
