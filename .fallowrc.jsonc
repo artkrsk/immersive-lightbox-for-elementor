@@ -14,19 +14,21 @@
   // ignore), so its imports are never traversed: these two are consumed by
   // build/sass.js, build/sync.js and build/package.js (the release harness).
   "ignoreDependencies": ["archiver", "chokidar"],
-  // The vendored PhotoSwipe fork is upstream code kept intentionally close
-  // to its source — excluded from analysis the same way it is excluded from
-  // Biome, knip and coverage. Fork refactors ride the phase-2 queue with
-  // on-device verification, not this gate.
-  "ignorePatterns": ["src/ts/photoswipe/**"],
+  // Same semantics knip runs with: a type consumed within its own module
+  // is not dead surface.
+  "ignoreExportsUsedInFile": true,
   "duplicates": {
-    // Test fixtures rhyme by design (same DOM scaffold, different assertion).
-    // Source duplication stays guarded — currently zero.
-    "ignore": ["tests/**"]
+    // Test fixtures rhyme by design (same DOM scaffold, different assertion);
+    // the fork keeps upstream's shapes (repeated axis math is upstream code).
+    "ignore": ["tests/**", "src/ts/photoswipe/**"]
   },
   "health": {
-    // Complexity gates apply to shipped engine code, not test bodies.
-    "ignore": ["tests/**"],
+    // Complexity gates apply to shipped engine code, not test bodies. The
+    // fork keeps upstream's function shapes (correctZoomPan and friends are
+    // phase-2 first-class work, verified on-device) — but its DEAD CODE is
+    // now analyzed like everything else (a lightbox/-sized find pays for
+    // this line).
+    "ignore": ["tests/**", "src/ts/photoswipe/**"],
     // CRAP is a coverage-policy metric (cyclomatic² × (1-coverage)³), not a
     // complexity one. This engine is playground-first by design — rAF
     // choreography and gesture feel are verified in the browser harness
