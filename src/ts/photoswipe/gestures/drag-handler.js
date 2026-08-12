@@ -229,6 +229,18 @@ class DragHandler {
       return false;
     }
 
+    // @arts fork: with mousemove-pan (explore) active, a mouse drag never
+    // pans — two pan writers would fight. Horizontal mouse drag always
+    // navigates slides; vertical mouse drag does nothing. Touch keeps the
+    // stock behavior below.
+    if (this.pswp.options.artsMouseDragNavigates && this.gestures.isMousePointer) {
+      if (axis === 'x' && !isMultitouch) {
+        mainScroll.moveTo(newMainScrollX, true);
+        return true; // changed main scroll
+      }
+      return false;
+    }
+
     // Always move main scroll if image can not be panned
     if (axis === 'x' && !currSlide.isPannable() && !isMultitouch) {
       mainScroll.moveTo(newMainScrollX, true);

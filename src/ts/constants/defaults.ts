@@ -16,10 +16,12 @@ export const DEFAULT_OPTIONS: IOptions = {
     enabled: true,
     smoothing: 0.12
   },
+  // The signature open: slides appear already zoomed to cover (fill is also
+  // the zoom ceiling), mousemove explores, click toggles out to fit.
   zoom: {
     imageClickAction: 'zoom',
     wheelToZoom: false,
-    initialLevel: 'fit'
+    initialLevel: 'fill'
   },
   slideChange: 'slide',
   gallery: {

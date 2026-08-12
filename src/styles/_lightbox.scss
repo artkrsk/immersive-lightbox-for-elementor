@@ -50,6 +50,12 @@
     border-radius: var(--arts-lightbox-slide-radius);
   }
 
+  // At the zoom ceiling the only zoom action left is out (fill-as-max opens
+  // slides already at max — a zoom-in cursor there promises the impossible).
+  .pswp--zoom-allowed.arts-lightbox-at-max-zoom .pswp__img {
+    cursor: zoom-out;
+  }
+
   // Safari compositing quirk: without a paintable background the first
   // loaded image can render truncated (upstream #1846, never fixed there).
   .pswp img {

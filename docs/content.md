@@ -1,6 +1,6 @@
 # Content types
 
-> Reboot recipes persist for this tab across reloads — `artsLightboxPlayground.reboot()` (no arguments) resets to defaults.
+> Reboot recipes apply until the next reload — `artsLightboxPlayground.reboot()` (no arguments) resets to defaults immediately.
 
 Images, self-hosted video, YouTube/Vimeo embeds, and arbitrary HTML — all
 first-class slide types in one gallery. Video plays on activation and pauses
@@ -19,23 +19,18 @@ import tallExplore from './demos/tall-explore.html?raw'
 
 ## Explore mode
 
-Enable, open the tall artwork, click to zoom in — then just **move** the
-mouse. The pan glides toward the pointer, no dragging:
-
-```js
-artsLightboxPlayground.reboot({ explore: { enabled: true } })
-
-// the asmobius experience: open ALREADY zoomed to cover, mouse explores
-artsLightboxPlayground.reboot({
-  explore: { enabled: true },
-  zoom: { initialLevel: 'fill' }
-})
-```
+**This is the default experience:** slides open already zoomed to cover
+(`fill`, which is also the zoom ceiling), the mouse explores by simply
+moving (no dragging — a horizontal mouse drag navigates slides instead),
+and a click toggles out to fit and back.
 
 <LightboxDemo :html="tallExplore" />
 
 ```js
-// desktop zoom ergonomics that pair with it
+// the classic contained opening instead
+artsLightboxPlayground.reboot({ zoom: { initialLevel: 'fit' } })
+
+// other desktop zoom ergonomics
 artsLightboxPlayground.reboot({ zoom: { wheelToZoom: true } })
 artsLightboxPlayground.reboot({ zoom: { imageClickAction: 'next' } })
 ```

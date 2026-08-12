@@ -48,16 +48,23 @@ export function mapToPswpOptions(
   gallery: IGallery,
   index: number
 ): PhotoSwipeOptions {
-  return {
+  const options: PhotoSwipeOptions & { artsMouseDragNavigates: boolean } = {
     dataSource: gallery.slides.map(toPswpSlide),
     index,
     showHideAnimationType: 'none',
     bgOpacity: 0,
     imageClickAction: opts.zoom.imageClickAction === 'none' ? false : opts.zoom.imageClickAction,
     wheelToZoom: opts.zoom.wheelToZoom,
-    // 'fill' opens already zoomed (full width or height, whichever covers) —
-    // pairs with explore mode for the mousemove-pan browsing experience.
+    // 'fill' opens already zoomed to cover AND is the zoom ceiling: click
+    // toggles OUT to fit and back, nothing zooms past fill (wheel/pinch
+    // clamp to max). 'fit' keeps the classic stock levels.
     initialZoomLevel: opts.zoom.initialLevel,
+    ...(opts.zoom.initialLevel === 'fill'
+      ? { secondaryZoomLevel: 'fit' as const, maxZoomLevel: 'fill' as const }
+      : {}),
+    // Fork policy flag: with mousemove-pan active, mouse drags navigate
+    // slides instead of panning (see photoswipe/gestures/drag-handler.js).
+    artsMouseDragNavigates: opts.explore.enabled,
     loop: opts.gallery.loop,
     counter: false,
     zoom: false,
@@ -74,4 +81,5 @@ export function mapToPswpOptions(
     closeOnVerticalDrag: false,
     pinchToClose: false
   }
+  return options
 }
