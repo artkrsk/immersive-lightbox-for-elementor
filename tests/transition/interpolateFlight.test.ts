@@ -42,13 +42,14 @@ describe('interpolateFlight', () => {
     })
   })
 
-  it('interpolates every channel linearly', () => {
+  it('interpolates rect and parallax linearly; radius scales with the rect', () => {
     const f = interpolateFlight(from, to, 0.5)
     expect(f.x).toBe(300)
     expect(f.y).toBe(150)
     expect(f.w).toBe(450)
     expect(f.h).toBe(600)
-    expect(f.radius).toBe(12)
+    // scale-aware: source 18px at 1.5x rect scale = 27, blended to 6 → 16.5
+    expect(f.radius).toBe(16.5)
     expect(f.innerHeightPct).toBe(110)
     expect(f.innerOffsetYPct).toBe(-6)
   })
