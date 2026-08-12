@@ -1,6 +1,5 @@
-import { buildGalleries, neighborGallery } from '../collector/buildGalleries'
+import { buildGalleries } from '../collector/buildGalleries'
 import { resolveOpenRequest } from '../collector/resolveOpenRequest'
-import { CANDIDATE_SELECTOR } from '../constants'
 import { registerContent } from '../content/registerContent'
 import { attachExploreMode } from '../interaction/exploreMode'
 import { attachHoverPrefetch } from '../interaction/hoverPrefetch'
@@ -11,18 +10,18 @@ import type { IGallery, ILightbox, ILightboxApi, IOpenRequest, IOptions } from '
 import { attachOpenTransition } from '../transition/transitionEngine'
 import type { TDeepPartial } from '../types'
 import { registerUi } from '../ui/registerUi'
-import { adoptVideo } from '../video/adoptVideo'
 import { audioFocus } from '../video/audioFocus'
-import { findAdoptableVideo } from '../video/findAdoptableVideo'
+import { resolveVideoSource } from '../video/resolveVideoSource'
+import { attachDelegation } from './attachDelegation'
+import { createNavigator } from './createNavigator'
 import { engineState } from './engineState'
 import { mergeOptions } from './mergeOptions'
 import { createPswp } from './pswpFactory'
 
-/** Composition root: delegated click handling, open path, close routing, nav. */
+/** Composition root: delegated input, open path, close routing, navigation. */
 export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
   const opts: IOptions = mergeOptions(options)
-  let clickHandler: ((e: MouseEvent) => void) | null = null
-  let keyHandler: ((e: KeyboardEvent) => void) | null = null
+  let detachDelegation: (() => void) | null = null
   let disposePrefetch: (() => void) | null = null
   let current: { req: IOpenRequest; galleries: IGallery[] } | null = null
 
@@ -69,47 +68,23 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
     })
   }
 
-  /** Nav with pass-through: at a gallery boundary, jump to the neighbor. */
-  const nav = (dir: 1 | -1): void => {
-    const pswp = engineState.pswp
-    if (!pswp || !current) {
-      return
+  const navigator = createNavigator({
+    opts,
+    getCurrent: () => current,
+    openInstant: (req, galleries) => {
+      openRequest(req, galleries, true)
     }
-    const { req, galleries } = current
-    const lastIndex = req.gallery.slides.length - 1
-    const atBoundary = dir === 1 ? pswp.currIndex >= lastIndex : pswp.currIndex <= 0
-    if (opts.gallery.passThrough && atBoundary) {
-      const neighbor = neighborGallery(req.gallery, galleries, dir)
-      const index = dir === 1 ? 0 : (neighbor?.slides.length ?? 1) - 1
-      const key = neighbor?.slides[index]?.key
-      const sourceElement = key ? neighbor?.elementsByKey.get(key)?.[0] : undefined
-      if (neighbor && sourceElement) {
-        // Instant swap: the backdrop stays visually continuous — the old core
-        // is destroyed without choreography and the neighbor opens fully up.
-        pswp.destroy()
-        openRequest({ gallery: neighbor, index, sourceElement }, galleries, true)
-        return
-      }
-    }
-    // pswp.next()/goTo() hard-cut (upstream #2175) — the animated path is the
-    // main scroll's own spring, the same one drag gestures use.
-    pswp.mainScroll.moveIndexBy(dir, true)
-  }
+  })
 
   const api: ILightboxApi = {
     close,
     next: () => {
-      nav(1)
+      navigator.nav(1)
     },
     prev: () => {
-      nav(-1)
+      navigator.nav(-1)
     },
-    goTo: (index) => {
-      const pswp = engineState.pswp
-      if (pswp) {
-        pswp.mainScroll.moveIndexBy(index - pswp.currIndex, true)
-      }
-    }
+    goTo: navigator.goTo
   }
 
   const open = (el: HTMLElement, point?: { x: number; y: number }): boolean => {
@@ -123,75 +98,27 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
     if (!req) {
       return false
     }
-    // Resolve the video source tier for the opened slide: adopt the live
-    // background video when it's genuinely visible; remember hidden ones
-    // for clone-and-seek.
-    const slide = req.gallery.slides[req.index]
-    if (slide?.type === 'video' && slide.sourceVideo) {
-      const adoptable = findAdoptableVideo(req.sourceElement)
-      if (adoptable) {
-        slide.adopted = adoptVideo(adoptable)
-      } else {
-        const hidden = req.sourceElement.querySelector('video')
-        if (hidden) {
-          slide.cloneSource = hidden
-        }
-      }
-    }
+    resolveVideoSource(req.gallery.slides[req.index], req.sourceElement)
     openRequest(req, galleries, false, point)
     return true
   }
 
   return {
     init: () => {
-      if (clickHandler) {
+      if (detachDelegation) {
         return
       }
-      clickHandler = (e: MouseEvent) => {
-        // Modifier clicks keep their native meaning (new tab etc.). We do NOT
-        // back off on defaultPrevented: data-arts-lightbox is explicit opt-in
-        // markup, and router layers (VitePress, SPA themes) preventDefault
-        // href="#" links in window-capture before we ever see the event.
-        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
-          return
-        }
-        const el = (e.target as Element | null)?.closest<HTMLElement>(CANDIDATE_SELECTOR)
-        if (!el) {
-          return
-        }
-        e.preventDefault()
-        open(el, { x: e.clientX, y: e.clientY })
-      }
-      keyHandler = (e: KeyboardEvent) => {
-        if (!engineState.pswp) {
-          return
-        }
-        // Esc and arrows are ours: PhotoSwipe's own paths would bypass the
-        // close choreography and pass-through navigation.
-        if (e.key === 'Escape') {
-          e.preventDefault()
-          close()
-        } else if (e.key === 'ArrowRight') {
-          e.preventDefault()
-          api.next()
-        } else if (e.key === 'ArrowLeft') {
-          e.preventDefault()
-          api.prev()
-        }
-      }
-      document.addEventListener('click', clickHandler, true)
-      document.addEventListener('keydown', keyHandler, true)
+      detachDelegation = attachDelegation({
+        open,
+        close,
+        next: api.next,
+        prev: api.prev
+      })
       disposePrefetch = attachHoverPrefetch(opts)
     },
     destroy: () => {
-      if (clickHandler) {
-        document.removeEventListener('click', clickHandler, true)
-        clickHandler = null
-      }
-      if (keyHandler) {
-        document.removeEventListener('keydown', keyHandler, true)
-        keyHandler = null
-      }
+      detachDelegation?.()
+      detachDelegation = null
       disposePrefetch?.()
       disposePrefetch = null
       engineState.pswp?.destroy()
