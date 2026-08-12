@@ -1,5 +1,5 @@
-const DEFAULT_NATURAL_FREQUENCY = 12;
-const DEFAULT_DAMPING_RATIO = 0.75;
+const DEFAULT_NATURAL_FREQUENCY = 12
+const DEFAULT_DAMPING_RATIO = 0.75
 
 /**
  * Spring easing helper
@@ -7,10 +7,10 @@ const DEFAULT_DAMPING_RATIO = 0.75;
 class SpringEaser {
   /* `declare` fields erase completely — constructor-assigned like upstream,
      so the emitted JS (and own-property semantics) stay byte-identical. */
-  declare velocity: number;
-  declare private _dampingRatio: number;
-  declare private _naturalFrequency: number;
-  declare private _dampedFrequency: number;
+  declare velocity: number
+  private declare _dampingRatio: number
+  private declare _naturalFrequency: number
+  private declare _dampedFrequency: number
 
   /**
    * @param initialVelocity Initial velocity, px per ms.
@@ -28,18 +28,18 @@ class SpringEaser {
    * Recommended value from 10 to 50
    */
   constructor(initialVelocity: number, dampingRatio?: number, naturalFrequency?: number) {
-    this.velocity = initialVelocity * 1000; // convert to "pixels per second"
+    this.velocity = initialVelocity * 1000 // convert to "pixels per second"
 
     // https://en.wikipedia.org/wiki/Damping_ratio
-    this._dampingRatio = dampingRatio || DEFAULT_DAMPING_RATIO;
+    this._dampingRatio = dampingRatio || DEFAULT_DAMPING_RATIO
 
     // https://en.wikipedia.org/wiki/Natural_frequency
-    this._naturalFrequency = naturalFrequency || DEFAULT_NATURAL_FREQUENCY;
+    this._naturalFrequency = naturalFrequency || DEFAULT_NATURAL_FREQUENCY
 
-    this._dampedFrequency = this._naturalFrequency;
+    this._dampedFrequency = this._naturalFrequency
 
     if (this._dampingRatio < 1) {
-      this._dampedFrequency *= Math.sqrt(1 - this._dampingRatio * this._dampingRatio);
+      this._dampedFrequency *= Math.sqrt(1 - this._dampingRatio * this._dampingRatio)
     }
   }
 
@@ -55,43 +55,40 @@ class SpringEaser {
     // https://en.wikipedia.org/wiki/Damping_ratio
     // we ignore mass (assume that it's 1kg)
 
-    let displacement = 0;
-    let coeff;
+    let displacement = 0
+    let coeff
 
-    deltaTime /= 1000;
+    deltaTime /= 1000
 
-    const naturalDumpingPow = Math.E ** (-this._dampingRatio * this._naturalFrequency * deltaTime);
+    const naturalDumpingPow = Math.E ** (-this._dampingRatio * this._naturalFrequency * deltaTime)
 
     if (this._dampingRatio === 1) {
-      coeff = this.velocity + this._naturalFrequency * deltaPosition;
+      coeff = this.velocity + this._naturalFrequency * deltaPosition
 
-      displacement = (deltaPosition + coeff * deltaTime) * naturalDumpingPow;
+      displacement = (deltaPosition + coeff * deltaTime) * naturalDumpingPow
 
-      this.velocity = displacement
-                        * (-this._naturalFrequency) + coeff
-                        * naturalDumpingPow;
+      this.velocity = displacement * -this._naturalFrequency + coeff * naturalDumpingPow
     } else if (this._dampingRatio < 1) {
-      coeff = (1 / this._dampedFrequency)
-                * (this._dampingRatio * this._naturalFrequency * deltaPosition + this.velocity);
+      coeff =
+        (1 / this._dampedFrequency) *
+        (this._dampingRatio * this._naturalFrequency * deltaPosition + this.velocity)
 
-      const dumpedFCos = Math.cos(this._dampedFrequency * deltaTime);
-      const dumpedFSin = Math.sin(this._dampedFrequency * deltaTime);
+      const dumpedFCos = Math.cos(this._dampedFrequency * deltaTime)
+      const dumpedFSin = Math.sin(this._dampedFrequency * deltaTime)
 
-      displacement = naturalDumpingPow
-                       * (deltaPosition * dumpedFCos + coeff * dumpedFSin);
+      displacement = naturalDumpingPow * (deltaPosition * dumpedFCos + coeff * dumpedFSin)
 
-      this.velocity = displacement
-                        * (-this._naturalFrequency)
-                        * this._dampingRatio
-                        + naturalDumpingPow
-                        * (-this._dampedFrequency * deltaPosition * dumpedFSin
-                        + this._dampedFrequency * coeff * dumpedFCos);
+      this.velocity =
+        displacement * -this._naturalFrequency * this._dampingRatio +
+        naturalDumpingPow *
+          (-this._dampedFrequency * deltaPosition * dumpedFSin +
+            this._dampedFrequency * coeff * dumpedFCos)
     }
 
     // Overdamped (>1) damping ratio is not supported
 
-    return displacement;
+    return displacement
   }
 }
 
-export default SpringEaser;
+export default SpringEaser

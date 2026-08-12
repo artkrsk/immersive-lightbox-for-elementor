@@ -1,12 +1,12 @@
-import type PhotoSwipeBase from '../core/base';
-import type { PhotoSwipeOptions, Point } from '../types';
-import type { SlideData } from '../slide/slide';
+import type PhotoSwipeBase from '../core/base'
+import type { SlideData } from '../slide/slide'
+import type { PhotoSwipeOptions, Point } from '../types'
 
 export function getViewportSize(options: PhotoSwipeOptions, pswp: PhotoSwipeBase): Point {
   if (options.getViewportSizeFn) {
-    const newViewportSize = options.getViewportSizeFn(options, pswp);
+    const newViewportSize = options.getViewportSizeFn(options, pswp)
     if (newViewportSize) {
-      return newViewportSize;
+      return newViewportSize
     }
   }
 
@@ -18,7 +18,7 @@ export function getViewportSize(options: PhotoSwipeOptions, pswp: PhotoSwipeBase
     //
     // document.documentElement.clientHeight - doesn't seem to work well
     y: window.innerHeight
-  };
+  }
 }
 
 /**
@@ -62,22 +62,22 @@ export function parsePaddingOption(
   itemData: SlideData,
   index: number
 ): number {
-  let paddingValue = 0;
+  let paddingValue = 0
 
   if (options.paddingFn) {
-    paddingValue = options.paddingFn(viewportSize, itemData, index)[prop];
+    paddingValue = options.paddingFn(viewportSize, itemData, index)[prop]
   } else if (options.padding) {
-    paddingValue = options.padding[prop];
+    paddingValue = options.padding[prop]
   } else {
-    const legacyPropName = 'padding' + prop[0]!.toUpperCase() + prop.slice(1);
+    const legacyPropName = 'padding' + prop[0]!.toUpperCase() + prop.slice(1)
     // @ts-expect-error
     if (options[legacyPropName]) {
       // @ts-expect-error
-      paddingValue = options[legacyPropName];
+      paddingValue = options[legacyPropName]
     }
   }
 
-  return Number(paddingValue) || 0;
+  return Number(paddingValue) || 0
 }
 
 export function getPanAreaSize(
@@ -87,11 +87,13 @@ export function getPanAreaSize(
   index: number
 ): Point {
   return {
-    x: viewportSize.x
-      - parsePaddingOption('left', options, viewportSize, itemData, index)
-      - parsePaddingOption('right', options, viewportSize, itemData, index),
-    y: viewportSize.y
-      - parsePaddingOption('top', options, viewportSize, itemData, index)
-      - parsePaddingOption('bottom', options, viewportSize, itemData, index)
-  };
+    x:
+      viewportSize.x -
+      parsePaddingOption('left', options, viewportSize, itemData, index) -
+      parsePaddingOption('right', options, viewportSize, itemData, index),
+    y:
+      viewportSize.y -
+      parsePaddingOption('top', options, viewportSize, itemData, index) -
+      parsePaddingOption('bottom', options, viewportSize, itemData, index)
+  }
 }

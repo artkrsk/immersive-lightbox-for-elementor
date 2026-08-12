@@ -1,4 +1,4 @@
-import type { UIElementData } from './ui-element';
+import type { UIElementData } from './ui-element'
 
 export const loadingIndicator: UIElementData = {
   name: 'preloader',
@@ -7,54 +7,55 @@ export const loadingIndicator: UIElementData = {
   html: {
     isCustomSVG: true,
     // eslint-disable-next-line max-len
-    inner: '<path fill-rule="evenodd" clip-rule="evenodd" d="M21.2 16a5.2 5.2 0 1 1-5.2-5.2V8a8 8 0 1 0 8 8h-2.8Z" id="pswp__icn-loading"/>',
+    inner:
+      '<path fill-rule="evenodd" clip-rule="evenodd" d="M21.2 16a5.2 5.2 0 1 1-5.2-5.2V8a8 8 0 1 0 8 8h-2.8Z" id="pswp__icn-loading"/>',
     outlineID: 'pswp__icn-loading'
   },
   onInit: (indicatorElement, pswp) => {
-    let isVisible: boolean | undefined;
-    let delayTimeout: NodeJS.Timeout | null = null;
+    let isVisible: boolean | undefined
+    let delayTimeout: NodeJS.Timeout | null = null
 
     const toggleIndicatorClass = (className: string, add: boolean): void => {
-      indicatorElement.classList.toggle('pswp__preloader--' + className, add);
-    };
+      indicatorElement.classList.toggle('pswp__preloader--' + className, add)
+    }
 
     const setIndicatorVisibility = (visible: boolean): void => {
       if (isVisible !== visible) {
-        isVisible = visible;
-        toggleIndicatorClass('active', visible);
+        isVisible = visible
+        toggleIndicatorClass('active', visible)
       }
-    };
+    }
 
     const updatePreloaderVisibility = (): void => {
       if (!pswp.currSlide?.content.isLoading()) {
-        setIndicatorVisibility(false);
+        setIndicatorVisibility(false)
         if (delayTimeout) {
-          clearTimeout(delayTimeout);
-          delayTimeout = null;
+          clearTimeout(delayTimeout)
+          delayTimeout = null
         }
-        return;
+        return
       }
 
       if (!delayTimeout) {
         // display loading indicator with delay
         delayTimeout = setTimeout(() => {
-          setIndicatorVisibility(Boolean(pswp.currSlide?.content.isLoading()));
-          delayTimeout = null;
-        }, pswp.options.preloaderDelay);
+          setIndicatorVisibility(Boolean(pswp.currSlide?.content.isLoading()))
+          delayTimeout = null
+        }, pswp.options.preloaderDelay)
       }
-    };
+    }
 
-    pswp.on('change', updatePreloaderVisibility);
+    pswp.on('change', updatePreloaderVisibility)
 
     pswp.on('loadComplete', (e) => {
       if (pswp.currSlide === e.slide) {
-        updatePreloaderVisibility();
+        updatePreloaderVisibility()
       }
-    });
+    })
 
     // expose the method
     if (pswp.ui) {
-      pswp.ui.updatePreloaderVisibility = updatePreloaderVisibility;
+      pswp.ui.updatePreloaderVisibility = updatePreloaderVisibility
     }
   }
-};
+}

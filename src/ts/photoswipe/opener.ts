@@ -1,18 +1,13 @@
-import {
-  setTransform,
-  equalizePoints,
-  decodeImage,
-  toTransformString
-} from './util/util';
-import type PhotoSwipe from './photoswipe';
-import type { Bounds } from './slide/get-thumb-bounds';
-import type { AnimationProps } from './util/animations';
+import type PhotoSwipe from './photoswipe'
+import type { Bounds } from './slide/get-thumb-bounds'
+import type { AnimationProps } from './util/animations'
+import { decodeImage, equalizePoints, setTransform, toTransformString } from './util/util'
 
 // some browsers do not paint
 // elements which opacity is set to 0,
 // since we need to pre-render elements for the animation -
 // we set it to the minimum amount
-const MIN_OPACITY = 0.003;
+const MIN_OPACITY = 0.003
 
 /**
  * Manages opening and closing transitions of the PhotoSwipe.
@@ -20,51 +15,50 @@ const MIN_OPACITY = 0.003;
  * It can perform zoom, fade or no transition.
  */
 class Opener {
-  declare pswp: PhotoSwipe;
-  declare isClosed: boolean;
-  declare isOpen: boolean;
-  declare isClosing: boolean;
-  declare isOpening: boolean;
-  declare private _duration: number | false | undefined;
-  declare private _useAnimation: boolean;
-  declare private _croppedZoom: boolean;
-  declare private _animateRootOpacity: boolean;
-  declare private _animateBgOpacity: boolean;
-  declare private _animateZoom: boolean | undefined;
-  declare private _placeholder: HTMLDivElement | HTMLImageElement | null | undefined;
-  declare private _opacityElement: HTMLDivElement | undefined;
-  declare private _cropContainer1: HTMLDivElement | undefined;
-  declare private _cropContainer2: HTMLElement | null | undefined;
-  declare private _thumbBounds: Bounds | undefined;
+  declare pswp: PhotoSwipe
+  declare isClosed: boolean
+  declare isOpen: boolean
+  declare isClosing: boolean
+  declare isOpening: boolean
+  private declare _duration: number | false | undefined
+  private declare _useAnimation: boolean
+  private declare _croppedZoom: boolean
+  private declare _animateRootOpacity: boolean
+  private declare _animateBgOpacity: boolean
+  private declare _animateZoom: boolean | undefined
+  private declare _placeholder: HTMLDivElement | HTMLImageElement | null | undefined
+  private declare _opacityElement: HTMLDivElement | undefined
+  private declare _cropContainer1: HTMLDivElement | undefined
+  private declare _cropContainer2: HTMLElement | null | undefined
+  private declare _thumbBounds: Bounds | undefined
 
   constructor(pswp: PhotoSwipe) {
-    this.pswp = pswp;
-    this.isClosed = true;
-    this.isOpen = false;
-    this.isClosing = false;
-    this.isOpening = false;
-    this._duration = undefined;
-    this._useAnimation = false;
-    this._croppedZoom = false;
-    this._animateRootOpacity = false;
-    this._animateBgOpacity = false;
-    this._placeholder = undefined;
-    this._opacityElement = undefined;
-    this._cropContainer1 = undefined;
-    this._cropContainer2 = undefined;
+    this.pswp = pswp
+    this.isClosed = true
+    this.isOpen = false
+    this.isClosing = false
+    this.isOpening = false
+    this._duration = undefined
+    this._useAnimation = false
+    this._croppedZoom = false
+    this._animateRootOpacity = false
+    this._animateBgOpacity = false
+    this._placeholder = undefined
+    this._opacityElement = undefined
+    this._cropContainer1 = undefined
+    this._cropContainer2 = undefined
 
-    this._thumbBounds = undefined;
+    this._thumbBounds = undefined
 
-
-    this._prepareOpen = this._prepareOpen.bind(this);
+    this._prepareOpen = this._prepareOpen.bind(this)
 
     // Override initial zoom and pan position
-    pswp.on('firstZoomPan', this._prepareOpen);
+    pswp.on('firstZoomPan', this._prepareOpen)
   }
 
   open(): void {
-    this._prepareOpen();
-    this._start();
+    this._prepareOpen()
+    this._start()
   }
 
   close(): void {
@@ -72,161 +66,167 @@ class Opener {
       // if we close during opening animation
       // for now do nothing,
       // browsers aren't good at changing the direction of the CSS transition
-      return;
+      return
     }
 
-    const slide = this.pswp.currSlide;
+    const slide = this.pswp.currSlide
 
-    this.isOpen = false;
-    this.isOpening = false;
-    this.isClosing = true;
-    this._duration = this.pswp.options.hideAnimationDuration;
+    this.isOpen = false
+    this.isOpening = false
+    this.isClosing = true
+    this._duration = this.pswp.options.hideAnimationDuration
 
     if (slide && slide.currZoomLevel * slide.width >= this.pswp.options.maxWidthToAnimate) {
-      this._duration = 0;
+      this._duration = 0
     }
 
-    this._applyStartProps();
-    setTimeout(() => {
-      this._start();
-    }, this._croppedZoom ? 30 : 0);
+    this._applyStartProps()
+    setTimeout(
+      () => {
+        this._start()
+      },
+      this._croppedZoom ? 30 : 0
+    )
   }
 
   private _prepareOpen(): void {
-    this.pswp.off('firstZoomPan', this._prepareOpen);
+    this.pswp.off('firstZoomPan', this._prepareOpen)
     if (!this.isOpening) {
-      const slide = this.pswp.currSlide;
-      this.isOpening = true;
-      this.isClosing = false;
-      this._duration = this.pswp.options.showAnimationDuration;
+      const slide = this.pswp.currSlide
+      this.isOpening = true
+      this.isClosing = false
+      this._duration = this.pswp.options.showAnimationDuration
       if (slide && slide.zoomLevels.initial * slide.width >= this.pswp.options.maxWidthToAnimate) {
-        this._duration = 0;
+        this._duration = 0
       }
-      this._applyStartProps();
+      this._applyStartProps()
     }
   }
 
   private _applyStartProps(): void {
-    const { pswp } = this;
-    const slide = this.pswp.currSlide;
-    const { options } = pswp;
+    const { pswp } = this
+    const slide = this.pswp.currSlide
+    const { options } = pswp
 
     if (options.showHideAnimationType === 'fade') {
-      options.showHideOpacity = true;
-      this._thumbBounds = undefined;
+      options.showHideOpacity = true
+      this._thumbBounds = undefined
     } else if (options.showHideAnimationType === 'none') {
-      options.showHideOpacity = false;
-      this._duration = 0;
-      this._thumbBounds = undefined;
+      options.showHideOpacity = false
+      this._duration = 0
+      this._thumbBounds = undefined
     } else if (this.isOpening && pswp._initialThumbBounds) {
       // Use initial bounds if defined
-      this._thumbBounds = pswp._initialThumbBounds;
+      this._thumbBounds = pswp._initialThumbBounds
     } else {
-      this._thumbBounds = this.pswp.getThumbBounds();
+      this._thumbBounds = this.pswp.getThumbBounds()
     }
 
-    this._placeholder = slide?.getPlaceholderElement();
+    this._placeholder = slide?.getPlaceholderElement()
 
-    pswp.animations.stopAll();
+    pswp.animations.stopAll()
 
     // Discard animations when duration is less than 50ms
-    this._useAnimation = Boolean(this._duration && this._duration > 50);
-    this._animateZoom = Boolean(this._thumbBounds)
-                        && slide?.content.usePlaceholder()
-                        && (!this.isClosing || !pswp.mainScroll.isShifted());
+    this._useAnimation = Boolean(this._duration && this._duration > 50)
+    this._animateZoom =
+      Boolean(this._thumbBounds) &&
+      slide?.content.usePlaceholder() &&
+      (!this.isClosing || !pswp.mainScroll.isShifted())
     if (!this._animateZoom) {
-      this._animateRootOpacity = true;
+      this._animateRootOpacity = true
 
       if (this.isOpening && slide) {
-        slide.zoomAndPanToInitial();
-        slide.applyCurrentZoomPan();
+        slide.zoomAndPanToInitial()
+        slide.applyCurrentZoomPan()
       }
     } else {
-      this._animateRootOpacity = options.showHideOpacity ?? false;
+      this._animateRootOpacity = options.showHideOpacity ?? false
     }
-    this._animateBgOpacity = !this._animateRootOpacity && this.pswp.options.bgOpacity > MIN_OPACITY;
-    this._opacityElement = this._animateRootOpacity ? pswp.element : pswp.bg;
+    this._animateBgOpacity = !this._animateRootOpacity && this.pswp.options.bgOpacity > MIN_OPACITY
+    this._opacityElement = this._animateRootOpacity ? pswp.element : pswp.bg
 
     if (!this._useAnimation) {
-      this._duration = 0;
-      this._animateZoom = false;
-      this._animateBgOpacity = false;
-      this._animateRootOpacity = true;
+      this._duration = 0
+      this._animateZoom = false
+      this._animateBgOpacity = false
+      this._animateRootOpacity = true
       if (this.isOpening) {
         if (pswp.element) {
-          pswp.element.style.opacity = String(MIN_OPACITY);
+          pswp.element.style.opacity = String(MIN_OPACITY)
         }
-        pswp.applyBgOpacity(1);
+        pswp.applyBgOpacity(1)
       }
-      return;
+      return
     }
 
     if (this._animateZoom && this._thumbBounds && this._thumbBounds.innerRect) {
       // Properties are used when animation from cropped thumbnail
-      this._croppedZoom = true;
-      this._cropContainer1 = this.pswp.container;
-      this._cropContainer2 = this.pswp.currSlide?.holderElement;
+      this._croppedZoom = true
+      this._cropContainer1 = this.pswp.container
+      this._cropContainer2 = this.pswp.currSlide?.holderElement
 
       if (pswp.container) {
-        pswp.container.style.overflow = 'hidden';
-        pswp.container.style.width = pswp.viewportSize.x + 'px';
+        pswp.container.style.overflow = 'hidden'
+        pswp.container.style.width = pswp.viewportSize.x + 'px'
       }
     } else {
-      this._croppedZoom = false;
+      this._croppedZoom = false
     }
 
     if (this.isOpening) {
       // Apply styles before opening transition
       if (this._animateRootOpacity) {
         if (pswp.element) {
-          pswp.element.style.opacity = String(MIN_OPACITY);
+          pswp.element.style.opacity = String(MIN_OPACITY)
         }
-        pswp.applyBgOpacity(1);
+        pswp.applyBgOpacity(1)
       } else {
         if (this._animateBgOpacity && pswp.bg) {
-          pswp.bg.style.opacity = String(MIN_OPACITY);
+          pswp.bg.style.opacity = String(MIN_OPACITY)
         }
         if (pswp.element) {
-          pswp.element.style.opacity = '1';
+          pswp.element.style.opacity = '1'
         }
       }
 
       if (this._animateZoom) {
-        this._setClosedStateZoomPan();
+        this._setClosedStateZoomPan()
         if (this._placeholder) {
           // tell browser that we plan to animate the placeholder
-          this._placeholder.style.willChange = 'transform';
+          this._placeholder.style.willChange = 'transform'
 
           // hide placeholder to allow hiding of
           // elements that overlap it (such as icons over the thumbnail)
-          this._placeholder.style.opacity = String(MIN_OPACITY);
+          this._placeholder.style.opacity = String(MIN_OPACITY)
         }
       }
     } else if (this.isClosing) {
       // hide nearby slides to make sure that
       // they are not painted during the transition
       if (pswp.mainScroll.itemHolders[0]) {
-        pswp.mainScroll.itemHolders[0].el.style.display = 'none';
+        pswp.mainScroll.itemHolders[0].el.style.display = 'none'
       }
       if (pswp.mainScroll.itemHolders[2]) {
-        pswp.mainScroll.itemHolders[2].el.style.display = 'none';
+        pswp.mainScroll.itemHolders[2].el.style.display = 'none'
       }
 
       if (this._croppedZoom) {
         if (pswp.mainScroll.x !== 0) {
           // shift the main scroller to zero position
-          pswp.mainScroll.resetPosition();
-          pswp.mainScroll.resize();
+          pswp.mainScroll.resetPosition()
+          pswp.mainScroll.resize()
         }
       }
     }
   }
 
   private _start(): void {
-    if (this.isOpening
-        && this._useAnimation
-        && this._placeholder
-        && this._placeholder.tagName === 'IMG') {
+    if (
+      this.isOpening &&
+      this._useAnimation &&
+      this._placeholder &&
+      this._placeholder.tagName === 'IMG'
+    ) {
       // To ensure smooth animation
       // we wait till the current slide image placeholder is decoded,
       // but no longer than 250ms,
@@ -234,190 +234,183 @@ class Opener {
       // (just using requestanimationframe is not enough in Firefox,
       // for some reason)
       new Promise((resolve) => {
-        let decoded = false;
-        let isDelaying = true;
+        let decoded = false
+        let isDelaying = true
         decodeImage(this._placeholder as HTMLImageElement).finally(() => {
-          decoded = true;
+          decoded = true
           if (!isDelaying) {
-            resolve(true);
+            resolve(true)
           }
-        });
+        })
         setTimeout(() => {
-          isDelaying = false;
+          isDelaying = false
           if (decoded) {
-            resolve(true);
+            resolve(true)
           }
-        }, 50);
-        setTimeout(resolve, 250);
-      }).finally(() => this._initiate());
+        }, 50)
+        setTimeout(resolve, 250)
+      }).finally(() => this._initiate())
     } else {
-      this._initiate();
+      this._initiate()
     }
   }
 
   private _initiate(): void {
-    this.pswp.element?.style.setProperty('--pswp-transition-duration', this._duration + 'ms');
+    this.pswp.element?.style.setProperty('--pswp-transition-duration', this._duration + 'ms')
 
-    this.pswp.dispatch(
-      this.isOpening ? 'openingAnimationStart' : 'closingAnimationStart'
-    );
+    this.pswp.dispatch(this.isOpening ? 'openingAnimationStart' : 'closingAnimationStart')
 
     // legacy event
     this.pswp.dispatch(
       ('initialZoom' + (this.isOpening ? 'In' : 'Out')) as 'initialZoomIn' | 'initialZoomOut'
-    );
+    )
 
-    this.pswp.element?.classList.toggle('pswp--ui-visible', this.isOpening);
+    this.pswp.element?.classList.toggle('pswp--ui-visible', this.isOpening)
 
     if (this.isOpening) {
       if (this._placeholder) {
         // unhide the placeholder
-        this._placeholder.style.opacity = '1';
+        this._placeholder.style.opacity = '1'
       }
-      this._animateToOpenState();
+      this._animateToOpenState()
     } else if (this.isClosing) {
-      this._animateToClosedState();
+      this._animateToClosedState()
     }
 
     if (!this._useAnimation) {
-      this._onAnimationComplete();
+      this._onAnimationComplete()
     }
   }
 
   private _onAnimationComplete(): void {
-    const { pswp } = this;
-    this.isOpen = this.isOpening;
-    this.isClosed = this.isClosing;
-    this.isOpening = false;
-    this.isClosing = false;
+    const { pswp } = this
+    this.isOpen = this.isOpening
+    this.isClosed = this.isClosing
+    this.isOpening = false
+    this.isClosing = false
 
-    pswp.dispatch(
-      this.isOpen ? 'openingAnimationEnd' : 'closingAnimationEnd'
-    );
+    pswp.dispatch(this.isOpen ? 'openingAnimationEnd' : 'closingAnimationEnd')
 
     // legacy event
     pswp.dispatch(
-      ('initialZoom' + (this.isOpen ? 'InEnd' : 'OutEnd')) as 'initialZoomInEnd' | 'initialZoomOutEnd'
-    );
+      ('initialZoom' + (this.isOpen ? 'InEnd' : 'OutEnd')) as
+        | 'initialZoomInEnd'
+        | 'initialZoomOutEnd'
+    )
 
     if (this.isClosed) {
-      pswp.destroy();
+      pswp.destroy()
     } else if (this.isOpen) {
       if (this._animateZoom && pswp.container) {
-        pswp.container.style.overflow = 'visible';
-        pswp.container.style.width = '100%';
+        pswp.container.style.overflow = 'visible'
+        pswp.container.style.width = '100%'
       }
-      pswp.currSlide?.applyCurrentZoomPan();
+      pswp.currSlide?.applyCurrentZoomPan()
     }
   }
 
   private _animateToOpenState(): void {
-    const { pswp } = this;
+    const { pswp } = this
     if (this._animateZoom) {
       if (this._croppedZoom && this._cropContainer1 && this._cropContainer2) {
-        this._animateTo(this._cropContainer1, 'transform', 'translate3d(0,0,0)');
-        this._animateTo(this._cropContainer2, 'transform', 'none');
+        this._animateTo(this._cropContainer1, 'transform', 'translate3d(0,0,0)')
+        this._animateTo(this._cropContainer2, 'transform', 'none')
       }
 
       if (pswp.currSlide) {
-        pswp.currSlide.zoomAndPanToInitial();
-        this._animateTo(
-          pswp.currSlide.container,
-          'transform',
-          pswp.currSlide.getCurrentTransform()
-        );
+        pswp.currSlide.zoomAndPanToInitial()
+        this._animateTo(pswp.currSlide.container, 'transform', pswp.currSlide.getCurrentTransform())
       }
     }
 
     if (this._animateBgOpacity && pswp.bg) {
-      this._animateTo(pswp.bg, 'opacity', String(pswp.options.bgOpacity));
+      this._animateTo(pswp.bg, 'opacity', String(pswp.options.bgOpacity))
     }
 
     if (this._animateRootOpacity && pswp.element) {
-      this._animateTo(pswp.element, 'opacity', '1');
+      this._animateTo(pswp.element, 'opacity', '1')
     }
   }
 
   private _animateToClosedState(): void {
-    const { pswp } = this;
+    const { pswp } = this
 
     if (this._animateZoom) {
-      this._setClosedStateZoomPan(true);
+      this._setClosedStateZoomPan(true)
     }
 
     // do not animate opacity if it's already at 0
     if (this._animateBgOpacity && pswp.bgOpacity > 0.01 && pswp.bg) {
-      this._animateTo(pswp.bg, 'opacity', '0');
+      this._animateTo(pswp.bg, 'opacity', '0')
     }
 
     if (this._animateRootOpacity && pswp.element) {
-      this._animateTo(pswp.element, 'opacity', '0');
+      this._animateTo(pswp.element, 'opacity', '0')
     }
   }
 
   private _setClosedStateZoomPan(animate?: boolean): void {
-    if (!this._thumbBounds) return;
+    if (!this._thumbBounds) return
 
-    const { pswp } = this;
-    const { innerRect } = this._thumbBounds;
-    const { currSlide, viewportSize } = pswp;
+    const { pswp } = this
+    const { innerRect } = this._thumbBounds
+    const { currSlide, viewportSize } = pswp
 
     if (this._croppedZoom && innerRect && this._cropContainer1 && this._cropContainer2) {
-      const containerOnePanX = -viewportSize.x + (this._thumbBounds.x - innerRect.x) + innerRect.w;
-      const containerOnePanY = -viewportSize.y + (this._thumbBounds.y - innerRect.y) + innerRect.h;
-      const containerTwoPanX = viewportSize.x - innerRect.w;
-      const containerTwoPanY = viewportSize.y - innerRect.h;
-
+      const containerOnePanX = -viewportSize.x + (this._thumbBounds.x - innerRect.x) + innerRect.w
+      const containerOnePanY = -viewportSize.y + (this._thumbBounds.y - innerRect.y) + innerRect.h
+      const containerTwoPanX = viewportSize.x - innerRect.w
+      const containerTwoPanY = viewportSize.y - innerRect.h
 
       if (animate) {
         this._animateTo(
           this._cropContainer1,
           'transform',
           toTransformString(containerOnePanX, containerOnePanY)
-        );
+        )
 
         this._animateTo(
           this._cropContainer2,
           'transform',
           toTransformString(containerTwoPanX, containerTwoPanY)
-        );
+        )
       } else {
-        setTransform(this._cropContainer1, containerOnePanX, containerOnePanY);
-        setTransform(this._cropContainer2, containerTwoPanX, containerTwoPanY);
+        setTransform(this._cropContainer1, containerOnePanX, containerOnePanY)
+        setTransform(this._cropContainer2, containerTwoPanX, containerTwoPanY)
       }
     }
 
     if (currSlide) {
-      equalizePoints(currSlide.pan, innerRect || this._thumbBounds);
-      currSlide.currZoomLevel = this._thumbBounds.w / currSlide.width;
+      equalizePoints(currSlide.pan, innerRect || this._thumbBounds)
+      currSlide.currZoomLevel = this._thumbBounds.w / currSlide.width
       if (animate) {
-        this._animateTo(currSlide.container, 'transform', currSlide.getCurrentTransform());
+        this._animateTo(currSlide.container, 'transform', currSlide.getCurrentTransform())
       } else {
-        currSlide.applyCurrentZoomPan();
+        currSlide.applyCurrentZoomPan()
       }
     }
   }
 
   private _animateTo(target: HTMLElement, prop: 'transform' | 'opacity', propValue: string): void {
     if (!this._duration) {
-      target.style[prop] = propValue;
-      return;
+      target.style[prop] = propValue
+      return
     }
 
-    const { animations } = this.pswp;
+    const { animations } = this.pswp
     const animProps: AnimationProps = {
       duration: this._duration,
       easing: this.pswp.options.easing,
       onComplete: () => {
         if (!animations.activeAnimations.length) {
-          this._onAnimationComplete();
+          this._onAnimationComplete()
         }
       },
-      target,
-    };
-    animProps[prop] = propValue;
-    animations.startTransition(animProps);
+      target
+    }
+    animProps[prop] = propValue
+    animations.startTransition(animProps)
   }
 }
 
-export default Opener;
+export default Opener

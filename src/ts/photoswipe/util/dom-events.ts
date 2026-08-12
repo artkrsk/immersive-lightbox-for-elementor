@@ -1,30 +1,33 @@
 // Detect passive event listener support
-let supportsPassive = false;
+let supportsPassive = false
 /* eslint-disable */
 try {
-  /* @ts-ignore */
-  window.addEventListener('test', null, Object.defineProperty({}, 'passive', {
-    get: () => {
-      supportsPassive = true;
-    }
-  }));
-} catch (e) {}
+  window.addEventListener(
+    'test',
+    null as unknown as EventListener,
+    Object.defineProperty({}, 'passive', {
+      get: () => {
+        supportsPassive = true
+      }
+    })
+  )
+} catch {}
 /* eslint-enable */
 
 export interface PoolItem {
-  target: HTMLElement | Window | Document | undefined | null;
-  type: string;
-  listener: EventListenerOrEventListenerObject;
+  target: HTMLElement | Window | Document | undefined | null
+  type: string
+  listener: EventListenerOrEventListenerObject
   // `| undefined` explicitly: callers thread an optional argument straight
   // through, and exactOptionalPropertyTypes forbids that otherwise.
-  passive?: boolean | undefined;
+  passive?: boolean | undefined
 }
 
 class DOMEvents {
-  declare private _pool: PoolItem[];
+  private declare _pool: PoolItem[]
 
   constructor() {
-    this._pool = [];
+    this._pool = []
   }
 
   /**
@@ -41,7 +44,7 @@ class DOMEvents {
     listener: PoolItem['listener'],
     passive?: PoolItem['passive']
   ): void {
-    this._toggleListener(target, type, listener, passive);
+    this._toggleListener(target, type, listener, passive)
   }
 
   /**
@@ -53,7 +56,7 @@ class DOMEvents {
     listener: PoolItem['listener'],
     passive?: PoolItem['passive']
   ): void {
-    this._toggleListener(target, type, listener, passive, true);
+    this._toggleListener(target, type, listener, passive, true)
   }
 
   /**
@@ -68,9 +71,9 @@ class DOMEvents {
         poolItem.passive,
         true,
         true
-      );
-    });
-    this._pool = [];
+      )
+    })
+    this._pool = []
   }
 
   /**
@@ -92,11 +95,11 @@ class DOMEvents {
     skipPool?: boolean
   ): void {
     if (!target) {
-      return;
+      return
     }
 
-    const methodName = unbind ? 'removeEventListener' : 'addEventListener';
-    const types = type.split(' ');
+    const methodName = unbind ? 'removeEventListener' : 'addEventListener'
+    const types = type.split(' ')
     types.forEach((eType) => {
       if (eType) {
         // Events pool is used to easily unbind all events when PhotoSwipe is closed,
@@ -105,10 +108,12 @@ class DOMEvents {
           if (unbind) {
             // Remove from the events pool
             this._pool = this._pool.filter((poolItem) => {
-              return poolItem.type !== eType
-                || poolItem.listener !== listener
-                || poolItem.target !== target;
-            });
+              return (
+                poolItem.type !== eType ||
+                poolItem.listener !== listener ||
+                poolItem.target !== target
+              )
+            })
           } else {
             // Add to the events pool
             this._pool.push({
@@ -116,22 +121,18 @@ class DOMEvents {
               type: eType,
               listener,
               passive
-            });
+            })
           }
         }
 
         // most PhotoSwipe events call preventDefault,
         // and we do not need browser to scroll the page
-        const eventOptions = supportsPassive ? { passive: (passive || false) } : false;
+        const eventOptions = supportsPassive ? { passive: passive || false } : false
 
-        target[methodName](
-          eType,
-          listener,
-          eventOptions
-        );
+        target[methodName](eType, listener, eventOptions)
       }
-    });
+    })
   }
 }
 
-export default DOMEvents;
+export default DOMEvents

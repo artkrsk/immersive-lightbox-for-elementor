@@ -1,25 +1,25 @@
-import SpringEaser from './spring-easer';
-import type { SharedAnimationProps } from './animations';
+import type { SharedAnimationProps } from './animations'
+import SpringEaser from './spring-easer'
 
 export interface DefaultSpringAnimationProps {
-  start: number;
-  end: number;
-  velocity: number;
-  dampingRatio?: number;
-  naturalFrequency?: number;
-  onUpdate: (end: number) => void;
+  start: number
+  end: number
+  velocity: number
+  dampingRatio?: number
+  naturalFrequency?: number
+  onUpdate: (end: number) => void
 }
 
-export type SpringAnimationProps = SharedAnimationProps & DefaultSpringAnimationProps;
+export type SpringAnimationProps = SharedAnimationProps & DefaultSpringAnimationProps
 
 class SpringAnimation {
-  declare props: SpringAnimationProps;
-  declare onFinish: () => void;
-  declare private _raf: number;
+  declare props: SpringAnimationProps
+  declare onFinish: () => void
+  private declare _raf: number
 
   constructor(props: SpringAnimationProps) {
-    this.props = props;
-    this._raf = 0;
+    this.props = props
+    this._raf = 0
 
     const {
       start,
@@ -30,44 +30,44 @@ class SpringAnimation {
       onFinish = () => {},
       dampingRatio,
       naturalFrequency
-    } = props;
+    } = props
 
-    this.onFinish = onFinish;
+    this.onFinish = onFinish
 
-    const easer = new SpringEaser(velocity, dampingRatio, naturalFrequency);
-    let prevTime = Date.now();
-    let deltaPosition = start - end;
+    const easer = new SpringEaser(velocity, dampingRatio, naturalFrequency)
+    let prevTime = Date.now()
+    let deltaPosition = start - end
 
     const animationLoop = () => {
       if (this._raf) {
-        deltaPosition = easer.easeFrame(deltaPosition, Date.now() - prevTime);
+        deltaPosition = easer.easeFrame(deltaPosition, Date.now() - prevTime)
 
         // Stop the animation if velocity is low and position is close to end
         if (Math.abs(deltaPosition) < 1 && Math.abs(easer.velocity) < 50) {
           // Finalize the animation
-          onUpdate(end);
+          onUpdate(end)
           if (onComplete) {
-            onComplete();
+            onComplete()
           }
-          this.onFinish();
+          this.onFinish()
         } else {
-          prevTime = Date.now();
-          onUpdate(deltaPosition + end);
-          this._raf = requestAnimationFrame(animationLoop);
+          prevTime = Date.now()
+          onUpdate(deltaPosition + end)
+          this._raf = requestAnimationFrame(animationLoop)
         }
       }
-    };
+    }
 
-    this._raf = requestAnimationFrame(animationLoop);
+    this._raf = requestAnimationFrame(animationLoop)
   }
 
   // Destroy is called automatically onFinish
   destroy(): void {
     if (this._raf >= 0) {
-      cancelAnimationFrame(this._raf);
+      cancelAnimationFrame(this._raf)
     }
-    this._raf = 0;
+    this._raf = 0
   }
 }
 
-export default SpringAnimation;
+export default SpringAnimation

@@ -1,6 +1,5 @@
 import type PhotoSwipeBase from './core/base'
 import type PhotoSwipe from './photoswipe'
-import type { Bounds } from './slide/get-thumb-bounds'
 import type { SlideData } from './slide/slide'
 import type { ZoomLevelOption } from './slide/zoom-level'
 

@@ -1,19 +1,15 @@
-import {
-  setTransform,
-  createElement,
-} from './util/util';
-import type PhotoSwipe from './photoswipe';
-import type Slide from './slide/slide';
+import type PhotoSwipe from './photoswipe'
+import type Slide from './slide/slide'
+import { createElement, setTransform } from './util/util'
 
 export interface ItemHolder {
-  el: HTMLDivElement;
+  el: HTMLDivElement
   // `| undefined` explicitly: holders are cleared by direct assignment
   // (exactOptionalPropertyTypes).
-  slide?: Slide | undefined;
+  slide?: Slide | undefined
 }
 
-const MAIN_SCROLL_END_FRICTION = 0.35;
-
+const MAIN_SCROLL_END_FRICTION = 0.35
 
 // const MIN_SWIPE_TRANSITION_DURATION = 250;
 // const MAX_SWIPE_TRABSITION_DURATION = 500;
@@ -26,23 +22,23 @@ const MAIN_SCROLL_END_FRICTION = 0.35;
  * Also stores its state.
  */
 class MainScroll {
-  declare pswp: PhotoSwipe;
-  declare x: number;
-  declare slideWidth: number;
-  declare itemHolders: ItemHolder[];
-  declare private _currPositionIndex: number;
-  declare private _prevPositionIndex: number;
-  declare private _containerShiftIndex: number;
+  declare pswp: PhotoSwipe
+  declare x: number
+  declare slideWidth: number
+  declare itemHolders: ItemHolder[]
+  private declare _currPositionIndex: number
+  private declare _prevPositionIndex: number
+  private declare _containerShiftIndex: number
 
   constructor(pswp: PhotoSwipe) {
-    this.pswp = pswp;
-    this.x = 0;
-    this.slideWidth = 0;
-    this._currPositionIndex = 0;
-    this._prevPositionIndex = 0;
-    this._containerShiftIndex = -1;
+    this.pswp = pswp
+    this.x = 0
+    this.slideWidth = 0
+    this._currPositionIndex = 0
+    this._prevPositionIndex = 0
+    this._containerShiftIndex = -1
 
-    this.itemHolders = [];
+    this.itemHolders = []
   }
 
   /**
@@ -52,30 +48,29 @@ class MainScroll {
    * @param resizeSlides Whether slides content should resized
    */
   resize(resizeSlides?: boolean): void {
-    const { pswp } = this;
+    const { pswp } = this
     const newSlideWidth = Math.round(
       pswp.viewportSize.x + pswp.viewportSize.x * pswp.options.spacing
-    );
+    )
     // Mobile browsers might trigger a resize event during a gesture.
     // (due to toolbar appearing or hiding).
     // Avoid re-adjusting main scroll position if width wasn't changed
-    const slideWidthChanged = (newSlideWidth !== this.slideWidth);
+    const slideWidthChanged = newSlideWidth !== this.slideWidth
 
     if (slideWidthChanged) {
-      this.slideWidth = newSlideWidth;
-      this.moveTo(this.getCurrSlideX());
+      this.slideWidth = newSlideWidth
+      this.moveTo(this.getCurrSlideX())
     }
 
     this.itemHolders.forEach((itemHolder, index) => {
       if (slideWidthChanged) {
-        setTransform(itemHolder.el, (index + this._containerShiftIndex)
-                                    * this.slideWidth);
+        setTransform(itemHolder.el, (index + this._containerShiftIndex) * this.slideWidth)
       }
 
       if (resizeSlides && itemHolder.slide) {
-        itemHolder.slide.resize();
+        itemHolder.slide.resize()
       }
-    });
+    })
   }
 
   /**
@@ -84,14 +79,14 @@ class MainScroll {
   resetPosition(): void {
     // Position on the main scroller (offset)
     // it is independent from slide index
-    this._currPositionIndex = 0;
-    this._prevPositionIndex = 0;
+    this._currPositionIndex = 0
+    this._prevPositionIndex = 0
 
     // This will force recalculation of size on next resize()
-    this.slideWidth = 0;
+    this.slideWidth = 0
 
     // _containerShiftIndex*viewportSize will give you amount of transform of the current slide
-    this._containerShiftIndex = -1;
+    this._containerShiftIndex = -1
   }
 
   /**
@@ -99,23 +94,23 @@ class MainScroll {
    * that hold data about slides in DOM
    */
   appendHolders(): void {
-    this.itemHolders = [];
+    this.itemHolders = []
 
     // append our three slide holders -
     // previous, current, and next
     for (let i = 0; i < 3; i++) {
-      const el = createElement('pswp__item', 'div', this.pswp.container);
-      el.setAttribute('role', 'group');
-      el.setAttribute('aria-roledescription', 'slide');
-      el.setAttribute('aria-hidden', 'true');
+      const el = createElement('pswp__item', 'div', this.pswp.container)
+      el.setAttribute('role', 'group')
+      el.setAttribute('aria-roledescription', 'slide')
+      el.setAttribute('aria-hidden', 'true')
 
       // hide nearby item holders until initial zoom animation finishes (to avoid extra Paints)
-      el.style.display = (i === 1) ? 'block' : 'none';
+      el.style.display = i === 1 ? 'block' : 'none'
 
       this.itemHolders.push({
-        el,
+        el
         //index: -1
-      });
+      })
     }
   }
 
@@ -123,7 +118,7 @@ class MainScroll {
    * Whether the main scroll can be horizontally swiped to the next or previous slide.
    */
   canBeSwiped(): boolean {
-    return this.pswp.getNumItems() > 1;
+    return this.pswp.getNumItems() > 1
   }
 
   /**
@@ -139,38 +134,38 @@ class MainScroll {
    * @returns whether index was changed or not
    */
   moveIndexBy(diff: number, animate?: boolean, velocityX?: number): boolean {
-    const { pswp } = this;
-    let newIndex = pswp.potentialIndex + diff;
-    const numSlides = pswp.getNumItems();
+    const { pswp } = this
+    let newIndex = pswp.potentialIndex + diff
+    const numSlides = pswp.getNumItems()
 
     if (pswp.canLoop()) {
-      newIndex = pswp.getLoopedIndex(newIndex);
-      const distance = (diff + numSlides) % numSlides;
+      newIndex = pswp.getLoopedIndex(newIndex)
+      const distance = (diff + numSlides) % numSlides
       if (distance <= numSlides / 2) {
         // go forward
-        diff = distance;
+        diff = distance
       } else {
         // go backwards
-        diff = distance - numSlides;
+        diff = distance - numSlides
       }
     } else {
       if (newIndex < 0) {
-        newIndex = 0;
+        newIndex = 0
       } else if (newIndex >= numSlides) {
-        newIndex = numSlides - 1;
+        newIndex = numSlides - 1
       }
-      diff = newIndex - pswp.potentialIndex;
+      diff = newIndex - pswp.potentialIndex
     }
 
-    pswp.potentialIndex = newIndex;
-    this._currPositionIndex -= diff;
+    pswp.potentialIndex = newIndex
+    this._currPositionIndex -= diff
 
-    pswp.animations.stopMainScroll();
+    pswp.animations.stopMainScroll()
 
-    const destinationX = this.getCurrSlideX();
+    const destinationX = this.getCurrSlideX()
     if (!animate) {
-      this.moveTo(destinationX);
-      this.updateCurrItem();
+      this.moveTo(destinationX)
+      this.updateCurrItem()
     } else {
       pswp.animations.startSpring({
         isMainScroll: true,
@@ -180,34 +175,34 @@ class MainScroll {
         naturalFrequency: 30,
         dampingRatio: 1, //0.7,
         onUpdate: (x) => {
-          this.moveTo(x);
+          this.moveTo(x)
         },
         onComplete: () => {
-          this.updateCurrItem();
-          pswp.appendHeavy();
+          this.updateCurrItem()
+          pswp.appendHeavy()
         }
-      });
+      })
 
-      let currDiff = pswp.potentialIndex - pswp.currIndex;
+      let currDiff = pswp.potentialIndex - pswp.currIndex
       if (pswp.canLoop()) {
-        const currDistance = (currDiff + numSlides) % numSlides;
+        const currDistance = (currDiff + numSlides) % numSlides
         if (currDistance <= numSlides / 2) {
           // go forward
-          currDiff = currDistance;
+          currDiff = currDistance
         } else {
           // go backwards
-          currDiff = currDistance - numSlides;
+          currDiff = currDistance - numSlides
         }
       }
 
       // Force-append new slides during transition
       // if difference between slides is more than 1
       if (Math.abs(currDiff) > 1) {
-        this.updateCurrItem();
+        this.updateCurrItem()
       }
     }
 
-    return Boolean(diff);
+    return Boolean(diff)
   }
 
   /**
@@ -215,7 +210,7 @@ class MainScroll {
    * (ignores position during dragging)
    */
   getCurrSlideX(): number {
-    return this.slideWidth * this._currPositionIndex;
+    return this.slideWidth * this._currPositionIndex
   }
 
   /**
@@ -223,60 +218,60 @@ class MainScroll {
    * For example, it will return true if the scroll is being dragged or animated.
    */
   isShifted(): boolean {
-    return this.x !== this.getCurrSlideX();
+    return this.x !== this.getCurrSlideX()
   }
 
   /**
    * Update slides X positions and set their content
    */
   updateCurrItem(): void {
-    const { pswp } = this;
-    const positionDifference = this._prevPositionIndex - this._currPositionIndex;
+    const { pswp } = this
+    const positionDifference = this._prevPositionIndex - this._currPositionIndex
 
     if (!positionDifference) {
-      return;
+      return
     }
 
-    this._prevPositionIndex = this._currPositionIndex;
+    this._prevPositionIndex = this._currPositionIndex
 
-    pswp.currIndex = pswp.potentialIndex;
+    pswp.currIndex = pswp.potentialIndex
 
-    let diffAbs = Math.abs(positionDifference);
-    let tempHolder: ItemHolder | undefined;
+    let diffAbs = Math.abs(positionDifference)
+    let tempHolder: ItemHolder | undefined
 
     if (diffAbs >= 3) {
-      this._containerShiftIndex += positionDifference + (positionDifference > 0 ? -3 : 3);
-      diffAbs = 3;
+      this._containerShiftIndex += positionDifference + (positionDifference > 0 ? -3 : 3)
+      diffAbs = 3
 
       // If slides are changed by 3 screens or more - clean up previous slides
       this.itemHolders.forEach((itemHolder) => {
-        itemHolder.slide?.destroy();
-        itemHolder.slide = undefined;
-      });
+        itemHolder.slide?.destroy()
+        itemHolder.slide = undefined
+      })
     }
 
     for (let i = 0; i < diffAbs; i++) {
       if (positionDifference > 0) {
-        tempHolder = this.itemHolders.shift();
+        tempHolder = this.itemHolders.shift()
         if (tempHolder) {
-          this.itemHolders[2] = tempHolder; // move first to last
+          this.itemHolders[2] = tempHolder // move first to last
 
-          this._containerShiftIndex++;
+          this._containerShiftIndex++
 
-          setTransform(tempHolder.el, (this._containerShiftIndex + 2) * this.slideWidth);
+          setTransform(tempHolder.el, (this._containerShiftIndex + 2) * this.slideWidth)
 
-          pswp.setContent(tempHolder, (pswp.currIndex - diffAbs) + i + 2);
+          pswp.setContent(tempHolder, pswp.currIndex - diffAbs + i + 2)
         }
       } else {
-        tempHolder = this.itemHolders.pop();
+        tempHolder = this.itemHolders.pop()
         if (tempHolder) {
-          this.itemHolders.unshift(tempHolder); // move last to first
+          this.itemHolders.unshift(tempHolder) // move last to first
 
-          this._containerShiftIndex--;
+          this._containerShiftIndex--
 
-          setTransform(tempHolder.el, this._containerShiftIndex * this.slideWidth);
+          setTransform(tempHolder.el, this._containerShiftIndex * this.slideWidth)
 
-          pswp.setContent(tempHolder, (pswp.currIndex + diffAbs) - i - 2);
+          pswp.setContent(tempHolder, pswp.currIndex + diffAbs - i - 2)
         }
       }
     }
@@ -288,28 +283,28 @@ class MainScroll {
     // I wasn't able to reach it, but just to be safe.
     // This should not cause noticable lag.
     if (Math.abs(this._containerShiftIndex) > 50 && !this.isShifted()) {
-      this.resetPosition();
-      this.resize();
+      this.resetPosition()
+      this.resize()
     }
 
     // Pan transition might be running (and consntantly updating pan position)
-    pswp.animations.stopAllPan();
+    pswp.animations.stopAllPan()
 
     this.itemHolders.forEach((itemHolder, i) => {
       if (itemHolder.slide) {
         // Slide in the 2nd holder is always active
-        itemHolder.slide.setIsActive(i === 1);
+        itemHolder.slide.setIsActive(i === 1)
       }
-    });
+    })
 
-    pswp.currSlide = this.itemHolders[1]?.slide;
-    pswp.contentLoader.updateLazy(positionDifference);
+    pswp.currSlide = this.itemHolders[1]?.slide
+    pswp.contentLoader.updateLazy(positionDifference)
 
     if (pswp.currSlide) {
-      pswp.currSlide.applyCurrentZoomPan();
+      pswp.currSlide.applyCurrentZoomPan()
     }
 
-    pswp.dispatch('change');
+    pswp.dispatch('change')
   }
 
   /**
@@ -318,24 +313,26 @@ class MainScroll {
   moveTo(x: number, dragging?: boolean): void {
     if (!this.pswp.canLoop() && dragging) {
       // Apply friction
-      let newSlideIndexOffset = ((this.slideWidth * this._currPositionIndex) - x) / this.slideWidth;
-      newSlideIndexOffset += this.pswp.currIndex;
-      const delta = Math.round(x - this.x);
+      let newSlideIndexOffset = (this.slideWidth * this._currPositionIndex - x) / this.slideWidth
+      newSlideIndexOffset += this.pswp.currIndex
+      const delta = Math.round(x - this.x)
 
-      if ((newSlideIndexOffset < 0 && delta > 0)
-          || (newSlideIndexOffset >= this.pswp.getNumItems() - 1 && delta < 0)) {
-        x = this.x + (delta * MAIN_SCROLL_END_FRICTION);
+      if (
+        (newSlideIndexOffset < 0 && delta > 0) ||
+        (newSlideIndexOffset >= this.pswp.getNumItems() - 1 && delta < 0)
+      ) {
+        x = this.x + delta * MAIN_SCROLL_END_FRICTION
       }
     }
 
-    this.x = x;
+    this.x = x
 
     if (this.pswp.container) {
-      setTransform(this.pswp.container, x);
+      setTransform(this.pswp.container, x)
     }
 
-    this.pswp.dispatch('moveMainScroll', { x, dragging: dragging ?? false });
+    this.pswp.dispatch('moveMainScroll', { x, dragging: dragging ?? false })
   }
 }
 
-export default MainScroll;
+export default MainScroll

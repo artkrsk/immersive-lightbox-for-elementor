@@ -1,4 +1,4 @@
-import type { UIElementData } from './ui-element';
+import type { UIElementData } from './ui-element'
 
 const closeButton: UIElementData = {
   name: 'close',
@@ -11,6 +11,6 @@ const closeButton: UIElementData = {
     outlineID: 'pswp__icn-close'
   },
   onClick: 'close'
-};
+}
 
-export default closeButton;
+export default closeButton

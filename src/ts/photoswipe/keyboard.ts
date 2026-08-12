@@ -1,6 +1,6 @@
-import { specialKeyUsed } from './util/util';
-import type PhotoSwipe from './photoswipe';
-import type { Methods } from './types';
+import type PhotoSwipe from './photoswipe'
+import type { Methods } from './types'
+import { specialKeyUsed } from './util/util'
 
 const KeyboardKeyCodesMap = {
   Escape: 27,
@@ -9,27 +9,27 @@ const KeyboardKeyCodesMap = {
   ArrowUp: 38,
   ArrowRight: 39,
   ArrowDown: 40,
-  Tab: 9,
-};
+  Tab: 9
+}
 
 const getKeyboardEventKey = <T extends keyof typeof KeyboardKeyCodesMap>(
   key: T,
   isKeySupported: boolean
 ): T | number | undefined => {
-  return isKeySupported ? key : KeyboardKeyCodesMap[key];
-};
+  return isKeySupported ? key : KeyboardKeyCodesMap[key]
+}
 
 /**
  * - Manages keyboard shortcuts.
  * - Helps trap focus within photoswipe.
  */
 class Keyboard {
-  declare pswp: PhotoSwipe;
-  declare private _wasFocused: boolean;
+  declare pswp: PhotoSwipe
+  private declare _wasFocused: boolean
 
   constructor(pswp: PhotoSwipe) {
-    this.pswp = pswp;
-    this._wasFocused = false;
+    this.pswp = pswp
+    this._wasFocused = false
 
     pswp.on('bindEvents', () => {
       if (pswp.options.trapFocus) {
@@ -38,109 +38,101 @@ class Keyboard {
           // focus causes layout,
           // which causes lag during the animation,
           // that's why we delay it until the opener transition ends
-          this._focusRoot();
+          this._focusRoot()
         }
 
-        pswp.events.add(
-          document,
-          'focusin',
-          this._onFocusIn.bind(this) as EventListener
-        );
+        pswp.events.add(document, 'focusin', this._onFocusIn.bind(this) as EventListener)
       }
 
-      pswp.events.add(document, 'keydown', this._onKeyDown.bind(this) as EventListener);
-    });
+      pswp.events.add(document, 'keydown', this._onKeyDown.bind(this) as EventListener)
+    })
 
-    const lastActiveElement = document.activeElement as HTMLElement;
+    const lastActiveElement = document.activeElement as HTMLElement
     pswp.on('destroy', () => {
-      if (pswp.options.returnFocus
-          && lastActiveElement
-          && this._wasFocused) {
-        lastActiveElement.focus();
+      if (pswp.options.returnFocus && lastActiveElement && this._wasFocused) {
+        lastActiveElement.focus()
       }
-    });
+    })
   }
 
   private _focusRoot(): void {
     if (!this._wasFocused && this.pswp.element) {
-      this.pswp.element.focus();
-      this._wasFocused = true;
+      this.pswp.element.focus()
+      this._wasFocused = true
     }
   }
 
   private _onKeyDown(e: KeyboardEvent): void {
-    const { pswp } = this;
+    const { pswp } = this
 
     if (pswp.dispatch('keydown', { originalEvent: e }).defaultPrevented) {
-      return;
+      return
     }
 
     if (specialKeyUsed(e)) {
       // don't do anything if special key pressed
       // to prevent from overriding default browser actions
       // for example, in Chrome on Mac cmd+arrow-left returns to previous page
-      return;
+      return
     }
 
-    let keydownAction: Methods<PhotoSwipe> | undefined;
-    let axis: 'x' | 'y' | undefined;
-    let isForward = false;
-    const isKeySupported = 'key' in e;
+    let keydownAction: Methods<PhotoSwipe> | undefined
+    let axis: 'x' | 'y' | undefined
+    let isForward = false
+    const isKeySupported = 'key' in e
 
     switch (isKeySupported ? e.key : (e as KeyboardEvent).keyCode) {
       case getKeyboardEventKey('Escape', isKeySupported):
         if (pswp.options.escKey) {
-          keydownAction = 'close';
+          keydownAction = 'close'
         }
-        break;
+        break
       case getKeyboardEventKey('z', isKeySupported):
-        keydownAction = 'toggleZoom';
-        break;
+        keydownAction = 'toggleZoom'
+        break
       case getKeyboardEventKey('ArrowLeft', isKeySupported):
-        axis = 'x';
-        break;
+        axis = 'x'
+        break
       case getKeyboardEventKey('ArrowUp', isKeySupported):
-        axis = 'y';
-        break;
+        axis = 'y'
+        break
       case getKeyboardEventKey('ArrowRight', isKeySupported):
-        axis = 'x';
-        isForward = true;
-        break;
+        axis = 'x'
+        isForward = true
+        break
       case getKeyboardEventKey('ArrowDown', isKeySupported):
-        isForward = true;
-        axis = 'y';
-        break;
+        isForward = true
+        axis = 'y'
+        break
       case getKeyboardEventKey('Tab', isKeySupported):
-        this._focusRoot();
-        break;
+        this._focusRoot()
+        break
       default:
     }
 
     // if left/right/top/bottom key
     if (axis) {
       // prevent page scroll
-      e.preventDefault();
+      e.preventDefault()
 
-      const { currSlide } = pswp;
+      const { currSlide } = pswp
 
-      if (pswp.options.arrowKeys
-          && axis === 'x'
-          && pswp.getNumItems() > 1) {
-        keydownAction = isForward ? 'next' : 'prev';
+      if (pswp.options.arrowKeys && axis === 'x' && pswp.getNumItems() > 1) {
+        keydownAction = isForward ? 'next' : 'prev'
       } else if (currSlide && currSlide.currZoomLevel > currSlide.zoomLevels.fit) {
         // up/down arrow keys pan the image vertically
         // left/right arrow keys pan horizontally.
         // Unless there is only one image,
         // or arrowKeys option is disabled
-        currSlide.pan[axis] += isForward ? -80 : 80;
-        currSlide.panTo(currSlide.pan.x, currSlide.pan.y);
+        currSlide.pan[axis] += isForward ? -80 : 80
+        currSlide.panTo(currSlide.pan.x, currSlide.pan.y)
       }
     }
 
     if (keydownAction) {
-      e.preventDefault();
-      // @ts-ignore
-      pswp[keydownAction]();
+      e.preventDefault()
+      // @ts-expect-error
+      pswp[keydownAction]()
     }
   }
 
@@ -148,15 +140,17 @@ class Keyboard {
    * Trap focus inside photoswipe
    */
   private _onFocusIn(e: FocusEvent): void {
-    const { template } = this.pswp;
-    if (template
-        && document !== e.target
-        && template !== e.target
-        && !template.contains(e.target as Node)) {
+    const { template } = this.pswp
+    if (
+      template &&
+      document !== e.target &&
+      template !== e.target &&
+      !template.contains(e.target as Node)
+    ) {
       // focus root element
-      template.focus();
+      template.focus()
     }
   }
 }
 
-export default Keyboard;
+export default Keyboard

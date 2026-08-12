@@ -1,62 +1,63 @@
-import CSSAnimation from './css-animation';
-import SpringAnimation from './spring-animation';
-import type { CssAnimationProps } from './css-animation';
-import type { SpringAnimationProps } from './spring-animation';
+import type { CssAnimationProps } from './css-animation'
+import CSSAnimation from './css-animation'
+import type { SpringAnimationProps } from './spring-animation'
+import SpringAnimation from './spring-animation'
 
 export interface SharedAnimationProps {
-  name?: string;
-  isPan?: boolean;
-  isMainScroll?: boolean;
-  onComplete?: VoidFunction;
-  onFinish?: VoidFunction;
+  name?: string
+  isPan?: boolean
+  isMainScroll?: boolean
+  onComplete?: VoidFunction
+  onFinish?: VoidFunction
 }
 
-export type Animation = SpringAnimation | CSSAnimation;
+export type Animation = SpringAnimation | CSSAnimation
 
-export type AnimationProps = SpringAnimationProps | CssAnimationProps;
+export type AnimationProps = SpringAnimationProps | CssAnimationProps
 
 /**
  * Manages animations
  */
 class Animations {
-  declare activeAnimations: Animation[];
+  declare activeAnimations: Animation[]
 
   constructor() {
-    this.activeAnimations = [];
+    this.activeAnimations = []
   }
 
   startSpring(props: SpringAnimationProps): void {
-    this._start(props, true);
+    this._start(props, true)
   }
 
   startTransition(props: CssAnimationProps): void {
-    this._start(props);
+    this._start(props)
   }
 
   private _start(props: AnimationProps, isSpring?: boolean): Animation {
     const animation = isSpring
       ? new SpringAnimation(props as SpringAnimationProps)
-      : new CSSAnimation(props as CssAnimationProps);
+      : new CSSAnimation(props as CssAnimationProps)
 
-    this.activeAnimations.push(animation);
-    animation.onFinish = () => this.stop(animation);
+    this.activeAnimations.push(animation)
+    animation.onFinish = () => this.stop(animation)
 
-    return animation;
+    return animation
   }
 
   stop(animation: Animation): void {
-    animation.destroy();
-    const index = this.activeAnimations.indexOf(animation);
+    animation.destroy()
+    const index = this.activeAnimations.indexOf(animation)
     if (index > -1) {
-      this.activeAnimations.splice(index, 1);
+      this.activeAnimations.splice(index, 1)
     }
   }
 
-  stopAll(): void { // _stopAllAnimations
+  stopAll(): void {
+    // _stopAllAnimations
     this.activeAnimations.forEach((animation) => {
-      animation.destroy();
-    });
-    this.activeAnimations = [];
+      animation.destroy()
+    })
+    this.activeAnimations = []
   }
 
   /**
@@ -65,23 +66,23 @@ class Animations {
   stopAllPan(): void {
     this.activeAnimations = this.activeAnimations.filter((animation) => {
       if (animation.props.isPan) {
-        animation.destroy();
-        return false;
+        animation.destroy()
+        return false
       }
 
-      return true;
-    });
+      return true
+    })
   }
 
   stopMainScroll(): void {
     this.activeAnimations = this.activeAnimations.filter((animation) => {
       if (animation.props.isMainScroll) {
-        animation.destroy();
-        return false;
+        animation.destroy()
+        return false
       }
 
-      return true;
-    });
+      return true
+    })
   }
 
   /**
@@ -98,9 +99,9 @@ class Animations {
    */
   isPanRunning(): boolean {
     return this.activeAnimations.some((animation) => {
-      return animation.props.isPan;
-    });
+      return animation.props.isPan
+    })
   }
 }
 
-export default Animations;
+export default Animations

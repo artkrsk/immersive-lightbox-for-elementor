@@ -1,6 +1,10 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
-  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "files": {
     "includes": [
       "build/**",
@@ -15,10 +19,53 @@
       ".fallowrc.jsonc"
     ]
   },
-  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
-  "linter": { "enabled": true, "rules": { "preset": "recommended" } },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
+  },
   "javascript": {
-    "formatter": { "semicolons": "asNeeded", "quoteStyle": "single", "trailingCommas": "none" }
-  }
+    "formatter": {
+      "semicolons": "asNeeded",
+      "quoteStyle": "single",
+      "trailingCommas": "none"
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/ts/photoswipe/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off",
+            "noImplicitAnyLet": "off",
+            "useIterableCallbackReturn": "off",
+            "noConfusingVoidType": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off",
+            "useTemplate": "off"
+          },
+          "complexity": {
+            "noBannedTypes": "off",
+            "useOptionalChain": "off"
+          }
+        }
+      }
+    }
+  ]
 }
