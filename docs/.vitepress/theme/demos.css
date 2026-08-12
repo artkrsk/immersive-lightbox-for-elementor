@@ -43,12 +43,25 @@
   color: var(--vp-c-text-2);
 }
 
-/* The hard case: radius + overflow crop + a parallax offset on the inner
-   image, varied per card via --par. */
+/* The hard case: radius + overflow crop + LIVE classic parallax on the
+   inner image — scroll-driven keyframes on the TRANSFORM channel (the
+   ArtsParallax/GSAP mechanism), drift amplitude varied per card via --par.
+   The companion "true parallax" fixture exercises the modern channel
+   (translate/scale properties, the Velum contract). */
+@keyframes demo-classic-parallax {
+  from {
+    transform: translateY(calc(var(--par, 6%) * -1)) scale(1.15);
+  }
+  to {
+    transform: translateY(var(--par, 6%)) scale(1.15);
+  }
+}
+
 .demo-parallax {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+  view-timeline: --demo-classic block;
 }
 
 .demo-parallax__card {
@@ -60,11 +73,11 @@
 }
 
 .demo-parallax__card img {
-  position: absolute;
-  left: 0;
-  top: 0;
+  display: block;
   width: 100%;
-  height: 120%;
+  height: 100%;
   object-fit: cover;
-  transform: translateY(var(--par, 0%));
+  animation: demo-classic-parallax auto linear both;
+  animation-timeline: --demo-classic;
+  animation-range: cover;
 }

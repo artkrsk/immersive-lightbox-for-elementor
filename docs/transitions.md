@@ -1,18 +1,36 @@
 # Transitions
 
 The hard case the engine was designed around: source images with
-**border-radius, overflow crop, and a mid-scroll parallax offset** on the
-inner image (each card below carries a different offset). On open, the
-clicked image is promoted above the curtain and un-does all three while it
-travels; on close it re-applies whatever the source's current state is.
+**border-radius, overflow crop, and live parallax** on the inner image. The
+flight capture is geometric (it measures rects, not mechanisms), so both
+parallax generations must behave identically:
+
+## Classic parallax (transform channel — ArtsParallax mechanism)
+
+Scroll-driven keyframes writing `transform: translateY(…) scale(1.15)` —
+the channel GSAP-era parallax writes to. Each card drifts with a different
+amplitude; open at any scroll position, the flight captures the mid-drift
+state, un-does it in the air, and re-applies the current state on close.
 
 <script setup>
 import parallaxCards from './demos/parallax-cards.html?raw'
+import trueParallax from './demos/true-parallax.html?raw'
 </script>
 
 <LightboxDemo :html="parallaxCards" />
 
 <<< @/demos/parallax-cards.html
+
+## True parallax (Velum contract, 1:1)
+
+The real thing: Velum's scroll-driven parallax — `translate` drift keyframes
+on a `view-timeline`, **overscan via the `scale` property** derived from the
+drift factor (`dy: 0.1` → scale 1.2), the frame clipping with a radius. The
+image is a live Velum asset with real attachment dimensions. Scroll to a few
+different positions and open — the flight must capture whatever mid-drift
+state the inner image is in:
+
+<LightboxDemo :html="trueParallax" />
 
 ## Variants
 

@@ -1,0 +1,89 @@
+<style>
+  /* Velum's native scroll-driven parallax contract, reproduced 1:1
+     (drift via `translate` keyframes, overscan via the `scale` property
+     derived from the factors, frame = clip box, wrapper = timeline owner). */
+  @keyframes arts-parallax-drift {
+    from {
+      translate: calc(var(--arts-parallax-drift-dx, 0) * -100%)
+        calc(var(--arts-parallax-drift-dy, 0) * -100%);
+    }
+    to {
+      translate: calc(var(--arts-parallax-drift-dx, 0) * 100%)
+        calc(var(--arts-parallax-drift-dy, 0) * 100%);
+    }
+  }
+
+  .arts-parallax {
+    position: relative;
+    display: block;
+    view-timeline: --arts-parallax block;
+  }
+
+  .arts-parallax__frame {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+  }
+
+  .arts-parallax__inner {
+    --arts-parallax-drift-dx: var(--arts-parallax-dx, 0);
+    --arts-parallax-drift-dy: var(--arts-parallax-dy, 0);
+    --arts-parallax-overscan: calc(
+      1 + 2 *
+        max(
+          var(--arts-parallax-dx, 0),
+          -1 * var(--arts-parallax-dx, 0),
+          var(--arts-parallax-dy, 0),
+          -1 * var(--arts-parallax-dy, 0)
+        )
+    );
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    scale: var(--arts-parallax-overscan);
+    translate: 0 0;
+    animation: arts-parallax-drift auto linear both;
+    animation-timeline: --arts-parallax;
+    animation-range: cover;
+  }
+
+  .demo-scroll-spacer {
+    display: grid;
+    place-items: center;
+    height: 38vh;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.4;
+  }
+</style>
+
+<div class="demo-scroll-spacer">scroll — the parallax drifts and overscans</div>
+
+<a
+  href="https://velum.dev.artemsemkin.com/wp-content/uploads/2026/06/board-formed-featured-image-optimized.jpg"
+  data-arts-lightbox
+  data-arts-lightbox-width="2528"
+  data-arts-lightbox-height="1696"
+  data-arts-lightbox-caption="Appartement Rivoli — board formed"
+  class="arts-parallax"
+>
+  <span
+    class="media-ratio arts-parallax__frame"
+    style="aspect-ratio: 2528 / 1696"
+  >
+    <img
+      loading="lazy"
+      width="2528"
+      height="1696"
+      src="https://velum.dev.artemsemkin.com/wp-content/uploads/2026/06/board-formed-featured-image-optimized-1024x687.jpg"
+      class="of-cover arts-parallax__inner"
+      style="--arts-parallax-dy: 0.1"
+      alt="Board formed concrete interior"
+    />
+  </span>
+</a>
+
+<div class="demo-scroll-spacer">click the image at different scroll positions</div>
