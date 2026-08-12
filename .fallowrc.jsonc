@@ -1,0 +1,31 @@
+{
+  // Entry points beyond auto-detection, mirroring knip.json:
+  // - global.d.ts: ambient window contract (TGateBoot is consumed there)
+  // - project.config.js + build/**: the esbuild release harness — its deps
+  //   (archiver, chokidar) and config are reachable only through these.
+  "entry": [
+    "src/ts/boot.ts",
+    "src/ts/gate.ts",
+    "src/ts/global.d.ts",
+    "project.config.js",
+    "build/**/*.js"
+  ],
+  // The build/ directory sits outside fallow's analyzable set (default build
+  // ignore), so its imports are never traversed: these two are consumed by
+  // build/sass.js, build/sync.js and build/package.js (the release harness).
+  "ignoreDependencies": ["archiver", "chokidar"],
+  // The vendored PhotoSwipe fork is upstream code kept intentionally close
+  // to its source — excluded from analysis the same way it is excluded from
+  // Biome, knip and coverage. Fork refactors ride the phase-2 queue with
+  // on-device verification, not this gate.
+  "ignorePatterns": ["src/ts/photoswipe/**"],
+  "duplicates": {
+    // Test fixtures rhyme by design (same DOM scaffold, different assertion).
+    // Source duplication stays guarded — currently zero.
+    "ignore": ["tests/**"]
+  },
+  "health": {
+    // Complexity gates apply to shipped engine code, not test bodies.
+    "ignore": ["tests/**"]
+  }
+}

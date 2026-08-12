@@ -5,6 +5,12 @@ Forked from photoswipe@5.4.4 (MIT, see LICENSE — Dmytro Semenov) at the
 is dormant; this copy is the maintained source of truth for the engine's
 gesture physics, zoom/pan math, main scroll and image loading.
 
+Deviations from upstream 5.4.4:
+
+- `lightbox/` (the PhotoSwipeLightbox lazy-loader wrapper) is removed — the
+  engine constructs the core directly with an explicit dataSource and owns
+  its own lazy gate (`gate.ts`), so the wrapper was 300 dead lines.
+
 Ground rules:
 
 - `gestures/`, `util/spring-*` are the battle-tested touch physics — change

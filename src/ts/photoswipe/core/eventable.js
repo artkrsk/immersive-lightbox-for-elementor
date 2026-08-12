@@ -1,4 +1,4 @@
-/** @typedef {import('../lightbox/lightbox.js').default} PhotoSwipeLightbox */
+/** @typedef {import('./base.js').default} PhotoSwipeBase */
 /** @typedef {import('../photoswipe.js').default} PhotoSwipe */
 /** @typedef {import('../photoswipe.js').PhotoSwipeOptions} PhotoSwipeOptions */
 /** @typedef {import('../photoswipe.js').DataSource} DataSource */
@@ -139,7 +139,7 @@
  * Modify item data when it's parsed from DOM element. Example on Data sources page.
  * https://photoswipe.com/filters/#domitemdata
  *
- * @prop {(clickedIndex: number, e: MouseEvent, instance: PhotoSwipeLightbox) => number} clickedIndex
+ * @prop {(clickedIndex: number, e: MouseEvent, instance: PhotoSwipeBase) => number} clickedIndex
  * Modify clicked gallery item index.
  * https://photoswipe.com/filters/#clickedindex
  *

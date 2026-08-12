@@ -15,5 +15,6 @@
     "build/**/*.js"
   ],
   "ignoreExportsUsedInFile": true,
-  "ignoreBinaries": ["composer"]
+  "ignoreBinaries": ["composer", "fallow"],
+  "ignoreDependencies": ["vue"]
 }
