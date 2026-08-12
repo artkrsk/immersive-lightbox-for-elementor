@@ -33,7 +33,14 @@ export function createLightbox(options?: TDeepPartial<IOptions>): ILightbox {
     current = { req, galleries }
     createPswp(opts, req, (pswp) => {
       engineState.closeHandle = attachOpenTransition(pswp, opts, req, instant)
-      attachExploreMode(pswp, opts, point)
+      const explore = attachExploreMode(pswp, opts, point)
+      // With explore active, the click zoom toggle runs aimed at the live
+      // mouse (one continuous writer) instead of PhotoSwipe's tap-point zoom.
+      if (explore && opts.zoom.imageClickAction === 'zoom') {
+        pswp.options.imageClickAction = () => {
+          explore.toggleZoomAimed()
+        }
+      }
       attachZoomCursor(pswp)
       attachZoomMode(pswp, opts)
       registerContent(pswp)
