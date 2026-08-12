@@ -50,4 +50,30 @@ describe('captureFlightSource', () => {
     expect(source.innerOffsetYPct).toBe(0)
     expect(source.src).toBe('')
   })
+
+  it('falls back to the inner img radius when the frame has none and does not clip', () => {
+    document.body.innerHTML = `
+      <a href="/full.jpg" data-arts-lightbox>
+        <img src="/thumb.jpg" alt="" style="border-radius: 12px" />
+      </a>
+    `
+    const frame = document.querySelector('a') as HTMLElement
+    const img = frame.querySelector('img') as HTMLImageElement
+    mockRect(frame, { left: 0, top: 0, width: 300, height: 400 })
+    mockRect(img, { left: 0, top: 0, width: 300, height: 400 })
+    expect(captureFlightSource(frame).radius).toBe(12)
+  })
+
+  it('ignores the img radius when the frame clips it away', () => {
+    document.body.innerHTML = `
+      <a href="/full.jpg" data-arts-lightbox style="overflow: hidden">
+        <img src="/thumb.jpg" alt="" style="border-radius: 12px" />
+      </a>
+    `
+    const frame = document.querySelector('a') as HTMLElement
+    const img = frame.querySelector('img') as HTMLImageElement
+    mockRect(frame, { left: 0, top: 0, width: 300, height: 400 })
+    mockRect(img, { left: 0, top: -20, width: 300, height: 480 })
+    expect(captureFlightSource(frame).radius).toBe(0)
+  })
 })
