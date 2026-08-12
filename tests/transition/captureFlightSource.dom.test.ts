@@ -64,6 +64,29 @@ describe('captureFlightSource', () => {
     expect(captureFlightSource(frame).radius).toBe(12)
   })
 
+  it('measures the intermediate clip box (Velum parallax contract)', () => {
+    document.body.innerHTML = `
+      <a href="/full.jpg" data-arts-lightbox>
+        <span style="overflow: hidden; border-radius: 16px">
+          <img src="/thumb.jpg" alt="" />
+        </span>
+      </a>
+    `
+    const anchor = document.querySelector('a') as HTMLElement
+    const frame = document.querySelector('span') as HTMLElement
+    const img = frame.querySelector('img') as HTMLImageElement
+    mockRect(anchor, { left: 90, top: 190, width: 320, height: 420 })
+    mockRect(frame, { left: 100, top: 200, width: 300, height: 400 })
+    mockRect(img, { left: 100, top: 160, width: 300, height: 480 })
+
+    const source = captureFlightSource(anchor)
+    // the clip box is the visible card — its rect and radius win
+    expect(source.rect).toEqual({ x: 100, y: 200, w: 300, h: 400 })
+    expect(source.radius).toBe(16)
+    expect(source.innerHeightPct).toBeCloseTo(120, 6)
+    expect(source.innerOffsetYPct).toBeCloseTo(-10, 6)
+  })
+
   it('ignores the img radius when the frame clips it away', () => {
     document.body.innerHTML = `
       <a href="/full.jpg" data-arts-lightbox style="overflow: hidden">

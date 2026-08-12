@@ -1,24 +1,51 @@
 import type { IFlightSource } from '../interfaces'
 
+const CLIPS = /hidden|clip|scroll|auto/
+
 /**
- * Captures the clicked element's visual state for the flight. Parallax is
- * measured geometrically — inner img rect vs frame rect — so it works for
- * any parallax mechanism without parsing transforms.
+ * Captures the clicked element's visual state for the flight.
+ *
+ * The measured frame is the box the user actually SEES: the nearest
+ * ancestor of the inner img (up to and including the clicked element) that
+ * clips — real-world markup often carries the radius+overflow on an
+ * intermediate frame (Velum's .arts-parallax__frame), not on the anchor.
+ * Without a clipping ancestor, the visible rounding is the img's own (plain
+ * grids) or the clicked element's.
+ *
+ * Parallax is measured geometrically — inner img rect vs frame rect — so
+ * any mechanism (transform, translate/scale properties, inline styles) is
+ * captured identically.
  */
 export function captureFlightSource(sourceEl: HTMLElement): IFlightSource {
-  const frameRect = sourceEl.getBoundingClientRect()
   const img = sourceEl.querySelector('img')
-  const frameStyle = getComputedStyle(sourceEl)
-  let radius = Number.parseFloat(frameStyle.borderRadius) || 0
-  // The visible rounding may live on the inner img (plain grids) rather than
-  // the frame (parallax cards). Fall back to it — unless the frame clips, in
-  // which case the img's own corners are cut away and square is correct.
-  // (Tested for clipping values, not 'visible': unset computes to '' in
-  // happy-dom while browsers report 'visible'.)
-  const frameClips = /hidden|clip|scroll|auto/.test(frameStyle.overflow)
-  if (!radius && img && !frameClips) {
-    radius = Number.parseFloat(getComputedStyle(img).borderRadius) || 0
+
+  let frame: HTMLElement = sourceEl
+  let radius = Number.parseFloat(getComputedStyle(sourceEl).borderRadius) || 0
+
+  if (img) {
+    let clipBox: HTMLElement | null = null
+    let el: HTMLElement | null = img.parentElement
+    while (el) {
+      if (CLIPS.test(getComputedStyle(el).overflow)) {
+        clipBox = el
+        break
+      }
+      if (el === sourceEl) {
+        break
+      }
+      el = el.parentElement
+    }
+    if (clipBox) {
+      frame = clipBox
+      radius = Number.parseFloat(getComputedStyle(clipBox).borderRadius) || 0
+    } else if (!radius) {
+      // Nothing clips and the clicked element is square — the visible
+      // rounding, if any, is the img's own.
+      radius = Number.parseFloat(getComputedStyle(img).borderRadius) || 0
+    }
   }
+
+  const frameRect = frame.getBoundingClientRect()
   const source: IFlightSource = {
     rect: { x: frameRect.left, y: frameRect.top, w: frameRect.width, h: frameRect.height },
     radius,
