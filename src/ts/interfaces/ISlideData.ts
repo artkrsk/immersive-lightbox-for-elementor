@@ -22,4 +22,10 @@ export interface ISlideData {
   html?: string
   videoSrc?: string
   videoEmbed?: TVideoEmbed
+  /** Vimeo private-access hash — required for unlisted videos. */
+  videoHash?: string
+  /** Start offset in seconds (YouTube t=/start=). */
+  videoStart?: number
+  /** The src came from a <video> contained in the candidate element. */
+  sourceVideo?: boolean
 }

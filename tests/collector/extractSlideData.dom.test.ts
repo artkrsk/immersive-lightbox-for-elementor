@@ -97,6 +97,39 @@ describe('extractSlideData', () => {
     expect(data.videoSrc).toBe('https://youtu.be/dQw4w9WgXcQ')
   })
 
+  it('derives video slides from a contained <video> on non-anchor candidates', () => {
+    document.body.innerHTML = `
+      <div data-arts-lightbox data-arts-lightbox-type="video">
+        <video src="https://example.com/bg.mp4" width="2528" height="1696"
+               poster="https://example.com/poster.jpg" autoplay muted loop playsinline></video>
+      </div>
+    `
+    const el = document.querySelector('div[data-arts-lightbox]') as HTMLElement
+    const data = extractSlideData(el)
+    expect(data.type).toBe('video')
+    expect(data.src).toContain('/bg.mp4')
+    expect(data.sourceVideo).toBe(true)
+    expect(data.width).toBe(2528)
+    expect(data.height).toBe(1696)
+    expect(data.msrc).toContain('/poster.jpg')
+  })
+
+  it('carries the Vimeo private hash and YouTube start into slide data', () => {
+    const vimeo = anchor(`
+      <a href="https://vimeo.com/617673871/701316cc64" data-arts-lightbox>
+        <img src="t.jpg" alt="" />
+      </a>
+    `)
+    expect(extractSlideData(vimeo).videoHash).toBe('701316cc64')
+
+    const yt = anchor(`
+      <a href="https://youtu.be/dQw4w9WgXcQ?t=90" data-arts-lightbox>
+        <img src="t.jpg" alt="" />
+      </a>
+    `)
+    expect(extractSlideData(yt).videoStart).toBe(90)
+  })
+
   it('resolves html slide content from the referenced selector', () => {
     document.body.innerHTML = `
       <template id="tpl"><p>Hello</p></template>
