@@ -10,15 +10,11 @@
  * event. Incoming messages are matched to this bridge's iframe by
  * `event.source`.
  */
+import type { IPlayerBridge } from '../interfaces'
 export function createPlayerBridge(
   iframe: HTMLIFrameElement,
   provider: 'youtube' | 'vimeo'
-): {
-  play(): void
-  pause(): void
-  setMuted(muted: boolean): void
-  destroy(): void
-} {
+): IPlayerBridge {
   let ready = false
   let queue: string[] = []
   let pingTimer: ReturnType<typeof setInterval> | null = null
@@ -104,7 +100,7 @@ export function createPlayerBridge(
     pause: () => {
       send(provider === 'youtube' ? yt('pauseVideo') : vimeo('pause'))
     },
-    setMuted: (muted) => {
+    setMuted: (muted: boolean) => {
       if (provider === 'youtube') {
         send(yt(muted ? 'mute' : 'unMute'))
       } else {

@@ -1,4 +1,4 @@
-import type { IMediaController } from '../content/registerContent'
+import type { IMediaController } from '../interfaces'
 import type PhotoSwipe from '../photoswipe/photoswipe.js'
 
 const HIDDEN_CLASS = 'arts-lightbox-sound_hidden'
