@@ -270,20 +270,28 @@
   // and would thin the thumbnail toward whatever sits behind the strip instead
   // of darkening it.
   //
-  // The border is always present and only ever changes colour, so there is a
-  // box to transition rather than one that pops into being when active.
+  // The ring is an OUTLINE, not a border. A border reserves a track inside the
+  // box, and since the black backing paints under a transparent one, every
+  // inactive thumbnail wore a 1px black rim — and `background-clip` only trades
+  // that for the backdrop showing through, which is dark too. An outline takes
+  // no space, so the image fills the whole tile and the ring sits outside it.
+  //
+  // Always present, only ever changing colour, so there is something to
+  // transition rather than a ring that pops into being.
   .arts-lightbox-thumbs__item {
     flex: 0 0 auto;
     width: var(--arts-lightbox-thumb-size);
     height: var(--arts-lightbox-thumb-size);
     position: relative;
     padding: 0;
-    border: 1px solid transparent;
+    border: 0;
     border-radius: 4px;
+    outline: 1px solid transparent;
+    outline-offset: 2px;
     overflow: hidden;
     background: #000;
     cursor: pointer;
-    transition: border-color var(--arts-lightbox-thumb-duration) ease;
+    transition: outline-color var(--arts-lightbox-thumb-duration) ease;
   }
 
   // Centring a scroll container with `justify-content` clips the overflow on
@@ -325,7 +333,7 @@
   }
 
   .arts-lightbox-thumbs__item_active {
-    border-color: currentColor;
+    outline-color: currentColor;
   }
 
   // Slideshow progress. No restart trick is needed: each advance moves the
