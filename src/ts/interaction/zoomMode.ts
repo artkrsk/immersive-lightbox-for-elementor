@@ -14,6 +14,13 @@ const EPSILON = 0.001
  * mismatched mid-swipe would otherwise visibly snap.
  */
 export function attachZoomMode(pswp: PhotoSwipe, opts: IOptions): void {
+  // The session mode is the fill-ceiling model's companion. Under the
+  // classic model (initialLevel 'fit' → stock zoom levels, secondary ~3x
+  // fit) the threshold would fire on any deep zoom and rewrite the live
+  // options, collapsing the stock range to the fill ceiling.
+  if (opts.zoom.initialLevel !== 'fill') {
+    return
+  }
   let mode: 'fit' | 'fill' = opts.zoom.initialLevel
 
   const syncSlide = (slide: NonNullable<PhotoSwipe['currSlide']>): void => {

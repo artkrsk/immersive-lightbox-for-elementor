@@ -74,6 +74,25 @@ describe('attachZoomMode', () => {
     expect(slide.zoomLevels.initial).toBe(1)
   })
 
+  it('stays detached under the classic model (initialLevel fit)', () => {
+    // Stock zoom levels put secondary at ~3x fit — a deep zoom would trip
+    // the threshold and collapse the classic range to the fill ceiling.
+    const classicOpts = {
+      ...DEFAULT_OPTIONS,
+      zoom: { ...DEFAULT_OPTIONS.zoom, initialLevel: 'fit' as const }
+    }
+    const pswp = fakePswp() as ReturnType<typeof fakePswp> & {
+      options: { initialZoomLevel?: unknown }
+    }
+    pswp.options = { initialZoomLevel: 'fit' }
+    const slide = slideStub(pswp.options)
+    pswp.currSlide = slide
+    attachZoomMode(pswp as unknown as PhotoSwipe, classicOpts)
+    slide.currZoomLevel = 1 // past fill — would flip the session mode
+    pswp.emit('zoomPanUpdate', { slide })
+    expect(pswp.options.initialZoomLevel).toBe('fit') // untouched
+  })
+
   it('never flips on degenerate ranges (fit-only video slides)', () => {
     const { pswp, slide } = setup()
     slide.zoomLevels.fill = slide.zoomLevels.fit // fit forced == fill

@@ -33,4 +33,13 @@ artsLightboxPlayground.reboot({ zoom: { initialLevel: 'fit' } })
 // other desktop zoom ergonomics
 artsLightboxPlayground.reboot({ zoom: { wheelToZoom: true } })
 artsLightboxPlayground.reboot({ zoom: { imageClickAction: 'next' } })
+
+// CLASSIC MODE — near-stock PhotoSwipe behavior: fit opening with the
+// stock zoom range (secondary ~3x fit, max ~4x), tap-point zoom toggle,
+// drag pans, wheel pans when zoomed, ctrl+wheel zooms. Our transitions,
+// UI and video handling stay.
+artsLightboxPlayground.reboot({
+  explore: { enabled: false },
+  zoom: { initialLevel: 'fit' }
+})
 ```
