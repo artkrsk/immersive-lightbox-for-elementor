@@ -1,15 +1,28 @@
 @layer arts-lightbox {
   // All chrome rides the shared transition clock.
-  .arts-lightbox-counter,
-  .arts-lightbox-caption,
-  .arts-lightbox-close,
-  .arts-lightbox-download,
-  .arts-lightbox-slideshow,
-  .arts-lightbox-sound,
-  .arts-lightbox-arrow,
-  .arts-lightbox-thumbs {
+  //
+  // The `.pswp` scope is load-bearing, not tidiness. The fork stamps
+  // `pswp__hide-on-close` straight onto every element appended to the root or
+  // the wrapper — our caption, thumbnails and arrows — and
+  // `.pswp--ui-visible .pswp__hide-on-close { opacity: 1 }` is two classes.
+  // Unscoped, this rule is one, so those three ignored the clock entirely:
+  // lit from the first frame of the open, still lit through the close, gone
+  // only when the DOM was destroyed. Bar-hosted chrome never had the problem,
+  // because the class lands on their shared container instead of on them.
+  //
+  // Two classes ties it, and `_ui.scss` is used after `_photoswipe.scss`, so
+  // source order settles the tie our way.
+  .pswp .arts-lightbox-counter,
+  .pswp .arts-lightbox-caption,
+  .pswp .arts-lightbox-close,
+  .pswp .arts-lightbox-download,
+  .pswp .arts-lightbox-slideshow,
+  .pswp .arts-lightbox-sound,
+  .pswp .arts-lightbox-arrow,
+  .pswp .arts-lightbox-thumbs {
     opacity: var(--arts-lightbox-chrome, 1);
     color: var(--arts-lightbox-ui-color, #efece6);
+    // One clock owns chrome opacity; a CSS transition here is a second owner.
     transition: none;
   }
 
