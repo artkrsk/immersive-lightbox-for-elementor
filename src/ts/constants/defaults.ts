@@ -34,7 +34,16 @@ export const DEFAULT_OPTIONS: IOptions = {
     download: false,
     counter: true,
     captions: true,
-    backdropOpacity: 1
+    backdropOpacity: 1,
+    // Two independently mirrored chevrons rather than one flipped by CSS: a
+    // theme replacing them supplies two unrelated glyphs, so the defaults
+    // behave the way a replacement would. Close is composed in closeButton.ts
+    // — baking its bars here would make constants/ import from ui/.
+    icons: {
+      prev: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
+      next: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
+      close: ''
+    }
   },
   slideshow: {
     enabled: false,

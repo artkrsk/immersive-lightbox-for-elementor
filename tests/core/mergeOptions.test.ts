@@ -15,6 +15,13 @@ describe('mergeOptions', () => {
     expect(merged.ui.counter).toBe(true)
   })
 
+  it('merges ui.icons key-by-key, so one override keeps the other glyphs', () => {
+    const merged = mergeOptions({ ui: { icons: { close: '<span>X</span>' } } })
+    expect(merged.ui.icons.close).toBe('<span>X</span>')
+    expect(merged.ui.icons.prev).toBe(DEFAULT_OPTIONS.ui.icons.prev)
+    expect(merged.ui.icons.next).toBe(DEFAULT_OPTIONS.ui.icons.next)
+  })
+
   it('does not mutate DEFAULT_OPTIONS', () => {
     mergeOptions({ transition: { duration: 999 }, ui: { thumbnails: true } })
     expect(DEFAULT_OPTIONS.transition.duration).toBe(800)

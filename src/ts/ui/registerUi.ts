@@ -27,8 +27,8 @@ export function registerUi(
   })
 
   pswp.on('uiRegister', () => {
-    registerArrows(pswp, api)
-    registerCloseButton(pswp, api)
+    registerArrows(pswp, api, opts.ui.icons)
+    registerCloseButton(pswp, api, opts.ui.icons.close)
     registerSoundButton(pswp, media)
     if (opts.ui.counter) {
       registerCounter(pswp, gallery)

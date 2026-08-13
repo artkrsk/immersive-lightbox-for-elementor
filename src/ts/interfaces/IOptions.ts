@@ -49,6 +49,17 @@ export interface IOptions {
     captions: boolean
     /** Opacity of our backdrop element (PhotoSwipe's own bg is suppressed). */
     backdropOpacity: number
+    /**
+     * Glyph markup for the built-in buttons — swap without replacing DOM.
+     * Arrow glyphs are duplicated into the blink layers. `close` defaults to
+     * '' (the built-in two-bar form); a non-empty string replaces those bars
+     * wholesale, forfeiting their hover cascade.
+     */
+    icons: {
+      prev: string
+      next: string
+      close: string
+    }
   }
   slideshow: {
     enabled: boolean

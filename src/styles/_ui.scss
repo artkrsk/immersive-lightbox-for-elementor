@@ -21,13 +21,35 @@
     letter-spacing: 0.12em;
   }
 
-  .arts-lightbox-caption {
+  // A zero-height anchor, not a box: every caption is absolutely positioned
+  // against it, so nothing here depends on any caption's size. Definite width
+  // because the items wrap against it.
+  //
+  // Scoped under `.pswp` only to outrank `.pswp--ui-visible .pswp__hide-on-close`,
+  // which the fork stamps on every registered element — the items overflow this
+  // element, and none of it may intercept a drag or a zoom click.
+  .pswp .arts-lightbox-caption {
     position: absolute;
     bottom: 20px;
     left: 24px;
-    max-width: 60%;
+    width: 60%;
     font-size: 13px;
     letter-spacing: 0.04em;
+    pointer-events: none;
+  }
+
+  // All captions share one bottom-left origin and grow upward, so a one-line
+  // and a five-line caption sit on the same baseline and neither disturbs the
+  // other. Position and opacity are projected from the live slide position by
+  // `ui/caption.ts` — this rule only decides what the two scalars mean, which
+  // is what lets a theme reinterpret them (another axis, a blur, a scale).
+  .arts-lightbox-caption__item {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    width: 100%;
+    opacity: var(--arts-lightbox-caption-fade, 1);
+    transform: translateY(calc(var(--arts-lightbox-caption-shift, 0) * 1%));
   }
 
   .arts-lightbox-close,
@@ -68,6 +90,90 @@
 
   .arts-lightbox-arrow_next {
     right: 12px;
+  }
+
+  // Same specificity as the shared button rule above — source order wins.
+  // `position: relative` gives the bars their containing block.
+  .arts-lightbox-close {
+    --arts-lightbox-close-size: 56px;
+    // Deliberately not derived from the size: a smaller box with proportionally
+    // thinner strokes stops reading as the same component at another scale.
+    --arts-lightbox-close-line-thickness: 2px;
+    position: relative;
+    width: var(--arts-lightbox-close-size);
+    height: var(--arts-lightbox-close-size);
+  }
+
+  // The blink hover: a normal layer exits while a duplicate chases it in,
+  // deliberately slower. Symmetric timing reads as a swap; the lag is the
+  // whole effect. Lives on descendants — the chrome roots carry
+  // `transition: none` because their opacity rides the shared clock.
+  .arts-lightbox-blink {
+    --arts-lightbox-blink-duration-out: 0.3s;
+    --arts-lightbox-blink-duration-in: 0.45s;
+    --arts-lightbox-blink-direction: 1;
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+  }
+
+  .arts-lightbox-blink__layer {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transition: transform var(--arts-lightbox-blink-duration-out) ease;
+  }
+
+  .arts-lightbox-blink__layer_hover {
+    position: absolute;
+    inset: 0;
+    // The extra 4px keeps a sub-pixel seam from showing between the layers.
+    transform: translateX(
+      calc(
+        var(--arts-lightbox-blink-direction) * -100% - var(--arts-lightbox-blink-direction) * 4px
+      )
+    );
+    transition-duration: var(--arts-lightbox-blink-duration-in);
+  }
+
+  // Prev mirrors next: its glyph leaves to the left, the copy arrives from the right.
+  .arts-lightbox-arrow_prev .arts-lightbox-blink {
+    --arts-lightbox-blink-direction: -1;
+  }
+
+  .arts-lightbox-arrow:hover > .arts-lightbox-blink > .arts-lightbox-blink__layer_normal,
+  .arts-lightbox-close:hover > .arts-lightbox-blink > .arts-lightbox-blink__layer_normal {
+    transform: translateX(calc(var(--arts-lightbox-blink-direction) * 100%));
+  }
+
+  .arts-lightbox-arrow:hover > .arts-lightbox-blink > .arts-lightbox-blink__layer_hover,
+  .arts-lightbox-close:hover > .arts-lightbox-blink > .arts-lightbox-blink__layer_hover {
+    transform: translateX(0);
+  }
+
+  .arts-lightbox-close__bar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 45%;
+    height: var(--arts-lightbox-close-line-thickness);
+  }
+
+  .arts-lightbox-close__bar > .arts-lightbox-blink__layer {
+    background: currentColor;
+  }
+
+  .arts-lightbox-close__bar_1 {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  .arts-lightbox-close__bar_2 {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
+  // The second bar trails the first by a beat.
+  .arts-lightbox-close__bar_2 > .arts-lightbox-blink__layer {
+    transition-delay: 75ms;
   }
 
   .arts-lightbox-thumbs {
