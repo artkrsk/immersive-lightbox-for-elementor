@@ -145,4 +145,35 @@ describe('extractSlideData', () => {
     expect(data.type).toBe('html')
     expect(data.html).toContain('Inline content')
   })
+
+  it('derives a thumbnail for a hosted video that carries no image', () => {
+    const el = document.createElement('a')
+    el.setAttribute('href', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+    el.setAttribute('data-arts-lightbox', '')
+
+    // A bare link to YouTube has nothing to borrow — without this it renders
+    // as an index number in the thumbnail strip.
+    expect(extractSlideData(el).msrc).toBe('https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg')
+  })
+
+  it('never overrides a thumbnail the author supplied', () => {
+    const el = document.createElement('a')
+    el.setAttribute('href', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+    el.setAttribute('data-arts-lightbox', '')
+    const img = document.createElement('img')
+    img.setAttribute('src', '/mine.jpg')
+    el.appendChild(img)
+
+    // currentSrc resolves to an absolute URL, so match the tail.
+    expect(extractSlideData(el).msrc).toMatch(/\/mine\.jpg$/)
+    expect(extractSlideData(el).msrc).not.toContain('ytimg')
+  })
+
+  it('leaves Vimeo alone — its thumbnail needs a round trip, not an id', () => {
+    const el = document.createElement('a')
+    el.setAttribute('href', 'https://vimeo.com/123456789')
+    el.setAttribute('data-arts-lightbox', '')
+
+    expect(extractSlideData(el).msrc).toBeUndefined()
+  })
 })

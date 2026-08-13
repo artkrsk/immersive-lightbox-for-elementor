@@ -10,6 +10,7 @@ import {
 import type { ISlideData } from '../interfaces'
 import { normalizeUrlKey } from '../utils'
 import { parseVideoUrl } from '../video/parseVideoUrl'
+import { posterUrl } from '../video/posterUrl'
 import { detectSlideType } from './detectSlideType'
 import { detectVideoEmbed } from './detectVideoEmbed'
 
@@ -94,6 +95,15 @@ function readVideoData(
   }
   if (parsed?.start !== undefined) {
     data.videoStart = parsed.start
+  }
+  // A hosted video usually has no image to borrow — a plain link to YouTube
+  // carries nothing at all — so derive one from the id. Only when the trigger
+  // gave us nothing: an author's own thumbnail always wins.
+  if (!data.msrc && parsed) {
+    const poster = posterUrl(parsed)
+    if (poster) {
+      data.msrc = poster
+    }
   }
   if (!href && containedVideo) {
     data.sourceVideo = true
