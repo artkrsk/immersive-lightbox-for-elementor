@@ -67,6 +67,14 @@ is free, and adding an event later is non-breaking. If a scripted exit is wanted
 A fresh pswp core is created per open (existing invariant), so consumers re-create their DOM on every
 `:open` and release on `:destroy`. No persistence, no reuse.
 
+**Unresolved: the continuous position.** Every key above is discrete, so chrome built on them can only
+ever react after a slide commits — the exact flaw the scrubbed caption removed. Anything a theme wants
+to feel coupled (a split counter being the concrete case) needs the fractional slide position, which
+today is private to `ui/caption.ts`. Publishing it should be **pull-based rather than emitted** — a
+60Hz `CustomEvent` is the wrong instrument, and `@arts/slider-engine` deliberately has none — but that
+widens the discovery global past the "presence/ready detection only" line drawn in §5, so it is a
+decision for this spec rather than for whoever implements the events.
+
 ### Channel 2 — The DOM anchor
 
 - `root` arrives in the event detail, so there is no query race.
