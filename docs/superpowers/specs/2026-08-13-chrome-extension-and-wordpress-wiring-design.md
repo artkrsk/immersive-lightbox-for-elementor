@@ -260,6 +260,15 @@ policy change. Every existing per-widget and global setting keeps meaning exactl
 own vocabulary remains for non-Elementor markup and for concepts Elementor lacks (`-type`, `-html`,
 `-off`).
 
+### PHP composition — standalone
+
+The phase-2 PHP layer does **not** compose from `arts/base` or `arts/utilities`. It stays
+self-contained under `Arts\BetterLightbox\`, requiring only `php >=8.0`, following
+`smooth-scrolling-for-elementor` (`Plugin.php`, `Options.php`, `Elementor/SiteSettingsTab.php`, empty
+`vendor-prefixed/`) and `cursor-follower-for-elementor` — the two closest analogues in shape, both
+standalone. Three other plugins in the directory do compose from framework packages; this one
+deliberately does not.
+
 ### Kit settings
 
 Reuse Elementor's existing lightbox controls rather than duplicating them, so a user's styling
@@ -267,9 +276,12 @@ survives activation: `lightbox_color`, `lightbox_ui_color`, `lightbox_ui_color_h
 `lightbox_text_color` gain `.pswp` selectors alongside the native `.elementor-lightbox` ones, and
 `lightbox_enable_counter` drives our counter. Only genuinely new options become new controls.
 
-**Open decision:** Elementor's `lightbox_enable_fullscreen` and `lightbox_enable_share` have no
-equivalent in our engine. Either hide them while we are active (ArtsCustomGallery's choice) or
-implement them. Not resolved in this spec.
+**Share and fullscreen are dropped.** Elementor's `lightbox_enable_fullscreen` and
+`lightbox_enable_share` have no equivalent in our engine and will not gain one — we render neither
+button. Their kit controls are left alone rather than hidden: the values stay meaningful for
+Elementor's own lightbox the moment this plugin is deactivated, and suppressing a control the user
+may rely on later would be a policy change, which §5 rules out. Inert while we are active, live
+again when we are not. No code required — the engine already renders neither.
 
 Our own kit controls persist after deactivation as unknown controls, which Elementor ignores;
 reactivating restores the user's config intact. This is desirable — no uninstall cleanup should
