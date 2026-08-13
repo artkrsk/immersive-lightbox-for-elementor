@@ -192,7 +192,9 @@ Upgrade of the existing `ui/thumbnailsStrip.ts`, not a rewrite.
 - **Native scrolling only** — `overflow` plus the existing `scrollIntoView`, which works on both axes.
   Fancybox's "modern"/"classic" variants are carousel-driven; we have no carousel engine and
   zero-dependencies means we would be writing one.
-- **Sizing as custom properties**: `--arts-lightbox-thumb-width` / `-height` / `-gap`.
+- **Sizing as custom properties**: `--arts-lightbox-thumb-size` (square — one dimension, so the
+  shape cannot drift), `-gap`, `-dim` (how far an inactive thumbnail darkens toward its black
+  backing) and `-duration`.
 - `loading="lazy"` on thumb images. Thumbs reuse the page's already-decoded `msrc`, so there is no
   extra network cost in the common case.
 - Existing touch-width hiding (`max-width: 767px`) is retained unchanged.

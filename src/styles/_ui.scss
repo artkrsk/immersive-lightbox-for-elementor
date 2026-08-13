@@ -211,9 +211,12 @@
   // otherwise reclaim both pointer-events and opacity the moment a touch tap
   // toggles the chrome off. Same fix the caption needed.
   .pswp .arts-lightbox-thumbs {
-    --arts-lightbox-thumb-width: 56px;
-    --arts-lightbox-thumb-height: 40px;
+    // Square: one dimension, so the shape cannot drift apart.
+    --arts-lightbox-thumb-size: 56px;
     --arts-lightbox-thumb-gap: 8px;
+    // How far an inactive thumbnail is dimmed toward its black backing.
+    --arts-lightbox-thumb-dim: 0.55;
+    --arts-lightbox-thumb-duration: 0.25s;
     position: absolute;
     display: flex;
     gap: var(--arts-lightbox-thumb-gap);
@@ -262,18 +265,25 @@
     right: 0;
   }
 
+  // Dimming happens on the IMAGE against a black backing, not on the item.
+  // Fading the whole item would take its border and its progress bar with it,
+  // and would thin the thumbnail toward whatever sits behind the strip instead
+  // of darkening it.
+  //
+  // The border is always present and only ever changes colour, so there is a
+  // box to transition rather than one that pops into being when active.
   .arts-lightbox-thumbs__item {
     flex: 0 0 auto;
-    width: var(--arts-lightbox-thumb-width);
-    height: var(--arts-lightbox-thumb-height);
+    width: var(--arts-lightbox-thumb-size);
+    height: var(--arts-lightbox-thumb-size);
     position: relative;
     padding: 0;
     border: 1px solid transparent;
     border-radius: 4px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.08);
+    background: #000;
     cursor: pointer;
-    opacity: 0.55;
+    transition: border-color var(--arts-lightbox-thumb-duration) ease;
   }
 
   // Centring a scroll container with `justify-content` clips the overflow on
@@ -305,11 +315,17 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    opacity: var(--arts-lightbox-thumb-dim);
+    transition: opacity var(--arts-lightbox-thumb-duration) ease;
+  }
+
+  .arts-lightbox-thumbs__item:hover img,
+  .arts-lightbox-thumbs__item_active img {
+    opacity: 1;
   }
 
   .arts-lightbox-thumbs__item_active {
     border-color: currentColor;
-    opacity: 1;
   }
 
   // Slideshow progress. No restart trick is needed: each advance moves the
