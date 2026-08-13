@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 /**
  * The `@ts/*` alias is a test-side convenience mapped in tsconfig and
- * vitest.config — nothing a consumer ever sees. Velum compiles src/ts straight
+ * vitest.config — nothing a consumer ever sees. Themes compile src/ts straight
  * from source with its own config, so a single aliased import inside src/ts
  * would break every external consumer while this repo keeps compiling. This
  * suite is the mechanical guard on that boundary.

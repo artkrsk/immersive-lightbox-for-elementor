@@ -24,7 +24,7 @@ Pre-commit (lefthook): Biome auto-fixes staged files, then typecheck, then the f
 - **Every close and nav path routes through the engine api** (`createLightbox`'s `close`/`nav`), never straight to pswp: `escKey`/`arrowKeys`/`bgClickAction` are disabled in `mapToPswpOptions` and reimplemented so the curtain choreography and pass-through navigation apply uniformly. `closeOnVerticalDrag`/`pinchToClose` are off until a touch-close choreography exists — revisit deliberately, not by flipping the flag.
 - **One clock per transition.** Backdrop `t`, flight interpolation, and chrome opacity all read one eased value (`transition/clock.ts`). No independently-timed tweens.
 - **Flight capture is geometric.** `captureFlightSource` measures the inner img rect vs frame rect — never parses transforms — so any parallax mechanism is captured identically. Close re-measures (scroll/slide may have changed) and targets the nearest visible clone via `gallery.elementsByKey`.
-- **The vendored curtain-mask must stay byte-identical to Velum's.** `tests/transition/curve.test.ts` carries exact-string parity vectors; a "refactor" that shifts any output string is a visual change in disguise.
+- **The vendored curtain-mask must stay byte-identical to @arts/curtain-mask.** `tests/transition/curve.test.ts` carries exact-string parity vectors; a "refactor" that shifts any output string is a visual change in disguise.
 - **The collector always feeds PhotoSwipe an explicit dataSource** — PhotoSwipe never scans anchors (sidesteps its `<a>`-wrapper architecture constraint).
 - **Zero dependencies, period** — the PhotoSwipe fork is repo source; nothing lightbox-related is installed from npm.
 

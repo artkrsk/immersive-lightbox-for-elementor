@@ -21,14 +21,14 @@ import trueParallax from './demos/true-parallax.html?raw'
 
 <<< @/demos/parallax-cards.html
 
-## True parallax (Velum contract, 1:1)
+## True parallax (production contract, 1:1)
 
-The real thing: Velum's scroll-driven parallax — `translate` drift keyframes
-on a `view-timeline`, **overscan via the `scale` property** derived from the
-drift factor (`dy: 0.1` → scale 1.2), the frame clipping with a radius. The
-image is a live Velum asset with real attachment dimensions. Scroll to a few
-different positions and open — the flight must capture whatever mid-drift
-state the inner image is in:
+The real thing: scroll-driven parallax — `translate` drift keyframes on a
+`view-timeline`, **overscan via the `scale` property** derived from the drift
+factor (`dy: 0.1` → scale 1.2), the frame clipping with a radius. The image is
+a real asset with real attachment dimensions. Scroll to a few different
+positions and open — the flight must capture whatever mid-drift state the
+inner image is in:
 
 <LightboxDemo :html="trueParallax" />
 

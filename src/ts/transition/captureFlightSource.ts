@@ -52,7 +52,8 @@ function measureInner(
  * The measured frame is the box the user actually SEES: the nearest
  * ancestor of the inner img (up to and including the clicked element) that
  * clips — real-world markup often carries the radius+overflow on an
- * intermediate frame (Velum's .arts-parallax__frame), not on the anchor.
+ * intermediate frame (a parallax wrapper's `.arts-parallax__frame`, say),
+ * not on the anchor.
  * Without a clipping ancestor, the visible rounding is the img's own (plain
  * grids) or the clicked element's.
  */

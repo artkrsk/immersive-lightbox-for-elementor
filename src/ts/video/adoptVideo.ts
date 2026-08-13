@@ -13,7 +13,7 @@ export function adoptVideo(video: HTMLVideoElement): IAdoptedVideo {
     element: video,
     home: parent instanceof HTMLElement ? parent : null,
     take: () => {
-      // The Velum scroll-driven parallax contract leaves live values on the
+      // Scroll-driven parallax leaves live values on the
       // translate/scale PROPERTIES — pinned here so the video doesn't carry
       // a stale drift/overscan into the lightbox. Restored via cssText.
       video.style.setProperty('translate', '0 0')

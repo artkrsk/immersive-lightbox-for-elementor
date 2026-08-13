@@ -10,8 +10,8 @@ import { initialMirror, watchComposer, watchSources } from './sync.js'
 
 async function dev(ctx) {
   // Deviation from the template: DEV_TARGET is optional. Without it, dev mode
-  // only compiles into src/php/libraries/ — the composer-symlink consumers
-  // (velum-core) run their own sync pipeline over that directory.
+  // only compiles into src/php/libraries/ — composer-symlink consumers run
+  // their own sync pipeline over that directory.
   const syncing = Boolean(ctx.paths.devTarget)
   if (!syncing) {
     log.info('No DEV_TARGET — building without sync (composer-symlink workflow)')

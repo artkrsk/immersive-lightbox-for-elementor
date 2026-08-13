@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (strict, ES2022), esbuild + sass via the sibling `build/` harness, Vitest (node default; happy-dom opt-in), VitePress playground, Biome, knip, lefthook, pnpm.
 
-**Context:** Spec approved at `docs/superpowers/specs/2026-08-12-better-lightbox-design.md` (read it before starting). Repo `/Users/art/Projects/Plugins/better-lightbox-for-elementor` is empty except `docs/superpowers/` and `.superpowers/`. Scaffold template: `/Users/art/Projects/Plugins/cursor-follower-for-elementor` (CF below). Curtain source: `/Users/art/Projects/Themes/Velum/DEV/modules/curtain-mask` (CM below). Working choreography reference (validated with the user): `.superpowers/brainstorm/87290-1786470134/content/open-transition.html`.
+**Context:** Spec approved at `docs/superpowers/specs/2026-08-12-better-lightbox-design.md` (read it before starting). Repo `/Users/art/Projects/Plugins/better-lightbox-for-elementor` is empty except `docs/superpowers/` and `.superpowers/`. Scaffold template: `/Users/art/Projects/Plugins/cursor-follower-for-elementor` (CF below). Curtain source: `the @arts/curtain-mask package` (CM below). Working choreography reference (validated with the user): `.superpowers/brainstorm/87290-1786470134/content/open-transition.html`.
 
 ## Global Constraints
 
@@ -72,7 +72,7 @@ git add -A && git commit -m "chore: scaffold build harness and toolchain from cu
 - [ ] **Step 1: copy CM test files first (they are the spec), adapt imports to `@ts/transition/curtainMask`**
 Carry the byte-for-byte parity vectors verbatim — e.g. `curvedEdgePath(0.3, 0.05, 'right')` must equal the exact `M0.7000,0.0000 L0.6922,0.0500 … L1,1 L1,0 Z` string from CM's `tests/curve.test.ts` (copy all four vector cases + edge/corner/clamp/bellBow cases). Convert mask DOM tests to `*.dom.test.ts` with the happy-dom docblock.
 - [ ] **Step 2: run to verify failure** — `pnpm test tests/transition` → FAIL (module not found).
-- [ ] **Step 3: copy `CurtainMask.ts` + `curve.ts` from CM, add `index.ts` barrel; adjust only formatting to Biome (no logic changes — the parity vectors will catch drift). Add a header comment: `/** Vendored from Velum @arts/curtain-mask (same author). Keep byte-parity with its curve tests. */`
+- [ ] **Step 3: copy `CurtainMask.ts` + `curve.ts` from CM, add `index.ts` barrel; adjust only formatting to Biome (no logic changes — the parity vectors will catch drift). Add a header comment: `/** Vendored from the consuming theme @arts/curtain-mask (same author). Keep byte-parity with its curve tests. */`
 - [ ] **Step 4: run to verify pass** — `pnpm test tests/transition` → PASS.
 - [ ] **Step 5: Commit** — `git commit -m "feat: vendor curtain-mask with byte-parity tests"`
 

@@ -56,7 +56,7 @@ function readMsrc(
 
 /**
  * Dims: explicit attrs win; then the thumb img; then the video element's
- * intrinsic width/height attributes (Velum's media partial prints them).
+ * intrinsic width/height attributes (well-behaved themes print them).
  * Thumb attributes carry the right aspect but the WRONG scale for the
  * full-size file — PhotoSwipe would cap zoom at "natural" thumb size, so
  * guessed dims are flagged for the content layer's natural upgrade.

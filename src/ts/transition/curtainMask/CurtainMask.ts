@@ -18,7 +18,7 @@ export interface ICurtainMaskOptions {
 const SVG_NS = 'http://www.w3.org/2000/svg'
 
 /**
- * Vendored from Velum's @arts/curtain-mask (same author).
+ * Vendored from @arts/curtain-mask (same author).
  *
  * Progress-driven bowed-edge clip mask. Pure mechanics: defs ownership,
  * target attachment, dirty-checked paint. Consumers own ALL policy —

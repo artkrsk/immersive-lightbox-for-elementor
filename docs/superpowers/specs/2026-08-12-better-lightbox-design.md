@@ -5,11 +5,11 @@ Status: approved in brainstorming; ready for implementation planning.
 
 ## What this is
 
-A free, standalone WordPress plugin that replaces Elementor's native lightbox with a custom engine built on PhotoSwipe 5.4.4. Successor in spirit to the ArtsCustomGallery framework package, with **no backward compatibility** with it or the Trigger theme. First consumer: the Velum theme (WIP), which simply requires the plugin — no composer package, no promised JS API surface in v1.
+A free, standalone WordPress plugin that replaces Elementor's native lightbox with a custom engine built on PhotoSwipe 5.4.4. Successor in spirit to the ArtsCustomGallery framework package, with **no backward compatibility** with it or the Trigger theme. First consumer: a first-party theme (WIP), which simply requires the plugin — no composer package, no promised JS API surface in v1.
 
 The two features that earn the "Better" name:
 
-1. **Polished open/close transition** — a curtain reveal (straight or curved edge, the Velum overlay-menu technique) sweeping the page away while the clicked image is promoted *above* the curtain and travels to its slide position, correctly un-doing parallax offset, border-radius, and overflow crop on the way. Validated in an interactive mockup during brainstorming.
+1. **Polished open/close transition** — a curtain reveal (straight or curved edge, an overlay-menu technique) sweeping the page away while the clicked image is promoted *above* the curtain and travels to its slide position, correctly un-doing parallax offset, border-radius, and overflow crop on the way. Validated in an interactive mockup during brainstorming.
 2. **Desktop ergonomics PhotoSwipe never shipped** — mouse-drag between slides, mousemove pan when zoomed, zoom-to-cursor/wheel polish, next-on-click.
 
 ## Engine strategy (Approach A: wrap + surgical patches)
@@ -49,7 +49,7 @@ Three-stage load, following the smooth-scrolling-for-elementor pattern:
 
 - **Collector.** Builds galleries from the DOM; PhotoSwipe always receives a custom data source and never scans anchors itself (sidesteps upstream's `<a>`-wrapper constraint, #2051). Extracts per-slide data: full-size URL, `currentSrc`, dimensions, caption, thumbnail source, type (`image | video | html`), group id, canonical key.
 - **Transition engine.** Owns open/close entirely (`showHideAnimationType: 'none'`). A transition composes:
-  - *Backdrop reveal*: `fade` or `curtain` preset. Curtain uses a vendored copy of Velum's `@arts/curtain-mask` (SVG clipPath in `objectBoundingBox` units, per-frame path rewrite, sine bow, `straight` inset fast path, re-pointable direction) with attribution and its exact-string parity test vectors carried over.
+  - *Backdrop reveal*: `fade` or `curtain` preset. Curtain uses a vendored copy of `@arts/curtain-mask` (SVG clipPath in `objectBoundingBox` units, per-frame path rewrite, sine bow, `straight` inset fast path, re-pointable direction) with attribution and its exact-string parity test vectors carried over.
   - *Flight*: promoted shared-element travel of the clicked media above the curtain — captures the source's computed transform (parallax offset), border-radius, and overflow crop, interpolates them away, lands on the slide rect, then swaps to the real PhotoSwipe slide underneath. Runs whenever a source element exists; degrades to backdrop-only otherwise (programmatic opens, vanished/off-screen source at close). Close re-measures the source rect and targets the nearest visible instance of the slide's canonical key.
   - *One clock*: backdrop `t`, flight interpolation, and chrome fade are driven by a single progress value — no independently timed tweens.
   - Defaults from the validated mockup: `power2.inOut`, 800 ms, bow 0.12, curved edge. Close direction `reverse | through` is a setting (default `reverse`).
@@ -103,7 +103,7 @@ Fixture pages reproduce the hard cases: parallax images with radius + overflow c
 ## Testing
 
 - Vitest, node env by default; DOM suites opt into happy-dom via `*.dom.test.ts` naming (the smooth-scrolling convention).
-- Unit: collector grouping/unite/dedup, slide-type detection, flight interpolation math, canonical-key normalization, options parity PHP↔TS via shared fixtures, curtain geometry with Velum's exact-string parity vectors.
+- Unit: collector grouping/unite/dedup, slide-type detection, flight interpolation math, canonical-key normalization, options parity PHP↔TS via shared fixtures, curtain geometry with the upstream exact-string parity vectors.
 - Browser truth lives in the playground fixtures (gesture feel, transitions, iOS behavior — on device).
 - PHPStan level max over `src/php` before any PHP ships.
 

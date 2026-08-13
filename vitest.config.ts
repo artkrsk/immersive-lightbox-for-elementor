@@ -21,7 +21,7 @@ export default defineConfig({
   },
   resolve: {
     // Test-only alias — tests live in tests/ and reach the engine through it.
-    // Never valid inside src/ts itself: consumers (Velum) compile that source
+    // Never valid inside src/ts itself: consumers compile that source
     // with their own config and would inherit the alias requirement. The
     // alias-boundary test enforces the split.
     alias: {

@@ -64,7 +64,7 @@ describe('captureFlightSource', () => {
     expect(captureFlightSource(frame).radius).toBe(12)
   })
 
-  it('measures the intermediate clip box (Velum parallax contract)', () => {
+  it('measures the intermediate clip box (parallax wrapper contract)', () => {
     document.body.innerHTML = `
       <a href="/full.jpg" data-arts-lightbox>
         <span style="overflow: hidden; border-radius: 16px">

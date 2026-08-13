@@ -57,8 +57,8 @@ describe('curvedEdgePath', () => {
     expect(pts.every(([x, y]) => x >= 0 && x <= 1 && y >= 0 && y <= 1)).toBe(true)
   })
 
-  it('reproduces the Velum samplers byte-for-byte (extraction parity vectors)', () => {
-    // Captured from Velum's curtain-mask tests — the vendored copy must stay
+  it('reproduces the upstream samplers byte-for-byte (extraction parity vectors)', () => {
+    // Captured from the @arts/curtain-mask tests — the vendored copy must stay
     // visually identical to the theme's overlay menu curtain.
     expect(curvedEdgePath(0.3, 0.05, 'right')).toBe(
       'M0.7000,0.0000 L0.6922,0.0500 L0.6845,0.1000 L0.6773,0.1500 L0.6706,0.2000 L0.6646,0.2500 L0.6595,0.3000 L0.6554,0.3500 L0.6524,0.4000 L0.6506,0.4500 L0.6500,0.5000 L0.6506,0.5500 L0.6524,0.6000 L0.6554,0.6500 L0.6595,0.7000 L0.6646,0.7500 L0.6706,0.8000 L0.6773,0.8500 L0.6845,0.9000 L0.6922,0.9500 L0.7000,1.0000 L1,1 L1,0 Z'

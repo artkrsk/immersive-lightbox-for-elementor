@@ -47,7 +47,7 @@
    inner image — scroll-driven keyframes on the TRANSFORM channel (the
    ArtsParallax/GSAP mechanism), drift amplitude varied per card via --par.
    The companion "true parallax" fixture exercises the modern channel
-   (translate/scale properties, the Velum contract). */
+   (translate/scale properties, the modern production contract). */
 @keyframes demo-classic-parallax {
   from {
     transform: translateY(calc(var(--par, 6%) * -1)) scale(1.15);

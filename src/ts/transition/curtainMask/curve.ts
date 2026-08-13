@@ -1,5 +1,5 @@
 /**
- * Vendored from Velum's @arts/curtain-mask (same author). Keep byte-parity
+ * Vendored from @arts/curtain-mask (same author). Keep byte-parity
  * with its curve tests — tests/transition/curve.test.ts carries the exact
  * extraction vectors; a change that shifts any output string is a visual
  * change in disguise.
