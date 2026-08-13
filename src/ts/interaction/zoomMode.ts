@@ -66,9 +66,18 @@ export function attachZoomMode(pswp: PhotoSwipe, opts: IOptions): void {
       // the render basis under a still-fill-sized element: one oversized,
       // out-of-bounds paint until the gesture-end correction resizes it.
       // Pinning the resolution to the live level makes the basis explicit
-      // and resizes the element NOW, in the same frame — visually seamless.
+      // and resizes the element NOW, in the same frame.
+      //
+      // The repaint is not optional. applyCurrentZoomPan writes the transform
+      // BEFORE it dispatches, so the scale that reached us still divides by
+      // the pre-flip basis; the resize lands under it and the frame paints at
+      // fit/fill of the right size, anchored top-left. Every _setResolution in
+      // the fork is followed by a repaint on the new basis — this one too.
+      // (Re-entrant: the repaint re-dispatches, but `mode` is already `next`
+      // above, so the nested setMode returns at the identity check.)
       if (!current.currentResolution) {
         current._setResolution(current.currZoomLevel)
+        current.applyCurrentZoomPan()
       }
     }
     // Already-appended neighbors sync now, offscreen — never mid-swipe.

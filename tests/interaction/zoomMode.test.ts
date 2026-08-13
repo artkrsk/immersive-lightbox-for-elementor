@@ -25,6 +25,47 @@ function slideStub(options: { initialZoomLevel?: unknown }) {
   return slide
 }
 
+const NATURAL = 2000
+
+/**
+ * slideStub plus the fork's actual render model: `box` is sticky at the last
+ * _setResolution, `scale` sticky at the last applyCurrentZoomPan, and — as in
+ * the fork — the transform is written BEFORE zoomPanUpdate is dispatched, so
+ * listeners see a scale that still divides by the pre-flip basis.
+ */
+function renderingSlideStub(
+  pswp: ReturnType<typeof fakePswp>,
+  options: { initialZoomLevel?: unknown }
+) {
+  const base = slideStub(options)
+  const basis = () => base.currentResolution || base.zoomLevels.initial
+  const slide = Object.assign(base, {
+    box: NATURAL * basis(),
+    scale: 1,
+    rendered: () => slide.box * slide.scale
+  })
+  slide._setResolution = vi.fn((r: number) => {
+    base.currentResolution = r
+    slide.box = NATURAL * basis()
+  })
+  slide.applyCurrentZoomPan = vi.fn(() => {
+    slide.scale = base.currZoomLevel / basis()
+    pswp.emit('zoomPanUpdate', { slide })
+  })
+  return slide
+}
+
+function renderingSetup() {
+  const pswp = fakePswp() as ReturnType<typeof fakePswp> & {
+    options: { initialZoomLevel?: unknown; secondaryZoomLevel?: unknown }
+  }
+  pswp.options = { initialZoomLevel: 'fill', secondaryZoomLevel: 'fit' }
+  const slide = renderingSlideStub(pswp, pswp.options)
+  pswp.currSlide = slide
+  attachZoomMode(pswp as unknown as PhotoSwipe, DEFAULT_OPTIONS)
+  return { pswp, slide }
+}
+
 function setup() {
   const pswp = fakePswp() as ReturnType<typeof fakePswp> & {
     options: { initialZoomLevel?: unknown; secondaryZoomLevel?: unknown }
@@ -62,6 +103,28 @@ describe('attachZoomMode', () => {
     slide.currZoomLevel = 1 // pinch back in — resolution now real
     pswp.emit('zoomPanUpdate', { slide })
     expect(slide._setResolution).toHaveBeenCalledTimes(1)
+  })
+
+  it('never ends a frame with the box and the transform on different bases', () => {
+    // The fork renders in two halves that must agree: the content box is
+    // `width * (currentResolution || zoomLevels.initial)`, the container
+    // transform divides the live zoom by that same basis. The browser paints
+    // whatever the synchronous stack ends in, so a flip that resizes the box
+    // without rewriting the transform paints one frame at fit/fill of the
+    // right size, anchored top-left (transform-origin is 0 0).
+    const { slide } = renderingSetup()
+    slide.currZoomLevel = 0.5 // the clock tick that crosses the fit threshold
+    slide.applyCurrentZoomPan()
+    expect(slide.rendered()).toBeCloseTo(NATURAL * slide.currZoomLevel)
+  })
+
+  it('leaves an already-explicit basis untouched — no resize, no repaint', () => {
+    const { pswp, slide } = setup()
+    slide.currentResolution = 1 // a real resolution already exists
+    slide.currZoomLevel = 0.5
+    pswp.emit('zoomPanUpdate', { slide })
+    expect(slide._setResolution).not.toHaveBeenCalled()
+    expect(slide.applyCurrentZoomPan).not.toHaveBeenCalled()
   })
 
   it('flips back to fill and re-derives again', () => {
