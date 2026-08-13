@@ -1,6 +1,7 @@
 import type { IGallery } from '../interfaces'
 import type PhotoSwipe from '../photoswipe/photoswipe'
 import { shortestDelta } from '../utils/shortestDelta'
+import { onSlidePosition } from './slidePosition'
 
 const ITEM_CLASS = 'arts-lightbox-caption__item'
 
@@ -52,22 +53,8 @@ export function registerCaption(pswp: PhotoSwipe, gallery: IGallery): void {
         return
       }
 
-      const paint = (): void => {
-        const { mainScroll } = pswp
-        // Zero until init runs updateSize; also guards the division.
-        if (!mainScroll?.slideWidth) {
-          return
-        }
-        // potentialIndex, NOT currIndex. moveIndexBy moves potentialIndex and
-        // _currPositionIndex in the same breath, so this offset stays a small
-        // fraction; currIndex only lands in updateCurrItem at spring
-        // completion, which would make the position jump on commit.
-        //
-        // Reading the difference rather than x also sidesteps x being an
-        // unbounded accumulator that silently rebases every ~50 navigations.
-        const offset = (mainScroll.x - mainScroll.getCurrSlideX()) / mainScroll.slideWidth
-        const position = pswp.potentialIndex - offset
-        const loop = pswp.canLoop()
+      const loop = pswp.canLoop()
+      onSlidePosition(pswp, (position) => {
         for (const item of items) {
           const delta = loop ? shortestDelta(item.index, position, total) : item.index - position
           const t = Math.max(-1, Math.min(1, delta / WINDOW))
@@ -82,20 +69,7 @@ export function registerCaption(pswp: PhotoSwipe, gallery: IGallery): void {
           item.node.style.setProperty('--arts-lightbox-caption-shift', String(-t * HIDDEN_SHIFT))
           item.node.style.setProperty('--arts-lightbox-caption-fade', String(1 - Math.abs(t)))
         }
-      }
-
-      // Always a no-op on a fresh core — uiRegister fires from
-      // _createMainStructure, before updateSize gives slideWidth a value — but
-      // it costs nothing and stops the module depending on that ordering.
-      paint()
-      // moveMainScroll is PhotoSwipe's own per-frame signal — it fires for
-      // drag, wheel-nav and the animated snap alike, but is silent at rest.
-      pswp.on('moveMainScroll', paint)
-      // Belt and braces for any index change that arrives without motion. The
-      // spring's terminal frame already reports the exact resting position, so
-      // this is normally redundant — and the skip above makes a redundant pass
-      // cost nothing, which is why it stays.
-      pswp.on('change', paint)
+      })
     }
   })
 }

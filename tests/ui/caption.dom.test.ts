@@ -79,16 +79,6 @@ describe('registerCaption', () => {
     expect(Math.sign(shift(rendered[0]))).toBe(-Math.sign(shift(rendered[2])))
   })
 
-  it('leaves the caption alone when the scroller has no width yet', () => {
-    const pswp = fakePswp()
-    pswp.mainScroll.slideWidth = 0
-    registerCaption(pswp as unknown as PhotoSwipe, fakeGallery(['One']))
-    const [only] = items(pswp.uiElementAt(0)) as [HTMLElement]
-
-    // No division by zero, nothing written.
-    expect(only.style.getPropertyValue(SHIFT)).toBe('')
-  })
-
   it('registers nothing to paint when no slide has a caption', () => {
     const pswp = fakePswp()
     registerCaption(pswp as unknown as PhotoSwipe, fakeGallery([undefined, undefined]))
