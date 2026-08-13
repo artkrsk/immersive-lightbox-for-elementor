@@ -43,6 +43,13 @@ export function attachZoomMode(pswp: PhotoSwipe, opts: IOptions): void {
     // Future slides parse their levels from the shared options object.
     pswp.options.initialZoomLevel = mode
     pswp.options.secondaryZoomLevel = mode === 'fill' ? 'fit' : 'fill'
+    // The CURRENT slide's zoomLevels are a cache of the pre-flip options —
+    // the fork's touch pinch-end (correctZoomPan) springs back to that
+    // cached `initial`, which undoes every pinch-out on release. Re-derive
+    // now so the fork's own correction math agrees with the mode.
+    // (Neighbors self-heal: deactivate/resize recalculate on the fork's
+    // own paths.)
+    pswp.currSlide?.calculateSize()
     // Already-appended neighbors sync now, offscreen — never mid-swipe.
     syncNeighbors()
   }

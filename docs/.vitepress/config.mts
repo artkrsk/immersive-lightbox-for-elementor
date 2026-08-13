@@ -52,6 +52,9 @@ export default defineConfig({
       }
     },
     server: {
+      // LAN-exposed: on-device iOS testing is part of the playground phase
+      // (gesture physics only verify on real touch hardware).
+      host: true,
       watch: {
         // dist/cache live inside the source root; without this, every
         // `docs:build` force-reloads any open docs:dev tab.
