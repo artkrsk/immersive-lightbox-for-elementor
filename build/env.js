@@ -5,5 +5,5 @@ import process from 'node:process'
 try {
   process.loadEnvFile()
 } catch {
-  // No .env — fine: committed defaults apply, dev mode fails fast if DEV_TARGET is needed
+  // No .env — fine: committed defaults apply and dev mode just skips the sync step
 }

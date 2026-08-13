@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * Extract a version's changelog entry from readme.txt, for the release
- * workflow's GitHub Release body. readme.txt is the single source — the
- * changelog is written once, where WordPress.org reads it.
+ * Extract a version's changelog entry from readme.txt, for a release
+ * workflow's GitHub Release body (this repo carries no workflow yet).
+ * readme.txt is the single source — the changelog is written once, where
+ * WordPress.org reads it.
  *
  * Usage:
  *   node build/extract-changelog.js            # latest entry

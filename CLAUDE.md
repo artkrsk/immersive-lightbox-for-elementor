@@ -34,7 +34,7 @@ Pre-commit (lefthook): Biome auto-fixes staged files, then typecheck, then the f
 - DOM suites are `*.dom.test.ts` with a `// @vitest-environment happy-dom` docblock; everything else is node env and must not touch `document`. jsdom is not an option (no matchMedia).
 - One declaration per file; `I*`/`T*` prefixes; barrels carry **only exports with live consumers** — knip is a hard gate, so a barrel line lands together with its first consumer.
 - The public API is whatever `src/ts/index.ts` re-exports plus the contract in `docs/developers.md` (discovery global, html classes, data-attribute vocabulary). Everything else is internal.
-- All shipped CSS lives in the `arts-lightbox` cascade layer (partials each declare their own `@layer` block — sass forbids `@use` inside `@layer`). The vendored `_photoswipe.scss` is generated from `node_modules/photoswipe/dist/photoswipe.css`; regenerate, don't hand-edit.
+- All shipped CSS lives in the `arts-lightbox` cascade layer (partials each declare their own `@layer` block — sass forbids `@use` inside `@layer`). The vendored `_photoswipe.scss` is a one-time hand-wrapped copy of photoswipe@5.4.4's `dist/photoswipe.css` — photoswipe is not an npm dependency and nothing regenerates the file; its own header records the provenance.
 - The gate (`gate.ts`) is a separate bundle: no banner, no sourcemap (PHP prints it inline). It holds a candidate click, lazy-loads CSS→JS serialized, replays the open via the ready promise, and releases the click to native navigation on load failure.
 
 ## Known hazards (from upstream research — see spec §Known upstream hazards)

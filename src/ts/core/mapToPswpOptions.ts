@@ -63,7 +63,7 @@ export function mapToPswpOptions(
       ? { secondaryZoomLevel: 'fit' as const, maxZoomLevel: 'fill' as const }
       : {}),
     // Fork policy flag: with mousemove-pan active, mouse drags navigate
-    // slides instead of panning (see photoswipe/gestures/drag-handler.js).
+    // slides instead of panning (see photoswipe/gestures/drag-handler.ts).
     artsMouseDragNavigates: opts.explore.enabled,
     loop: opts.gallery.loop,
     counter: false,

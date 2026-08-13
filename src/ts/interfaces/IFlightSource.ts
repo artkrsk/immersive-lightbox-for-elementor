@@ -12,6 +12,7 @@ export interface IFlightSource {
   innerHeightPct: number
   /** Inner image top offset as % of the frame height (0 = flush). */
   innerOffsetYPct: number
-  /** The thumb's displayed src — what the flight element paints. */
+  /** The source element's displayed image — the img's own src, or a video's
+   *  poster. */
   src: string
 }

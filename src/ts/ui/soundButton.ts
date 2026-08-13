@@ -9,10 +9,10 @@ const SOUND_OFF_SVG =
   '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
 
 /**
- * The "enable sound" affordance for video slides — the user's described
- * flow: an ambient muted video continues into the lightbox, this button
- * turns its sound on (claiming the single-audio focus). Hidden on
- * non-video slides; reflects the active medium's mute state.
+ * The "enable sound" affordance for video slides: an ambient muted video
+ * continues into the lightbox, this button turns its sound on (claiming the
+ * single-audio focus). Hidden on non-video slides; reflects the active
+ * medium's mute state.
  */
 export function registerSoundButton(pswp: PhotoSwipe, media: IMediaController): void {
   pswp.ui?.registerElement({

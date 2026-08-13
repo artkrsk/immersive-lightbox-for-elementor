@@ -21,8 +21,8 @@ export function buildEmbedUrl(source: TVideoSource, opts: { autoplay?: boolean }
     return `https://www.youtube-nocookie.com/embed/${source.id}?${params.toString()}`
   }
   if (source.provider === 'vimeo') {
-    // api=1 enables the postMessage control channel — without it the player
-    // ignores play/pause/mute commands entirely.
+    // api=1 is the legacy Froogaloop-era switch; the modern player accepts
+    // postMessage commands without it (vimeo/player.js, migrate-from-froogaloop).
     const params = new URLSearchParams({ api: '1', dnt: '1', playsinline: '1' })
     if (source.hash) {
       params.set('h', source.hash)

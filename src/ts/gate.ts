@@ -1,11 +1,11 @@
 /**
- * Inline pre-paint gate — printed into `wp_head` by PHP, never enqueued.
- * Owns the parse-time discovery global and the <html> state classes. The
- * engine + CSS load only when someone is about to need them: a click on a
- * candidate is HELD (prevented), assets load, and the open replays through
- * the ready promise; hovering a candidate pre-warms the load. A failed
- * engine load releases the held click to native navigation — the image URL
- * opens as a plain link.
+ * Inline pre-paint gate — printed into `wp_head` by PHP (phase 2), never
+ * enqueued. Owns the parse-time discovery global and the <html> state
+ * classes. The engine + CSS load only when someone is about to need them: a
+ * click on a candidate is HELD (prevented), assets load, and the open replays
+ * through the ready promise; hovering a candidate pre-warms the load. A
+ * failed engine load releases the held click to native navigation — the image
+ * URL opens as a plain link.
  */
 
 import { GATE_CSS_ID, GATE_JS_ID } from './constants/assetIds'
