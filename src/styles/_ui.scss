@@ -30,7 +30,9 @@
   // element, and none of it may intercept a drag or a zoom click.
   .pswp .arts-lightbox-caption {
     position: absolute;
-    bottom: 20px;
+    // Clears a bottom strip when one is present — the two overlapped before
+    // this variable existed, since the caption grows upward from its anchor.
+    bottom: calc(20px + var(--arts-lightbox-thumbs-inset-bottom, 0px));
     left: 24px;
     width: 60%;
     font-size: 13px;
@@ -84,12 +86,27 @@
     transform: translateY(-50%);
   }
 
+  // A rail claims one edge, so whatever else lives there steps aside by the
+  // same amount. One variable per edge, set on the root because the arrows and
+  // the caption are not descendants of the strip.
+  .arts-lightbox-has-thumbs_left {
+    --arts-lightbox-thumbs-inset-start: var(--arts-lightbox-thumbs-size, 88px);
+  }
+
+  .arts-lightbox-has-thumbs_right {
+    --arts-lightbox-thumbs-inset-end-inline: var(--arts-lightbox-thumbs-size, 88px);
+  }
+
+  .arts-lightbox-has-thumbs_bottom {
+    --arts-lightbox-thumbs-inset-bottom: var(--arts-lightbox-thumbs-size, 64px);
+  }
+
   .arts-lightbox-arrow_prev {
-    left: 12px;
+    left: calc(12px + var(--arts-lightbox-thumbs-inset-start, 0px));
   }
 
   .arts-lightbox-arrow_next {
-    right: 12px;
+    right: calc(12px + var(--arts-lightbox-thumbs-inset-end-inline, 0px));
   }
 
   // Same specificity as the shared button rule above — source order wins.
@@ -176,23 +193,67 @@
     transition-delay: 75ms;
   }
 
-  .arts-lightbox-thumbs {
+  // Scoped under `.pswp` to outrank `.pswp--ui-visible .pswp__hide-on-close`,
+  // which the fork stamps on every registered element and which would
+  // otherwise reclaim both pointer-events and opacity the moment a touch tap
+  // toggles the chrome off. Same fix the caption needed.
+  .pswp .arts-lightbox-thumbs {
+    --arts-lightbox-thumb-width: 56px;
+    --arts-lightbox-thumb-height: 40px;
+    --arts-lightbox-thumb-gap: 8px;
     position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
     display: flex;
-    gap: 8px;
-    justify-content: center;
+    gap: var(--arts-lightbox-thumb-gap);
     padding: 12px 16px;
-    overflow-x: auto;
     pointer-events: auto;
+    // The strip is scrolled from the slide position, so hide the bars rather
+    // than paint an affordance nobody drives.
+    scrollbar-width: none;
+  }
+
+  .pswp .arts-lightbox-thumbs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .arts-lightbox-thumbs_bottom,
+  .arts-lightbox-thumbs_top {
+    right: 0;
+    left: 0;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .arts-lightbox-thumbs_bottom {
+    bottom: 0;
+  }
+
+  .arts-lightbox-thumbs_top {
+    top: 0;
+  }
+
+  .arts-lightbox-thumbs_left,
+  .arts-lightbox-thumbs_right {
+    top: 0;
+    bottom: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+  }
+
+  .arts-lightbox-thumbs_left {
+    left: 0;
+  }
+
+  .arts-lightbox-thumbs_right {
+    right: 0;
   }
 
   .arts-lightbox-thumbs__item {
     flex: 0 0 auto;
-    width: 56px;
-    height: 40px;
+    width: var(--arts-lightbox-thumb-width);
+    height: var(--arts-lightbox-thumb-height);
+    position: relative;
     padding: 0;
     border: 1px solid transparent;
     border-radius: 4px;
@@ -200,6 +261,30 @@
     background: rgba(255, 255, 255, 0.08);
     cursor: pointer;
     opacity: 0.55;
+  }
+
+  // Centring a scroll container with `justify-content` clips the overflow on
+  // BOTH sides, stranding the leading items where no scroll position can reach
+  // them. Auto margins on the end items centre while there is spare room and
+  // collapse to zero once the strip overflows.
+  .arts-lightbox-thumbs_bottom .arts-lightbox-thumbs__item:first-child,
+  .arts-lightbox-thumbs_top .arts-lightbox-thumbs__item:first-child {
+    margin-inline-start: auto;
+  }
+
+  .arts-lightbox-thumbs_bottom .arts-lightbox-thumbs__item:last-child,
+  .arts-lightbox-thumbs_top .arts-lightbox-thumbs__item:last-child {
+    margin-inline-end: auto;
+  }
+
+  .arts-lightbox-thumbs_left .arts-lightbox-thumbs__item:first-child,
+  .arts-lightbox-thumbs_right .arts-lightbox-thumbs__item:first-child {
+    margin-block-start: auto;
+  }
+
+  .arts-lightbox-thumbs_left .arts-lightbox-thumbs__item:last-child,
+  .arts-lightbox-thumbs_right .arts-lightbox-thumbs__item:last-child {
+    margin-block-end: auto;
   }
 
   .arts-lightbox-thumbs__item img {
@@ -212,6 +297,29 @@
   .arts-lightbox-thumbs__item_active {
     border-color: currentColor;
     opacity: 1;
+  }
+
+  // Slideshow progress. No restart trick is needed: each advance moves the
+  // active class onto a different element, so its animation begins fresh.
+  .arts-lightbox-slideshow-playing .arts-lightbox-thumbs__item_active::after {
+    content: '';
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    block-size: 2px;
+    background: currentColor;
+    animation: arts-lightbox-thumb-progress var(--arts-lightbox-slideshow-interval, 5000ms) linear
+      forwards;
+  }
+
+  @keyframes arts-lightbox-thumb-progress {
+    from {
+      inline-size: 0%;
+    }
+
+    to {
+      inline-size: 100%;
+    }
   }
 
   // Touch-width viewports navigate by swipe + counter.

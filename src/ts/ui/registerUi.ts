@@ -22,8 +22,29 @@ export function registerUi(
   api: ILightboxApi,
   media: IMediaController
 ): void {
-  const slideshow = createSlideshow(opts.slideshow.interval, () => {
-    api.next()
+  const SLIDESHOW_CLASS = 'arts-lightbox-slideshow-playing'
+  const slideshow = createSlideshow(
+    opts.slideshow.interval,
+    () => {
+      api.next()
+    },
+    // The only signal CSS needs: the progress bar restarts by itself, because
+    // each advance moves the active class onto a different element.
+    (playing) => {
+      pswp.element?.classList.toggle(SLIDESHOW_CLASS, playing)
+    }
+  )
+
+  pswp.on('firstUpdate', () => {
+    pswp.element?.style.setProperty(
+      '--arts-lightbox-slideshow-interval',
+      `${opts.slideshow.interval}ms`
+    )
+    if (opts.ui.thumbnails) {
+      // On the root, not the strip: the arrows and the caption move aside for
+      // a rail, and neither is a descendant of it.
+      pswp.element?.classList.add(`arts-lightbox-has-thumbs_${opts.ui.thumbnailsPosition}`)
+    }
   })
 
   pswp.on('uiRegister', () => {
@@ -43,7 +64,7 @@ export function registerUi(
       registerSlideshowButton(pswp, slideshow)
     }
     if (opts.ui.thumbnails) {
-      registerThumbnailsStrip(pswp, gallery, api)
+      registerThumbnailsStrip(pswp, gallery, api, opts.ui.thumbnailsPosition)
     }
   })
 

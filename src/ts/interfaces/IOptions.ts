@@ -4,6 +4,7 @@ import type { TEasingName } from '../types/TEasingName'
 import type { TImageClickAction } from '../types/TImageClickAction'
 import type { TInitialZoomLevel } from '../types/TInitialZoomLevel'
 import type { TSlideChangeStyle } from '../types/TSlideChangeStyle'
+import type { TThumbnailsPosition } from '../types/TThumbnailsPosition'
 import type { TTransitionPreset } from '../types/TTransitionPreset'
 
 /**
@@ -44,6 +45,8 @@ export interface IOptions {
   }
   ui: {
     thumbnails: boolean
+    /** Which edge the strip rides; orientation follows from it. */
+    thumbnailsPosition: TThumbnailsPosition
     download: boolean
     counter: boolean
     captions: boolean

@@ -31,6 +31,7 @@ export const DEFAULT_OPTIONS: IOptions = {
   },
   ui: {
     thumbnails: false,
+    thumbnailsPosition: 'bottom',
     download: false,
     counter: true,
     captions: true,
