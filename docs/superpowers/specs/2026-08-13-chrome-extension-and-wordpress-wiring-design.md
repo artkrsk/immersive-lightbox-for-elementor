@@ -125,10 +125,26 @@ directions plus arbitrary diagonals. We duplicate the *same* icon (movement); Ve
 Markup: `<button><span class="arts-lightbox-blink"><span …_normal>ICON</span><span …_hover>ICON</span></span></button>`.
 The duplicate keeps the `aria-hidden="true"` the existing SVGs already carry — no new a11y work.
 
-### Close button
+### Timing is the effect
 
-Grows to arrow scale via `--arts-lightbox-close-size` (icon size its own var) and takes the same
-blink treatment. This is the burger-hover request: the burger's closed state *is* this primitive.
+Velum's burger is not a symmetric swap: the leaving fill slides out over `0.3s`, the arriving one
+over `0.45s` — 1.5× slower, a chase rather than a swap — cascading across the glyph's parts at 75ms,
+with the parked layer at `translateX(calc(-100% - 4px))` so the two fills never leave a sub-pixel
+seam. That asymmetry is most of what reads as premium; a symmetric blink feels cheap. Exposed as
+`--arts-lightbox-blink-duration-out` / `-in`, defaulting to those values.
+
+### Close button — two bars, not an SVG X
+
+The glyph is built from two rotated `<span>`s rather than an inline SVG path. A single path has
+nothing for the stagger to cascade across, bars take the sliding-fill treatment natively, and two
+rotated bars are exactly the form Velum's burger takes when opened — so the lightbox close and the
+burger close read as one component.
+
+`--arts-lightbox-close-size` sizes the box; `--arts-lightbox-close-line-thickness` is **deliberately
+independent of it**. Velum wants the same component at a smaller size, and thickness derived from the
+box would render thinner and break that read.
+
+The magnetic half of that shared identity is cursor-follower's, not ours — see §4.
 
 ### Caption reveal
 
