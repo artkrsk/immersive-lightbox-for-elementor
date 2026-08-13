@@ -1,3 +1,13 @@
+---
+lightbox:
+  ui:
+    thumbnails: true
+    download: true
+  slideshow:
+    enabled: true
+    interval: 3000
+---
+
 # Galleries
 
 ## Groups and pass-through
@@ -60,26 +70,18 @@ no caption simply fades the previous one out with nothing arriving.
 
 ## Thumbnails, download, slideshow
 
-All three are **off by default**, so nothing appears until you ask for them:
+All three ship **off by default**, so this page turns them on for itself in
+frontmatter — open any gallery here and the strip is already there.
 
-```js
-artsLightboxPlayground.reboot({
-  ui: { thumbnails: true, download: true },
-  slideshow: { enabled: true, interval: 3000 }
-})
-```
+The strip scrolls itself from the same slide position the captions read, so it
+glides with a drag instead of catching up afterwards. Open the stress gallery
+above to watch it actually travel; a handful of slides never overflows it.
+Press play and the active thumbnail fills over the interval.
 
 The strip rides any edge, and whatever else lives there steps aside — a side
-rail insets the arrows, a bottom one lifts the caption clear:
+rail insets the arrows, a bottom one lifts the caption clear. Only one edge can
+be shown at a time, so the other three are a line away:
 
 ```js
 artsLightboxPlayground.reboot({ ui: { thumbnails: true, thumbnailsPosition: 'left' } })
 ```
-
-`'bottom'` (default), `'top'`, `'left'`, `'right'`. The strip scrolls itself
-from the same slide position the captions read, so it glides with a drag
-instead of catching up afterwards. With the slideshow running, the active
-thumbnail fills over the interval.
-
-Pair it with the stress gallery above to see the strip actually scroll —
-a handful of slides never overflows it.
