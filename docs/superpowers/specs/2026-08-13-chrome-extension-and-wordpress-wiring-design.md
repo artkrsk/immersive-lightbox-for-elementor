@@ -7,7 +7,7 @@ Status: approved in brainstorm, pending implementation plans
 
 Two decisions that were being treated as one pile of feature requests:
 
-1. **How a theme reaches this plugin's chrome** — so Velum can ship a split counter, split-text captions and its own icons without this repo growing a plugin framework or a GSAP dependency.
+1. **How a theme reaches this plugin's chrome** — so a consuming theme can ship a split counter, split-text captions and its own icons without this repo growing a plugin framework or a GSAP dependency.
 2. **How the WordPress plugin wires into Elementor** — so activation enhances and deactivation restores, with no database writes in either direction.
 
 Supersedes nothing in `2026-08-12-better-lightbox-design.md`; extends its Behavior and
@@ -15,7 +15,8 @@ Elementor-integration sections.
 
 ## The constraint envelope
 
-- **No backwards-compatibility obligations.** Velum is unreleased and has no lightbox wiring yet.
+- **No backwards-compatibility obligations.** The first consuming theme is unreleased and has no
+  lightbox wiring yet.
   Released themes (Trigger and older) will not be migrated. `ArtsCustomGallery` is prior art, never
   a migration target.
 - **The real constraint is post-release version skew.** Once on WP.org this plugin auto-updates
@@ -29,7 +30,7 @@ Elementor-integration sections.
 
 ## 1. The notification contract
 
-Velum needs **notification and restyling, not registration**. `ArtsSplitCounter` does not want to be
+A consuming theme needs **notification and restyling, not registration**. `ArtsSplitCounter` does not want to be
 mounted by us — it wants `setCurrent(n)` called when the index changes. That is an event, not a
 plugin API. A renderer-registration API (`registerChrome(name, {mount, update, destroy})`) was
 considered and rejected: it is far harder to keep additive than an event detail, it welds the
@@ -96,13 +97,15 @@ to `createLightbox`.
 
 ## 2. Stock chrome upgrades
 
-Velum's `icon-blink`, `text-blink` and the burger button's closed-state hover are **one primitive**:
+The reference implementation's icon hover, text hover and burger closed-state hover are **one
+primitive**:
 an `overflow: hidden` track holding a normal layer and a duplicate layer parked off-view; on hover
 the normal layer exits and the duplicate slides in. All three are pure sass — no JS, no GSAP.
 
 ### The blink primitive
 
-Velum enumerates eight directions as sass modifiers (~200 lines across two partials). Collapse to two
+The reference enumerates eight directions as sass modifiers (~200 lines across two partials).
+Collapse to two
 custom properties and four rules:
 
 ```scss
@@ -119,15 +122,15 @@ custom properties and four rules:
 ```
 
 Direction becomes data (`-1 | 0 | 1` per axis), themeable per element, and covers all eight
-directions plus arbitrary diagonals. We duplicate the *same* icon (movement); Velum's
-`_normal-scale` variant exists only for mismatched icon pairs we do not have.
+directions plus arbitrary diagonals. We duplicate the *same* icon (movement); the reference's
+scale variant exists only for mismatched icon pairs we do not have.
 
 Markup: `<button><span class="arts-lightbox-blink"><span …_normal>ICON</span><span …_hover>ICON</span></span></button>`.
 The duplicate keeps the `aria-hidden="true"` the existing SVGs already carry — no new a11y work.
 
 ### Timing is the effect
 
-Velum's burger is not a symmetric swap: the leaving fill slides out over `0.3s`, the arriving one
+The reference burger is not a symmetric swap: the leaving fill slides out over `0.3s`, the arriving one
 over `0.45s` — 1.5× slower, a chase rather than a swap — cascading across the glyph's parts at 75ms,
 with the parked layer at `translateX(calc(-100% - 4px))` so the two fills never leave a sub-pixel
 seam. That asymmetry is most of what reads as premium; a symmetric blink feels cheap. Exposed as
@@ -137,30 +140,36 @@ seam. That asymmetry is most of what reads as premium; a symmetric blink feels c
 
 The glyph is built from two rotated `<span>`s rather than an inline SVG path. A single path has
 nothing for the stagger to cascade across, bars take the sliding-fill treatment natively, and two
-rotated bars are exactly the form Velum's burger takes when opened — so the lightbox close and the
-burger close read as one component.
+rotated bars are exactly the form a burger button takes when opened — so a theme can style the
+lightbox close and its own burger close as one component.
 
 `--arts-lightbox-close-size` sizes the box; `--arts-lightbox-close-line-thickness` is **deliberately
-independent of it**. Velum wants the same component at a smaller size, and thickness derived from the
+independent of it**. A theme wants the same component at a smaller size, and thickness derived from the
 box would render thinner and break that read.
 
 The magnetic half of that shared identity is cursor-follower's, not ours — see §4.
 
-### Caption reveal
+### Caption reveal — superseded
 
-Fade-in-up on slide change via a state class toggled in the existing `change` handler, with
-distance/duration/easing as custom properties.
+A fade-in-up played on the `change` event shipped first and was then replaced: `change` is
+past-tense, so the reveal could only ever follow the slide rather than move with it, and it was
+direction-blind. The caption is now a per-frame projection of the live slide position — see the
+implementation notes on the issue tracker.
 
-**Structural requirement:** the reveal lives on an inner `.arts-lightbox-caption__inner`. The outer
-element's `opacity` is already claimed by `--arts-lightbox-chrome`; two things animating one property
-is a latent bug.
+What survives for the theming surface: every captioned slide owns a `.arts-lightbox-caption__item`
+element for the whole session, and the engine writes two unitless scalars onto each —
+`--arts-lightbox-caption-shift` and `--arts-lightbox-caption-fade`. **CSS decides what they mean**,
+which is the seam a theme restyles through; the JS never chooses an axis or an easing. The container
+is a zero-height anchor and no element's size is ever measured.
+
+The old `.arts-lightbox-caption__inner` no longer exists — do not build kit controls against it.
 
 ### Icons as options
 
 `ui.icons.{prev,next,close}` as option strings. The fork already supports per-element SVG override by
 option name (`pswp.options[name + 'SVG']`, `photoswipe/ui/ui-element.ts`). This closes the gap where a
 theme can restyle a button but not swap its glyph — reachable through Channel 4, no DOM surgery.
-Velum's chevrons are filled 16×24 paths; ours are stroked, so they genuinely differ.
+A theme's chevrons may be filled paths where ours are stroked, so they genuinely differ.
 
 ## 3. Thumbnails
 
