@@ -5,14 +5,33 @@
     display: none;
   }
 
+  // The four layers, bottom to top, named in one place so paint order is a
+  // decision rather than a side effect of DOM order.
+  //
+  // Container and chrome are MIRRORS of values the vendored stylesheet owns
+  // (`.pswp__item` and `.pswp__hide-on-close`). They are written here to state
+  // the scale and to show what the flight slots between — do not "fix" a
+  // mismatch by editing `_photoswipe.scss`; change these to match it.
+  .pswp {
+    --arts-lightbox-z-backdrop: 0;
+    --arts-lightbox-z-container: 1;
+    --arts-lightbox-z-flight: 5;
+    --arts-lightbox-z-chrome: 10;
+  }
+
   .arts-lightbox-backdrop {
     position: absolute;
     inset: 0;
+    z-index: var(--arts-lightbox-z-backdrop);
     background: var(--arts-lightbox-backdrop-color, #121214);
     will-change: clip-path, opacity;
   }
 
-  // The promoted element that travels above everything during transitions.
+  // The promoted element that travels while a transition runs.
+  //
+  // This rule is the DETACHED state: the close moves the flight out to `body`
+  // so it can outlive the root's teardown by a couple of frames, and there it
+  // needs to clear the whole lightbox.
   .arts-lightbox-flight {
     position: fixed;
     left: 0;
@@ -21,6 +40,12 @@
     overflow: hidden;
     pointer-events: none;
     will-change: transform, width, height;
+  }
+
+  // Mounted state — above the slides, below the controls, so the travelling
+  // image passes UNDER the chrome instead of blanking it mid-fade.
+  .pswp .arts-lightbox-flight {
+    z-index: var(--arts-lightbox-z-flight);
   }
 
   // Applies to both an img clone and a LIVE adopted video flying.

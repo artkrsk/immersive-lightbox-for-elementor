@@ -5,10 +5,15 @@ import type { IFlightFrame } from './IFlightFrame'
  * The promoted element that travels above the curtain: a fixed-position
  * frame with overflow hidden; the inner media repaints from interpolated
  * overscan/offset percentages each frame.
+ *
+ * It mounts inside the pswp root, between the slides and the controls, so the
+ * travelling image passes under the chrome rather than over it.
  */
 export interface IFlightLayer {
   mount(frame: IFlightFrame, media: TFlightMedia): void
   paint(frame: IFlightFrame): void
+  /** Move to `body`, for the frames that have to outlive the root's teardown. */
+  detach(): void
   /** Element mode: hand the live media out (to the slide / the page slot)
    *  without destroying it. */
   extract(): HTMLElement | null

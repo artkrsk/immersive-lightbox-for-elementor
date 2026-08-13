@@ -95,6 +95,9 @@ export function runCloseChoreography(ctx: ITransitionContext): Promise<void> {
         slideData?.adopted?.return()
         backdrop.current?.destroy()
         backdrop.current = null
+        // Out of the root before the root goes: the flight lives inside it so
+        // it paints under the chrome, but it has to survive the teardown.
+        flight.detach()
         pswp.destroy() // restores hidden sources + any un-returned adoptee
         flight.unmountLater(2)
         requestAnimationFrame(() => {

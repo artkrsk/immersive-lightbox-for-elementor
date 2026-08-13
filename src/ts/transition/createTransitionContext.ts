@@ -34,7 +34,9 @@ export function createTransitionContext(
     pswp,
     opts,
     req,
-    flight: createFlightLayer(),
+    // Resolved at mount: the root does not exist yet. Body is the fallback for
+    // the window before init, where a flight should never start anyway.
+    flight: createFlightLayer(() => pswp.element ?? document.body),
     backdrop: { current: null },
     hidden: createHiddenSources(pswp, req),
     openSource: captureOpenSource(req),

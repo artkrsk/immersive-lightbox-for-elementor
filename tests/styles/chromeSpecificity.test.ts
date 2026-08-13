@@ -74,6 +74,18 @@ describe('shipped stylesheet', () => {
     expect(css).toContain('opacity: var(--arts-lightbox-chrome, 1)')
   })
 
+  it('gives the flight both a mounted and a detached z-index', () => {
+    // Mounted it must sit under the chrome; detached — for the frames that
+    // outlive the root's teardown — it must clear the whole lightbox. Losing
+    // either rule breaks one direction silently.
+    const flight = rulesTouching(css, ['z-index'])
+      .map(({ selector }) => selector.replace(/\s+/g, ' '))
+      .filter((selector) => selector.includes('arts-lightbox-flight'))
+
+    expect(flight).toContain('.arts-lightbox-flight')
+    expect(flight).toContain('.pswp .arts-lightbox-flight')
+  })
+
   it('hides only the slides during a flight, not their chrome-bearing ancestor', () => {
     // `.pswp__scroll-wrap` also holds the top bar and the arrows, so masking it
     // pinned that chrome invisible for the whole choreography and then revealed

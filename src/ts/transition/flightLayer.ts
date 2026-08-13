@@ -6,7 +6,12 @@ import { snapshotVideoFrame } from './snapshotVideoFrame'
 const LAYER_CLASS = 'arts-lightbox-flight'
 const MEDIA_CLASS = 'arts-lightbox-flight__media'
 
-export function createFlightLayer(): IFlightLayer {
+/**
+ * `resolveParent` is called at mount, not now: the flight belongs inside the
+ * pswp root so it paints under the controls, and that root does not exist yet
+ * when the transition context is built.
+ */
+export function createFlightLayer(resolveParent: () => HTMLElement): IFlightLayer {
   let el: HTMLDivElement | null = null
   let mediaEl: HTMLElement | null = null
   let owned = false // img clones are ours to destroy; live elements are not
@@ -42,8 +47,17 @@ export function createFlightLayer(): IFlightLayer {
       owned = inner.owned
       mediaEl.classList.add(MEDIA_CLASS)
       el.appendChild(mediaEl)
-      document.body.appendChild(el)
+      resolveParent().appendChild(el)
       paint(frame)
+    },
+    detach: () => {
+      // The close destroys the root while the flight is still needed for two
+      // more frames — see unmountLater. Reparenting is safe here: the layer is
+      // painted per frame by JS, so there is no transition to interrupt, and
+      // by now it is already sitting on its final frame.
+      if (el && el.parentElement !== document.body) {
+        document.body.appendChild(el)
+      }
     },
     paint,
     extract: () => {
