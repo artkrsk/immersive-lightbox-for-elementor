@@ -49,7 +49,21 @@ export function attachZoomMode(pswp: PhotoSwipe, opts: IOptions): void {
     // now so the fork's own correction math agrees with the mode.
     // (Neighbors self-heal: deactivate/resize recalculate on the fork's
     // own paths.)
-    pswp.currSlide?.calculateSize()
+    const current = pswp.currSlide
+    if (current) {
+      current.calculateSize()
+      // A slide's FIRST zoom interaction renders on the implicit resolution
+      // (currentResolution 0 falls back to zoomLevels.initial in the fork's
+      // transform math — and deactivate resets it, so every visit starts
+      // there). The recalc above just changed `initial`, which would swap
+      // the render basis under a still-fill-sized element: one oversized,
+      // out-of-bounds paint until the gesture-end correction resizes it.
+      // Pinning the resolution to the live level makes the basis explicit
+      // and resizes the element NOW, in the same frame — visually seamless.
+      if (!current.currentResolution) {
+        current._setResolution(current.currZoomLevel)
+      }
+    }
     // Already-appended neighbors sync now, offscreen — never mid-swipe.
     syncNeighbors()
   }

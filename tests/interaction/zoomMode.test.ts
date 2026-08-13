@@ -7,11 +7,15 @@ import { fakePswp } from '../helpers/fakePswp'
 function slideStub(options: { initialZoomLevel?: unknown }) {
   const slide = {
     currZoomLevel: 1,
+    currentResolution: 0,
     zoomLevels: { fit: 0.5, fill: 1, initial: 1, secondary: 0.5 },
     pan: { x: 0, y: 0 },
     bounds: { center: { x: 0, y: 0 } },
     setZoomLevel: vi.fn(),
     applyCurrentZoomPan: vi.fn(),
+    _setResolution: vi.fn((r: number) => {
+      slide.currentResolution = r
+    }),
     // The fork re-derives zoomLevels from the SHARED options object.
     calculateSize: vi.fn(() => {
       slide.zoomLevels.initial =
@@ -43,6 +47,21 @@ describe('attachZoomMode', () => {
     expect(pswp.options.initialZoomLevel).toBe('fit')
     expect(slide.calculateSize).toHaveBeenCalled()
     expect(slide.zoomLevels.initial).toBe(0.5) // cache agrees with the mode
+  })
+
+  it('pins the resolution on the implicit-basis first interaction only', () => {
+    // With currentResolution 0 the fork renders on `initial` as the basis —
+    // flipping `initial` mid-gesture swapped the basis under a fill-sized
+    // element (one oversized out-of-bounds paint). The flip must make the
+    // basis explicit; once a real resolution exists it is never touched.
+    const { pswp, slide } = setup()
+    slide.currZoomLevel = 0.5
+    pswp.emit('zoomPanUpdate', { slide })
+    expect(slide._setResolution).toHaveBeenCalledWith(0.5)
+
+    slide.currZoomLevel = 1 // pinch back in — resolution now real
+    pswp.emit('zoomPanUpdate', { slide })
+    expect(slide._setResolution).toHaveBeenCalledTimes(1)
   })
 
   it('flips back to fill and re-derives again', () => {
