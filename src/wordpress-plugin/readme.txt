@@ -17,4 +17,4 @@ In development.
 == Changelog ==
 
 = 0.1.0 =
-* Initial development scaffold.
+Initial release.

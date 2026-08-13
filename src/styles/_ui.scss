@@ -22,6 +22,7 @@
   .pswp .arts-lightbox-thumbs {
     opacity: var(--arts-lightbox-chrome, 1);
     color: var(--arts-lightbox-ui-color, #efece6);
+
     // One clock owns chrome opacity; a CSS transition here is a second owner.
     transition: none;
   }
@@ -43,6 +44,7 @@
   // element, and none of it may intercept a drag or a zoom click.
   .pswp .arts-lightbox-caption {
     position: absolute;
+
     // Clears a bottom strip when one is present — the two overlapped before
     // this variable existed, since the caption grows upward from its anchor.
     bottom: calc(20px + var(--arts-lightbox-thumbs-inset-bottom, 0px));
@@ -126,9 +128,11 @@
   // `position: relative` gives the bars their containing block.
   .arts-lightbox-close {
     --arts-lightbox-close-size: 56px;
+
     // Deliberately not derived from the size: a smaller box with proportionally
     // thinner strokes stops reading as the same component at another scale.
     --arts-lightbox-close-line-thickness: 2px;
+
     position: relative;
     width: var(--arts-lightbox-close-size);
     height: var(--arts-lightbox-close-size);
@@ -142,6 +146,7 @@
     --arts-lightbox-blink-duration-out: 0.3s;
     --arts-lightbox-blink-duration-in: 0.45s;
     --arts-lightbox-blink-direction: 1;
+
     position: relative;
     display: inline-block;
     overflow: hidden;
@@ -157,6 +162,7 @@
   .arts-lightbox-blink__layer_hover {
     position: absolute;
     inset: 0;
+
     // The extra 4px keeps a sub-pixel seam from showing between the layers.
     transform: translateX(
       calc(
@@ -190,7 +196,7 @@
   }
 
   .arts-lightbox-close__bar > .arts-lightbox-blink__layer {
-    background: currentColor;
+    background: currentcolor;
   }
 
   .arts-lightbox-close__bar_1 {
@@ -214,14 +220,17 @@
     // Square: one dimension, so the shape cannot drift apart.
     --arts-lightbox-thumb-size: 56px;
     --arts-lightbox-thumb-gap: 8px;
+
     // How far an inactive thumbnail is dimmed toward its black backing.
     --arts-lightbox-thumb-dim: 0.55;
     --arts-lightbox-thumb-duration: 0.25s;
+
     position: absolute;
     display: flex;
     gap: var(--arts-lightbox-thumb-gap);
     padding: 12px 16px;
     pointer-events: auto;
+
     // The strip is scrolled from the slide position, so hide the bars rather
     // than paint an affordance nobody drives.
     scrollbar-width: none;
@@ -333,7 +342,7 @@
   }
 
   .arts-lightbox-thumbs__item_active {
-    outline-color: currentColor;
+    outline-color: currentcolor;
   }
 
   // Slideshow progress. No restart trick is needed: each advance moves the
@@ -344,7 +353,7 @@
     inset-block-end: 0;
     inset-inline-start: 0;
     block-size: 2px;
-    background: currentColor;
+    background: currentcolor;
     animation: arts-lightbox-thumb-progress var(--arts-lightbox-slideshow-interval, 5000ms) linear
       forwards;
   }
@@ -360,7 +369,7 @@
   }
 
   // Touch-width viewports navigate by swipe + counter.
-  @media (max-width: 767px) {
+  @media (width <= 767px) {
     .arts-lightbox-thumbs {
       display: none;
     }

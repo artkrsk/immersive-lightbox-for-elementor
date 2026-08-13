@@ -1,19 +1,13 @@
 {
   // Entry points beyond auto-detection, mirroring knip.json:
   // - global.d.ts: ambient window contract (TGateBoot is consumed there)
-  // - project.config.js + build/**: the esbuild release harness — its deps
-  //   (archiver, chokidar) and config are reachable only through these.
   "entry": [
     "src/ts/boot.ts",
     "src/ts/gate.ts",
     "src/ts/global.d.ts",
     "project.config.js",
-    "build/**/*.js"
+    "tests/ts/setup.ts"
   ],
-  // The build/ directory sits outside fallow's analyzable set (default build
-  // ignore), so its imports are never traversed: these two are consumed by
-  // build/sass.js, build/sync.js and build/package.js (the release harness).
-  "ignoreDependencies": ["archiver", "chokidar"],
   // Same semantics knip runs with: a type consumed within its own module
   // is not dead surface.
   "ignoreExportsUsedInFile": true,
@@ -36,5 +30,7 @@
     // The real complexity gates (maxCyclomatic 20, maxCognitive 15) stay
     // at their defaults.
     "maxCrap": 999
-  }
+  },
+  // The docs site (vitepress/vue) is a dev harness, not shipped production code.
+  "rules": { "dev-dependencies-in-production": "off" }
 }

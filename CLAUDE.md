@@ -9,8 +9,8 @@ A PhotoSwipe-powered lightbox that replaces Elementor's native one — curtain/f
 ## Commands
 
 - `pnpm test` — Vitest. Single file: `pnpm test tests/transition/curve.test.ts`.
-- `pnpm typecheck` / `pnpm lint` (Biome) / `pnpm knip` / `pnpm fallow` — all hard gates, keep them green per commit. Fallow's CRAP scores read Istanbul data — run `pnpm test:coverage` first when health findings look stale.
-- `pnpm docs:dev` — the playground at `localhost:5201`; **this is the browser harness**, the only place transitions/gestures are truly verified.
+- `pnpm exec tsc --noEmit` / `pnpm lint` (Biome) / `pnpm exec knip` / `pnpm exec fallow` — all hard gates, keep them green per commit. Fallow's CRAP scores read Istanbul data — run `pnpm test:coverage` first when health findings look stale.
+- `pnpm dev` — the playground at `localhost:5201`; **this is the browser harness**, the only place transitions/gestures are truly verified.
 - `pnpm build` — release build: stamps versions from `composer.json#version` (the only version source), stages `dist/<slug>/`, zips.
 - `pnpm dev:plugin` — watch mode; mirrors into a Local site only if `DEV_TARGET` is set in the gitignored `.env`.
 

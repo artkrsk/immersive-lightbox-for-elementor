@@ -1,13 +1,8 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
+  "extends": ["@arts/wp-plugin-tooling/biome"],
   "files": {
     "includes": [
-      "build/**",
       "src/ts/**",
       "tests/**",
       "docs/.vitepress/**/*.ts",
@@ -18,32 +13,6 @@
       "knip.json",
       ".fallowrc.jsonc"
     ]
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 100
-  },
-  "assist": {
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
-    }
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "preset": "recommended"
-    }
-  },
-  "javascript": {
-    "formatter": {
-      "semicolons": "asNeeded",
-      "quoteStyle": "single",
-      "trailingCommas": "none"
-    }
   },
   "overrides": [
     {
@@ -56,14 +25,8 @@
             "useIterableCallbackReturn": "off",
             "noConfusingVoidType": "off"
           },
-          "style": {
-            "noNonNullAssertion": "off",
-            "useTemplate": "off"
-          },
-          "complexity": {
-            "noBannedTypes": "off",
-            "useOptionalChain": "off"
-          }
+          "style": { "noNonNullAssertion": "off", "useTemplate": "off" },
+          "complexity": { "noBannedTypes": "off", "useOptionalChain": "off" }
         }
       }
     }

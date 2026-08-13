@@ -1,22 +1,27 @@
-# yaml-language-server: $schema=./node_modules/lefthook/schema.json
-
+# Sequential on purpose: Biome/stylelint REWRITE staged files and every later
+# step has to read the fixed output. Hooks are advisory (skip with LEFTHOOK=0
+# for a WIP commit) — CI is the authoritative gate.
+#
+# No PHP steps yet: the PHP layer is phase-2 (src/php is a stub), so there is
+# no phpcbf/phpstan/phpcs to run. They arrive with arts/wp-plugin-standards
+# when the PHP integration lands.
 pre-commit:
-  # Sequential on purpose: Biome rewrites the staged files, and everything after
-  # it has to read what the fix produced rather than what was typed.
   parallel: false
   jobs:
-    - name: format
+    - name: format (biome)
       glob: '*.{ts,mts,js,json,jsonc,vue}'
       run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
-      # Fold the rewrites back into the commit being made, not the next one.
       stage_fixed: true
-
+    - name: format (stylelint)
+      glob: 'src/styles/**/*.scss'
+      run: pnpm exec stylelint --fix {staged_files}
+      stage_fixed: true
     - name: typecheck
-      run: pnpm typecheck
+      run: pnpm exec tsc --noEmit
 
+# Proof before sharing: the whole project, under a minute.
+pre-push:
+  parallel: false
+  jobs:
     - name: test
-      run: pnpm test
-
-# Not covered here, matching the repo as it stands: SCSS (nothing lints or
-# formats it), PHP formatting (no PHPCS config exists), and PHPStan (arrives
-# with the phase-2 PHP integration).
+      run: pnpm exec vitest run
