@@ -35,7 +35,13 @@
   }
 
   // The real slide stays hidden until the flight lands exactly on it.
-  .pswp.arts-lightbox-transitioning .pswp__scroll-wrap {
+  //
+  // The container, NOT the scroll wrap. The wrap also holds the top bar and
+  // the arrows, so hiding it took every piece of bar and wrapper chrome down
+  // with the slides — pinned at zero for the whole flight and then revealed in
+  // one untransitioned step the instant this class came off, which is why the
+  // chrome arrived with no fade no matter what the clock was doing.
+  .pswp.arts-lightbox-transitioning .pswp__container {
     opacity: 0;
   }
 

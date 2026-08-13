@@ -73,4 +73,16 @@ describe('shipped stylesheet', () => {
     // The other direction: scoped, but no longer reading the clock.
     expect(css).toContain('opacity: var(--arts-lightbox-chrome, 1)')
   })
+
+  it('hides only the slides during a flight, not their chrome-bearing ancestor', () => {
+    // `.pswp__scroll-wrap` also holds the top bar and the arrows, so masking it
+    // pinned that chrome invisible for the whole choreography and then revealed
+    // it in one untransitioned step. The container holds only slides.
+    const masked = rulesTouching(css, ['opacity'])
+      .map(({ selector }) => selector.replace(/\s+/g, ' '))
+      .filter((selector) => selector.includes('arts-lightbox-transitioning'))
+
+    expect(masked).toContain('.pswp.arts-lightbox-transitioning .pswp__container')
+    expect(masked.some((s) => s.includes('.pswp__scroll-wrap'))).toBe(false)
+  })
 })
