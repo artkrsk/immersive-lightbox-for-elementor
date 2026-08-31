@@ -1,0 +1,130 @@
+/*
+ * Editor-panel companion for the upgraded URL control (`url_arts_lightbox`).
+ *
+ * Elementor scopes its URL-control CSS to the type class it generates from
+ * get_type() — `.elementor-control-type-url` — so a control registered under
+ * a NEW type inherits none of it: the more-options popover loses its
+ * display:none (renders flat under the input) and the autocomplete spinner
+ * shows permanently. These are Elementor 4.2.2's own rules (editor.css,
+ * `.elementor-control-type-url` block) re-scoped to our type, mirroring the
+ * ArtsEnhancedURLControl package's companion stylesheet. Plain CSS on
+ * purpose: imported by the editor bundle, emitted by esbuild as editor.css —
+ * it runs in the editor document, not in the front-end cascade layer.
+ */
+.elementor-control-type-url_arts_lightbox .elementor-control-field {
+  position: relative;
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-input-wrapper {
+  display: flex;
+}
+.elementor-control-type-url_arts_lightbox.elementor-control-dynamic .elementor-control-url-more-options input {
+  border-radius: var(--e-a-border-radius);
+}
+.elementor-control-type-url_arts_lightbox.elementor-control-dynamic-value .e-input-style {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+.elementor-control-type-url_arts_lightbox.elementor-control-dynamic-value .elementor-control-url-more {
+  border-start-end-radius: var(--e-a-border-radius);
+  border-end-end-radius: var(--e-a-border-radius);
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-url-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: var(--e-a-border-bold);
+  color: currentColor;
+  background-color: transparent;
+  border-inline-start-width: 0;
+  cursor: pointer;
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-url-more i {
+  font-size: 12px;
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-url-more-options {
+  display: none;
+  padding-block-start: 10px;
+  width: 100%;
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-url-more-options .elementor-control-field-description {
+  margin-block-start: 10px;
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-url-more:hover {
+  color: var(--e-a-color-txt-hover);
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-url-more:focus {
+  color: var(--e-a-color-txt-active);
+  border-color: var(--e-a-border-color-focus);
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-url-option {
+  display: flex;
+  align-items: center;
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-url-option:not(:last-child) {
+  padding-block-end: 10px;
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-url-option input,
+.elementor-control-type-url_arts_lightbox .elementor-control-url-option label {
+  cursor: pointer;
+}
+/* Logical insets match Elementor's own rule for this control (its editor.css
+   and editor-rtl.css both ship `inset-block-start` / `inset-inline-end`). */
+.elementor-control-type-url_arts_lightbox .elementor-control-url-autocomplete-spinner {
+  display: none;
+  position: absolute;
+  inset-block-start: 5px;
+  inset-inline-end: 0;
+  width: 10px;
+  height: 10px;
+  font-size: 10px;
+  color: var(--e-a-color-txt-disabled);
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-url__custom-attributes label {
+  font-size: var(--control-title-size);
+}
+.elementor-control-type-url_arts_lightbox .elementor-control-url__custom-attributes input {
+  width: 100%;
+  margin-block-start: 10px;
+}
+.elementor-control-type-url_arts_lightbox .elementor-input:focus ~ div {
+  border-color: var(--e-a-border-color-focus);
+}
+
+/*
+ * The lightbox marker, pinned beside the control's label. It sits in the
+ * label's own wrapped flex row — the input wrapper is 100% wide and drops
+ * below — so `margin-inline-start: auto` pushes it to the far edge without
+ * adding a row or shifting anything when it appears.
+ */
+.elementor-control-type-url_arts_lightbox .arts-lightbox-badge {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-inline: 6px;
+  border-radius: var(--e-a-border-radius);
+  background-color: var(--e-a-bg-active);
+  color: var(--e-a-color-txt-accent);
+  font-size: 10px;
+  /*
+   * Matched to the label's own 12px box. Anything taller grows the wrapped
+   * label row and pushes the input down as the badge appears — a 4px jump on
+   * every toggle. Sized this way it occupies space the row already had.
+   */
+  line-height: 12px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+/*
+ * `--e-a-color-success` is the one green Elementor keeps identical across both
+ * editor themes, so the dot reads the same either way while the badge sits on
+ * the neutral active grey like any other chip.
+ */
+.elementor-control-type-url_arts_lightbox .arts-lightbox-badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--e-a-color-success);
+}

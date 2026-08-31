@@ -1,0 +1,866 @@
+// The tap-toggle factor (see the chrome group below). Registered so the
+// flip can FADE: a transition can only animate a custom property the
+// browser knows is a number. Where @property is unsupported the toggle
+// still works — it just cuts instead of fading.
+@property --arts-lightbox-ui-visible {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
+// Every button centres a 24px icon box — the default `icons.prev/next` SVGs
+// and the square the close bars fit in. This is the distance from the
+// button's box edge to that icon box, which is how far the box overhangs the
+// inset line so the ICON sits on it.
+@function icon-pad($size-var, $fallback) {
+  @return calc((var(#{$size-var}, #{$fallback}) - 24px) / 2);
+}
+
+@layer arts-lightbox {
+  // All chrome rides the shared transition clock.
+  //
+  // The `.pswp` scope is load-bearing, not tidiness. The fork stamps
+  // `pswp__hide-on-close` straight onto every element appended to the root or
+  // the wrapper — our caption, thumbnails and arrows — and
+  // `.pswp--ui-visible .pswp__hide-on-close { opacity: 1 }` is two classes.
+  // Unscoped, this rule is one, so those three ignored the clock entirely:
+  // lit from the first frame of the open, still lit through the close, gone
+  // only when the DOM was destroyed. Bar-hosted chrome never had the problem,
+  // because the class lands on their shared container instead of on them.
+  //
+  // Two classes ties it, and `_ui.scss` is used after `_photoswipe.scss`, so
+  // source order settles the tie our way.
+  //
+  // Winning that tie also silenced the fork's tap toggle (a touch tap flips
+  // `pswp--ui-visible` on the root, stock tapAction 'toggle-controls') for
+  // everything but the bar — so the toggle is reimplemented below against the
+  // class itself, as a second FACTOR multiplied into the chrome opacity. The
+  // clock owns its factor, the ui state owns its own; neither ever writes the
+  // other's, which is what keeps a mid-transition tap composable.
+  // Chrome geometry knobs, with their defaults — set any of them on `:root`,
+  // on `.pswp`, or anywhere between:
+  //
+  //   --arts-lightbox-inset-x               24px   edge to chrome, horizontal
+  //   --arts-lightbox-inset-y               24px   edge to chrome, vertical
+  //   --arts-lightbox-arrow-size            56px   prev/next, square
+  //   --arts-lightbox-close-size            56px   close, square
+  //   --arts-lightbox-close-line-thickness  2px    its two bars
+  //   --arts-lightbox-thumb-size            56px   one thumbnail, square
+  //   --arts-lightbox-thumb-gap             8px    between thumbnails
+  //   --arts-lightbox-thumbs-size           72px   how far arrows/caption step
+  //                                                in from the line for a rail
+  //
+  // Deliberately NOT declared anywhere — the defaults live in the `var()`
+  // fallbacks at each consumer, as every color in this file already does. A
+  // declaration on `.pswp` would beat an inherited one, so a `:root` override
+  // would silently do nothing.
+  //
+  // They exist because the widths are applied with `!important`, against the
+  // unlayered `button { width: auto }` resets themes ship (hello-elementor's
+  // among them) that collapse a fixed-size button whose content is absolutely
+  // positioned. All of ours sits in a cascade layer, where the order REVERSES
+  // for important declarations — a layered `!important` outranks an unlayered
+  // one — so a theme cannot out-specify the width at any specificity. The
+  // property is the way in, and being a normal declaration it needs no
+  // `!important` of its own.
+  //
+  // The insets draw one line per edge, and everything visible sits ON it:
+  // the arrows' and the close's 24px icon box, the counter's text, the
+  // caption's text, the thumbnail tiles. A button's box overhangs the line
+  // outward by `icon-pad` — hit area, not ink — so the line is where the eye
+  // measures, not where the box ends. Their defaults are responsive, which a
+  // fallback cannot be, so the resolved pair below is the one exception to
+  // "never declared": it is declared on `.pswp`, but only ever as a `var()`
+  // of the public one, so a `:root` override still flows through at both
+  // widths. Consumers read the resolved pair, never the public one.
+
+  .pswp {
+    --arts-lightbox-inset-x-resolved: var(--arts-lightbox-inset-x, 24px);
+    --arts-lightbox-inset-y-resolved: var(--arts-lightbox-inset-y, 24px);
+
+    // Which PHYSICAL rail inset a LOGICAL consumer reads. Thumbnail rails are
+    // placed physically (a user picks a screen side — see the strip block),
+    // while the arrows that step aside for them are logical, so the two
+    // vocabularies meet here and nowhere else. Substitution happens at
+    // computed-value time, so the physical vars can be set later in the file
+    // (on `.arts-lightbox-has-thumbs_*`) and still be seen through these.
+    --arts-lightbox-thumbs-inset-inline-start: var(--arts-lightbox-thumbs-inset-left, 0px);
+    --arts-lightbox-thumbs-inset-inline-end: var(--arts-lightbox-thumbs-inset-right, 0px);
+
+    // The tap-toggle fade rides the registered factor on the ROOT — where the
+    // rule below changes it — never `opacity`, which stays the clock's alone.
+    transition: --arts-lightbox-ui-visible 0.2s ease;
+  }
+
+  // The one direction-aware rule in this file: reading start/end swap sides.
+  [dir='rtl'] .pswp,
+  .pswp[dir='rtl'] {
+    --arts-lightbox-thumbs-inset-inline-start: var(--arts-lightbox-thumbs-inset-right, 0px);
+    --arts-lightbox-thumbs-inset-inline-end: var(--arts-lightbox-thumbs-inset-left, 0px);
+  }
+
+  // Touch widths pull the line in. At 16px the 56px buttons land flush with
+  // the edge (16 − icon-pad = 0), which on a phone is where a thumb wants them.
+  @media (width <= 767px) {
+    .pswp {
+      --arts-lightbox-inset-x-resolved: var(--arts-lightbox-inset-x, 16px);
+      --arts-lightbox-inset-y-resolved: var(--arts-lightbox-inset-y, 16px);
+    }
+  }
+
+  .pswp .arts-lightbox-counter,
+  .pswp .arts-lightbox-caption,
+  .pswp .arts-lightbox-close,
+  .pswp .arts-lightbox-arrow,
+  .pswp .arts-lightbox-thumbs {
+    opacity: calc(var(--arts-lightbox-chrome, 1) * var(--arts-lightbox-ui-visible, 1));
+    color: var(--arts-lightbox-ui-color, #efece6);
+
+    // One clock owns chrome opacity; a CSS transition here is a second owner.
+    transition: none;
+  }
+
+  // Elementor's kit offers a hover color and a text color next to the UI
+  // color; both used to land on --arts-lightbox-ui-color, where setting
+  // either recolored the whole chrome. Each gets its own property, falling
+  // back through the UI color so a kit that sets only that one looks exactly
+  // as it did before these existed. Interactive roots only — the counter and
+  // thumbnails have no hover identity.
+  // Important-in-layer because the ARMOR block below pins the rest-state
+  // color the same way — a plain declaration here would lose to it.
+  .pswp .arts-lightbox-arrow:hover,
+  .pswp .arts-lightbox-close:hover {
+    color: var(--arts-lightbox-ui-hover-color, var(--arts-lightbox-ui-color, #efece6)) !important;
+  }
+
+  // The bar IS the top row: the close button's home, the counter's anchor.
+  // It is placed so the close's icon box sits on the inset line — the box
+  // overhangs upward and rightward by `icon-pad`, which is why the right edge
+  // and the left edge differ: the left is the line itself, where the counter
+  // starts. Its height is the close button's, so "centred in the bar" means
+  // centred on the close.
+  //
+  // The admin bar is opaque, and the lightbox layers under it (see the
+  // z-drop in _lightbox.scss) — top-pinned chrome slides down by the bar's
+  // measured viewport overlap, stamped on the root by createOpener.
+  .pswp .pswp__top-bar {
+    top: calc(
+      var(--arts-lightbox-admin-bar, 0px) + var(--arts-lightbox-inset-y-resolved) -
+        #{icon-pad(--arts-lightbox-close-size, 56px)}
+    );
+
+    // Logical, so the whole row mirrors under `dir="rtl"` without an
+    // override: the inline-END side carries the icon-pad overhang because
+    // that is where the close button sits — the vendored bar is a flex row
+    // with `justify-content: flex-end`, which flips on its own. The counter
+    // below anchors to the inline-START edge for the same reason.
+    inset-inline: var(--arts-lightbox-inset-x-resolved)
+      calc(var(--arts-lightbox-inset-x-resolved) - #{icon-pad(--arts-lightbox-close-size, 56px)});
+    width: auto;
+    height: var(--arts-lightbox-close-size, 56px);
+
+    // The fork fades this container as a proxy for its children; ours carry
+    // their own opacity, and under our engine the stamped
+    // `--pswp-transition-duration` is 0ms — the "fade" was a snap that hid
+    // the close and counter before their own fade could show.
+    opacity: 1;
+  }
+
+  // No inset or admin-bar term here, deliberately: the counter is absolutely
+  // positioned INSIDE `.pswp__top-bar`, which the rule above already places on
+  // the line and pushes down by the bar. Adding the admin bar again sank the
+  // counter a whole bar-height below the close button it shares the row with.
+  .arts-lightbox-counter {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+
+    // Absolute, so it sits outside the bar's flex flow and cannot inherit
+    // the close button's automatic flip — the logical inset is what keeps
+    // the two at opposite ends under `dir="rtl"` instead of collided.
+    inset-inline-start: 0;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  // A label floating over the slide, with nothing to click: taking the pointer
+  // would only interrupt whatever the slide beneath it promises. Scoped under
+  // `.pswp` because the fork claims `pointer-events` for its stamped
+  // hide-on-close class through a two-class selector — one class loses.
+  .pswp .arts-lightbox-counter {
+    pointer-events: none;
+  }
+
+  // A zero-height anchor, not a box: every caption is absolutely positioned
+  // against it, so nothing here depends on any caption's size. Definite width
+  // because the items wrap against it.
+  //
+  // Scoped under `.pswp` only to outrank `.pswp--ui-visible .pswp__hide-on-close`,
+  // which the fork stamps on every registered element — the items overflow this
+  // element, and none of it may intercept a drag or a zoom click.
+  .pswp .arts-lightbox-caption {
+    position: absolute;
+
+    // Same specificity as the shared chrome group, later in source — the
+    // kit's text color reaches captions without touching the buttons.
+    color: var(--arts-lightbox-caption-color, var(--arts-lightbox-ui-color, #efece6));
+
+    // Clears a bottom strip when one is present — the two overlapped before
+    // this variable existed, since the caption grows upward from its anchor.
+    bottom: calc(var(--arts-lightbox-inset-y-resolved) + var(--arts-lightbox-thumbs-inset-bottom, 0px));
+
+    // Logical: the caption reads from the same edge the text does, so it
+    // mirrors with the document. Its items are already `inset-inline-start`.
+    inset-inline-start: var(--arts-lightbox-inset-x-resolved);
+    width: 60%;
+    pointer-events: none;
+  }
+
+  // All captions share one bottom-left origin and grow upward, so a one-line
+  // and a five-line caption sit on the same baseline and neither disturbs the
+  // other. Position and opacity are projected from the live slide position by
+  // `ui/caption.ts` — this rule only decides what the two scalars mean, which
+  // is what lets a theme reinterpret them (another axis, a blur, a scale).
+  .arts-lightbox-caption__item {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    width: 100%;
+    opacity: var(--arts-lightbox-caption-fade, 1);
+    transform: translateY(calc(var(--arts-lightbox-caption-shift, 0) * 1%));
+  }
+
+  // Two lines, as native shows them, each typeset on its own element so the
+  // kit's Title / Description Typography groups reach one without the other.
+  // Same voice for both; the description is set apart by opacity alone, which
+  // multiplies with the item's fade rather than fighting it.
+  .arts-lightbox-caption__title,
+  .arts-lightbox-caption__description {
+    display: block;
+    font-size: 13px;
+  }
+
+  .arts-lightbox-caption__description {
+    margin-top: 0.35em;
+    opacity: 0.72;
+  }
+
+  // Structural geometry rides important-in-layer (see the ARMOR block's
+  // cascade note): theme resets ship unlayered `button { width: auto;
+  // margin: 0 }` (hello-elementor's reset.css among them), which collapses a
+  // fixed-size button whose content is absolutely positioned to zero width.
+  // `position: relative` gives the bars their containing block.
+  .arts-lightbox-close {
+    position: relative;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: var(--arts-lightbox-close-size, 56px) !important;
+    height: var(--arts-lightbox-close-size, 56px) !important;
+    margin: 0 !important;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .arts-lightbox-arrow {
+    position: absolute;
+    top: 50%;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: var(--arts-lightbox-arrow-size, 56px) !important;
+    height: var(--arts-lightbox-arrow-size, 56px) !important;
+    margin: 0 !important;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transform: translateY(-50%);
+  }
+
+  // A rail claims one edge, so whatever else lives there steps in from the
+  // line by the same amount: a tile plus the 16px a button pads its own icon
+  // with, so icon-to-tile reads as icon-to-edge does. One variable per edge,
+  // set on the root because the arrows and the caption are not descendants
+  // of the strip.
+  // Rails are placed PHYSICALLY on purpose — `thumbnailsPosition` is a
+  // literal `'left' | 'right'` in the public options, i.e. a choice of
+  // screen side, and the strip mirrors the track's own physical order.
+  // These two variables therefore name physical edges. The arrows that
+  // step aside for them are LOGICAL (they mirror with the document), so
+  // the physical→logical mapping happens once, right below.
+  .arts-lightbox-has-thumbs_left {
+    --arts-lightbox-thumbs-inset-left: var(--arts-lightbox-thumbs-size, 72px);
+  }
+
+  .arts-lightbox-has-thumbs_right {
+    --arts-lightbox-thumbs-inset-right: var(--arts-lightbox-thumbs-size, 72px);
+  }
+
+  .arts-lightbox-has-thumbs_bottom {
+    --arts-lightbox-thumbs-inset-bottom: var(--arts-lightbox-thumbs-size, 72px);
+  }
+
+  // A dead arrow (end of a no-loop gallery) fades out and stops taking
+  // clicks. Same specificity as the chrome-opacity group but later in
+  // source, so the literal 0 and its own transition win over the clock var
+  // and the group's transition: none.
+  .pswp .arts-lightbox-arrow_hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  // The tap toggle's hidden state. Opacity is already handled by the factor
+  // above going to 0; what needs saying is that invisible chrome answers no
+  // taps. The close button needs it explicitly — the vendored
+  // `.pswp__top-bar > *` keeps bar children `pointer-events: auto` no matter
+  // what the stamped class says — and so do the tiles, which re-claim the
+  // pointer at child level below their dead strip. A tap that lands where a
+  // control was falls through to the slide area and toggles the chrome back.
+  .pswp:not(.pswp--ui-visible) {
+    --arts-lightbox-ui-visible: 0;
+  }
+
+  .pswp:not(.pswp--ui-visible) .arts-lightbox-counter,
+  .pswp:not(.pswp--ui-visible) .arts-lightbox-caption,
+  .pswp:not(.pswp--ui-visible) .arts-lightbox-close,
+  .pswp:not(.pswp--ui-visible) .arts-lightbox-arrow,
+  .pswp:not(.pswp--ui-visible) .arts-lightbox-thumbs,
+  .pswp:not(.pswp--ui-visible) .arts-lightbox-thumbs__item {
+    pointer-events: none;
+  }
+
+  // Logical sides: prev sits where reading starts, next where it ends, so
+  // both mirror with the document (the glyph each button renders is swapped
+  // in `ui/arrows.ts` to match). The rail step-aside reads the mapped
+  // logical vars above.
+  .arts-lightbox-arrow_prev {
+    inset-inline-start: calc(
+      var(--arts-lightbox-inset-x-resolved) - #{icon-pad(--arts-lightbox-arrow-size, 56px)} +
+        var(--arts-lightbox-thumbs-inset-inline-start, 0px)
+    );
+  }
+
+  .arts-lightbox-arrow_next {
+    inset-inline-end: calc(
+      var(--arts-lightbox-inset-x-resolved) - #{icon-pad(--arts-lightbox-arrow-size, 56px)} +
+        var(--arts-lightbox-thumbs-inset-inline-end, 0px)
+    );
+  }
+
+  // The blink hover: a normal layer exits while a duplicate chases it in,
+  // deliberately slower. Symmetric timing reads as a swap; the lag is the
+  // whole effect. Lives on descendants — the chrome roots carry
+  // `transition: none` because their opacity rides the shared clock.
+  .arts-lightbox-blink {
+    --arts-lightbox-blink-duration-out: 0.3s;
+    --arts-lightbox-blink-duration-in: 0.45s;
+    --arts-lightbox-blink-direction: 1;
+
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+  }
+
+  .arts-lightbox-blink__layer {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transition: transform var(--arts-lightbox-blink-duration-out) ease;
+  }
+
+  // An icon inside a layer is NOT a flex item — the button's flex blockifies
+  // the blink wrapper, and there the chain stops. So an inline <svg> still
+  // sits on the layer's text baseline, which leaves descender space under it:
+  // the line box measures taller than the glyph and centring the box lands
+  // the glyph itself high. Block takes it off the baseline, so the layer is
+  // the icon's own height and the button's `align-items: center` is true.
+  .arts-lightbox-blink__layer > svg {
+    display: block;
+  }
+
+  .arts-lightbox-blink__layer_hover {
+    position: absolute;
+    inset: 0;
+
+    // The extra 4px keeps a sub-pixel seam from showing between the layers.
+    transform: translateX(
+      calc(
+        var(--arts-lightbox-blink-direction) * -100% - var(--arts-lightbox-blink-direction) * 4px
+      )
+    );
+    transition-duration: var(--arts-lightbox-blink-duration-in);
+  }
+
+  // Prev mirrors next: its glyph leaves to the left, the copy arrives from the right.
+  .arts-lightbox-arrow_prev .arts-lightbox-blink {
+    --arts-lightbox-blink-direction: -1;
+  }
+
+  // The layers travel on a physical axis (`translateX`), and the buttons swap
+  // both sides and glyphs under `dir="rtl"` — so the sign swaps with them and
+  // each glyph still exits the way it points. One flip for the whole
+  // choreography; nothing else in the blink needs a direction rule.
+  [dir='rtl'] .arts-lightbox-blink,
+  .pswp[dir='rtl'] .arts-lightbox-blink {
+    --arts-lightbox-blink-direction: -1;
+  }
+
+  [dir='rtl'] .arts-lightbox-arrow_prev .arts-lightbox-blink,
+  .pswp[dir='rtl'] .arts-lightbox-arrow_prev .arts-lightbox-blink {
+    --arts-lightbox-blink-direction: 1;
+  }
+
+  .arts-lightbox-arrow:hover > .arts-lightbox-blink > .arts-lightbox-blink__layer_normal,
+  .arts-lightbox-close:hover > .arts-lightbox-blink > .arts-lightbox-blink__layer_normal {
+    transform: translateX(calc(var(--arts-lightbox-blink-direction) * 100%));
+  }
+
+  .arts-lightbox-arrow:hover > .arts-lightbox-blink > .arts-lightbox-blink__layer_hover,
+  .arts-lightbox-close:hover > .arts-lightbox-blink > .arts-lightbox-blink__layer_hover {
+    transform: translateX(0);
+  }
+
+  .arts-lightbox-close__bar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 45%;
+    height: var(--arts-lightbox-close-line-thickness, 2px);
+  }
+
+  .arts-lightbox-close__bar > .arts-lightbox-blink__layer {
+    background: currentcolor;
+  }
+
+  .arts-lightbox-close__bar_1 {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  .arts-lightbox-close__bar_2 {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
+  // The second bar trails the first by a beat.
+  .arts-lightbox-close__bar_2 > .arts-lightbox-blink__layer {
+    transition-delay: 75ms;
+  }
+
+  // Scoped under `.pswp` to outrank `.pswp--ui-visible .pswp__hide-on-close`,
+  // which the fork stamps on every registered element and which would
+  // otherwise reclaim both pointer-events and opacity the moment a touch tap
+  // toggles the chrome off. Same fix the caption needed.
+  //
+  // The strip mounts on the root AFTER the scroll-wrap that holds the top
+  // bar, at the same z-index the fork stamps on both, so tree order paints it
+  // over the close button and the counter. The bar's corners are anchors and
+  // do not move for a rail; the strip yields instead. Only the tiles take the
+  // pointer — the container's padding and gaps let clicks through to whatever
+  // they cover, the same split the fork's own top bar uses.
+  .pswp .arts-lightbox-thumbs {
+    // How far an inactive thumbnail is dimmed toward its black backing.
+    --arts-lightbox-thumb-dim: 0.55;
+
+    // Deliberately short of 1: hover lifts a thumbnail without reaching the
+    // active brightness, so `active` stays a state hover cannot imitate.
+    --arts-lightbox-thumb-hover: 0.8;
+    --arts-lightbox-thumb-duration: 0.25s;
+
+    position: absolute;
+    display: flex;
+    gap: var(--arts-lightbox-thumb-gap, 8px);
+    pointer-events: none;
+
+    // The strip is scrolled from the slide position, so hide the bars rather
+    // than paint an affordance nobody drives.
+    scrollbar-width: none;
+  }
+
+  .pswp .arts-lightbox-thumbs::-webkit-scrollbar {
+    display: none;
+  }
+
+  // The inner padding, between the tiles and the slide. Unscoped on purpose:
+  // each rail below replaces its outer edge with the inset so the tiles sit
+  // on the line, and a `.pswp`-scoped base would outrank those.
+  // Important-in-layer, here and on every rail override below: the strip is a
+  // <div>, and themes ship Meyer-style resets whose selector list includes
+  // `div` (Velum's `main.css` among them). Those are unlayered, so a normal
+  // declaration of ours loses to them and the tiles collapse onto the edge —
+  // the same trap `overflow` fell into on the tiles themselves. The rails
+  // still beat this base: equal specificity, later in source.
+  .arts-lightbox-thumbs {
+    padding: 12px !important;
+  }
+
+  .arts-lightbox-thumbs_bottom,
+  .arts-lightbox-thumbs_top {
+    right: 0;
+    left: 0;
+    justify-content: flex-start;
+    padding-inline: var(--arts-lightbox-inset-x-resolved) !important;
+    overflow-x: auto;
+  }
+
+  // The tiles clear the bottom edge by the inset PLUS one gap. Every other
+  // chrome element on the inset line is type or an icon, whose glyph carries
+  // its own optical margin; a thumbnail is a filled rectangle that runs to its
+  // own edge, so the same measurement reads tighter under it. Reusing the gap
+  // that separates the tiles keeps it one knob rather than a second constant.
+  .arts-lightbox-thumbs_bottom {
+    bottom: 0;
+    padding-bottom: calc(
+      var(--arts-lightbox-inset-y-resolved) + var(--arts-lightbox-thumb-gap, 8px)
+    ) !important;
+  }
+
+  // Shares the bar's row, so its scroll window stops short of both corners:
+  // a close-size past the line on the right, and a mirror of that on the left
+  // so the auto-margin centring stays on the viewport's axis. The window, not
+  // the padding, because an overflowing row runs edge to edge.
+  .arts-lightbox-thumbs_top {
+    top: var(--arts-lightbox-admin-bar, 0);
+    right: calc(var(--arts-lightbox-inset-x-resolved) + var(--arts-lightbox-close-size, 56px));
+    left: calc(var(--arts-lightbox-inset-x-resolved) + var(--arts-lightbox-close-size, 56px));
+    padding-top: var(--arts-lightbox-inset-y-resolved) !important;
+  }
+
+  // The side columns start a close-size below the line — a full-height column
+  // covers whichever corner control it starts in, and the first tile of an
+  // overflowing one would sit under the close button. Mirrored at the bottom
+  // so the column stays centred on the arrows.
+  .arts-lightbox-thumbs_left,
+  .arts-lightbox-thumbs_right {
+    top: calc(
+      var(--arts-lightbox-admin-bar, 0px) + var(--arts-lightbox-inset-y-resolved) +
+        var(--arts-lightbox-close-size, 56px)
+    );
+    bottom: calc(var(--arts-lightbox-inset-y-resolved) + var(--arts-lightbox-close-size, 56px));
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+  }
+
+  // Physical on purpose, in both directions: `thumbnailsPosition` is a
+  // literal `'left' | 'right'` in the public options, so someone who picked
+  // `left` means the screen's left. The rail is also a map of the slide
+  // track, which stays physical too — mirroring the rail alone would put the
+  // strip's order at odds with the motion it indexes (and would need an
+  // RTL `scrollLeft` branch the centring math does not have).
+  .arts-lightbox-thumbs_left {
+    left: 0;
+    padding-left: var(--arts-lightbox-inset-x-resolved) !important;
+  }
+
+  .arts-lightbox-thumbs_right {
+    right: 0;
+    padding-right: var(--arts-lightbox-inset-x-resolved) !important;
+  }
+
+  // Dimming happens on the IMAGE against a black backing, not on the item.
+  // Fading the whole item would take its ring and its progress bar with it,
+  // and would thin the thumbnail toward whatever sits behind the strip instead
+  // of darkening it.
+  //
+  // Neither `border` nor `outline` carries the ring. A border reserves a track
+  // inside the box, and since the black backing paints under a transparent one,
+  // every inactive thumbnail wore a 1px black rim. An outline reserves nothing,
+  // but it can only land on the image or on the backdrop — both of them
+  // arbitrary photographs. The ring gets a layer of its own instead; see below.
+  //
+  // Flex, like the other buttons: a glyph or a number inside relies on the
+  // UA's centred button text, which theme resets drop (`text-align:
+  // inherit` lands it flush left). Important-in-layer for the same reason
+  // the close button's is — an unlayered `button { display }` reset would
+  // otherwise win.
+  .arts-lightbox-thumbs__item {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: var(--arts-lightbox-thumb-size, 56px) !important;
+    height: var(--arts-lightbox-thumb-size, 56px) !important;
+    position: relative;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+
+    // Important-in-layer for the same reason `display` above is: themes ship
+    // an unlayered `button, input { overflow: visible }` in their reset
+    // (hello-elementor's among them), and an unlayered normal declaration
+    // outranks a layered one. Losing it left the image unclipped, painting
+    // its square corners over the black backing's rounded ones.
+    overflow: hidden !important;
+    background: #000;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  // Centring a scroll container with `justify-content` clips the overflow on
+  // BOTH sides, stranding the leading items where no scroll position can reach
+  // them. Auto margins on the end items centre while there is spare room and
+  // collapse to zero once the strip overflows.
+  .arts-lightbox-thumbs_bottom .arts-lightbox-thumbs__item:first-child,
+  .arts-lightbox-thumbs_top .arts-lightbox-thumbs__item:first-child {
+    margin-inline-start: auto !important;
+  }
+
+  .arts-lightbox-thumbs_bottom .arts-lightbox-thumbs__item:last-child,
+  .arts-lightbox-thumbs_top .arts-lightbox-thumbs__item:last-child {
+    margin-inline-end: auto !important;
+  }
+
+  .arts-lightbox-thumbs_left .arts-lightbox-thumbs__item:first-child,
+  .arts-lightbox-thumbs_right .arts-lightbox-thumbs__item:first-child {
+    margin-block-start: auto !important;
+  }
+
+  .arts-lightbox-thumbs_left .arts-lightbox-thumbs__item:last-child,
+  .arts-lightbox-thumbs_right .arts-lightbox-thumbs__item:last-child {
+    margin-block-end: auto !important;
+  }
+
+  // `border-radius: inherit` as well as the parent's clip: the image animates
+  // its opacity, which promotes it to its own compositing layer, and a
+  // composited child is not reliably clipped by an ancestor's rounded overflow
+  // (Safari most of all). Clipping itself costs nothing where the ancestor
+  // clip already works.
+  .arts-lightbox-thumbs__item img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+  }
+
+  // The dim ladder covers the play glyph a posterless video shows in place
+  // of an image — the same three states, read off the same element.
+  .arts-lightbox-thumbs__item > img,
+  .arts-lightbox-thumbs__item > svg {
+    opacity: var(--arts-lightbox-thumb-dim);
+    transition: opacity var(--arts-lightbox-thumb-duration) ease;
+  }
+
+  // Hover stops SHORT of the active brightness. The two used to land on the
+  // same value, which left the ring as the only thing separating "the one I am
+  // pointing at" from "the one I am on". Worse, pointing at a thumbnail is how
+  // you click it: hover lit the target to full while the ring was still fading
+  // in, so the ring arrived onto the brightest possible backing and was never
+  // seen — the only ring you ever caught was the one LEAVING the thumbnail you
+  // came from, growing legible as that image darkened under it. With a keyboard
+  // there is no hover, which is why the same navigation looked correct.
+  //
+  // `:not()` rather than source order: `:hover` outranks the active class on
+  // its own, so the two selectors are made mutually exclusive instead.
+  .arts-lightbox-thumbs__item:not(.arts-lightbox-thumbs__item_active):hover > img,
+  .arts-lightbox-thumbs__item:not(.arts-lightbox-thumbs__item_active):hover > svg {
+    opacity: var(--arts-lightbox-thumb-hover);
+  }
+
+  .arts-lightbox-thumbs__item_active > img,
+  .arts-lightbox-thumbs__item_active > svg {
+    opacity: 1;
+  }
+
+  // The ring rides its own layer ABOVE the image, and carries its own contrast.
+  // Two hairlines — light outside, dark immediately inside — so one or the
+  // other always separates the tile from its picture, whatever that picture
+  // happens to be at the edges. Opacity carries the whole ring and owes nothing
+  // to the brightness underneath it.
+  .arts-lightbox-thumbs__item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    box-shadow:
+      inset 0 0 0 1px currentcolor,
+      inset 0 0 0 2px rgb(0 0 0 / 45%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--arts-lightbox-thumb-duration) ease;
+  }
+
+  .arts-lightbox-thumbs__item_active::before {
+    opacity: 1;
+  }
+
+  // Clicking a thumbnail left the theme's (or the UA's) focus ring drawn
+  // around the tile until something else took focus — a second, foreign
+  // outline sitting outside our own rounded edge. Important-in-layer because
+  // those rules are unlayered.
+  .pswp .arts-lightbox-thumbs__item:focus {
+    outline: none !important;
+  }
+
+  // Keyboard focus still has to be visible, so it borrows the ring the tile
+  // already owns rather than reinstating an outline that ignores the radius.
+  // `:focus-visible` only, so a mouse click stays clean.
+  .pswp .arts-lightbox-thumbs__item:focus-visible::before {
+    opacity: 1;
+  }
+
+  // Touch-width viewports navigate by swipe + counter. Scoped under `.pswp`
+  // because the strip's own base rule is, and sets `display: flex` — one
+  // class lost to it, and the rail was never hidden on a phone.
+  @media (width <= 767px) {
+    .pswp .arts-lightbox-thumbs {
+      display: none;
+    }
+
+    // Nothing steps aside for a rail that is not there. Same specificity as
+    // the `has-thumbs_*` roots above, later in source.
+    .pswp {
+      --arts-lightbox-thumbs-inset-start: 0px;
+      --arts-lightbox-thumbs-inset-end-inline: 0px;
+      --arts-lightbox-thumbs-inset-bottom: 0px;
+    }
+  }
+
+  // Video/html slide content — PhotoSwipe positions it; we only paint.
+  // Same designed corner radius as .pswp__img: the flight lands on it and
+  // launches from it, so a square media box pops at both hand-offs.
+  .arts-lightbox-media {
+    display: block;
+    overflow: hidden;
+    background: #000;
+    border-radius: var(--arts-lightbox-slide-radius);
+  }
+
+  // Sized by PhotoSwipe to the slide box; the card look + scrolling live here.
+  .arts-lightbox-html {
+    padding: 32px;
+    overflow: auto;
+    background: var(--arts-lightbox-html-bg, #1c1c1f);
+    border-radius: 8px;
+  }
+
+  // The zoom glyph a cursor follower draws for us, in ITS element rather than
+  // ours (the payload carries this markup; see Elementor\CursorFollowerBridge).
+  // Two bars, like the close button: a plus that becomes a minus when the
+  // slide is already zoomed. The state comes from <html>, mirrored there by
+  // interaction/zoomCursor.ts, because nothing of ours contains that element
+  // — and because a follower resolves its rules only when the pointer crosses
+  // into a target, so a swapped icon would lag a zoom toggled under a still
+  // pointer. Here the payload never changes: one pair of bars, animated by
+  // CSS, always honest about what the click does.
+  .arts-lightbox-zoom {
+    // Slightly past linear at the end, so the turn settles instead of
+    // stopping. Safe here where a back-out would not be on a scale toward
+    // zero: rotation has no sign to overshoot through.
+    --arts-lightbox-zoom-ease: cubic-bezier(0.34, 1.4, 0.64, 1);
+    --arts-lightbox-zoom-duration: 0.4s;
+
+    position: relative;
+    display: block;
+
+    // Matched to the close button's bars rather than to icon-font scale: this
+    // is the same mark, drawn in the cursor instead of in the corner. The
+    // follower sizes its ring around what it holds, so this widens that too.
+    width: 20px;
+    height: 20px;
+
+    // The glyph turns as it morphs — a half turn, so the flat arm ends flat
+    // again. Without it the fold alone reads as a bar quietly going away;
+    // with it, the shape visibly becomes the other shape.
+    transform: rotate(0deg);
+    transition: transform var(--arts-lightbox-zoom-duration) var(--arts-lightbox-zoom-ease);
+  }
+
+  // The half turn belongs to the zoom pair; the cross reaches its angle
+  // through the bars themselves, so turning the whole glyph as well would
+  // just spin a symmetric shape.
+  html.arts-lightbox-over-image.arts-lightbox-zoomed-in .arts-lightbox-zoom {
+    transform: rotate(180deg);
+  }
+
+  .arts-lightbox-zoom__bar {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    margin-top: -1px;
+
+    // The follower owns its own color; fall back to the ink it inherits.
+    background: var(--arts-cursor-text-color, currentcolor);
+
+    // Trails the turn by a breath: the two motions read as one gesture with
+    // a direction rather than as two properties changing at once.
+    transition: transform var(--arts-lightbox-zoom-duration) var(--arts-lightbox-zoom-ease) 0.04s;
+  }
+
+  .arts-lightbox-zoom__bar_2 {
+    transform: rotate(90deg);
+  }
+
+  // Folds ONTO its twin rather than collapsing: the arms are the same length,
+  // so the plus closes into a single clean minus and nothing has to vanish.
+  html.arts-lightbox-over-image.arts-lightbox-zoomed-in .arts-lightbox-zoom__bar_2 {
+    transform: rotate(0deg);
+  }
+
+  // Third state, same two bars: beside the image a click closes, so the plus
+  // opens into a cross. Every state of this glyph is a rotation of the same
+  // pair, which is what lets it morph rather than cut between icons — and
+  // why the close button is built from two bars as well.
+  html:not(.arts-lightbox-over-image) .arts-lightbox-zoom__bar_1 {
+    transform: rotate(45deg);
+  }
+
+  html:not(.arts-lightbox-over-image) .arts-lightbox-zoom__bar_2 {
+    transform: rotate(-45deg);
+  }
+
+
+  // ARMOR. Elementor's Site Settings "Buttons" section prints unlayered,
+  // broad rules (`.elementor-kit-N button { … }`) that reach every <button>
+  // on the page — ours included, which is how a site's pill-shaped button
+  // style ends up drawn around the close icon. Importance reverses layer
+  // order (important-in-layer beats important-unlayered), so the baseline is
+  // re-stated here with !important, covering exactly the properties that kit
+  // section can emit. Values must match the base blocks above — theming
+  // stays on the custom properties, which this does not touch.
+  // `color` re-states the base value, not `inherit`: inherit outranked our
+  // own base rule too, so the buttons took the theme's text color and the
+  // kit's UI Color picker did nothing for them.
+  .pswp .arts-lightbox-close,
+  .pswp .arts-lightbox-arrow {
+    padding: 0 !important;
+    color: var(--arts-lightbox-ui-color, #efece6) !important;
+    text-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  // The thumbnails are buttons too; their black backing and radius are load-
+  // bearing (see the strip block), so they re-state their own values.
+  .pswp .arts-lightbox-thumbs__item {
+    padding: 0 !important;
+    color: inherit !important;
+    border: 0 !important;
+    border-radius: 4px !important;
+    background: #000 !important;
+    box-shadow: none !important;
+  }
+
+  // ── Vendored chrome that still renders: the stock preloader ──────────────
+  // `_photoswipe.scss` is a frozen byte-copy, so its physical rules are
+  // overridden from HERE (our layer wins). The preloader is the one stock UI
+  // element we don't disable; both rules below are its LTR values restated
+  // logically, so LTR is unchanged and RTL mirrors.
+  .pswp .pswp__preloader {
+    margin-right: 0;
+    margin-inline-end: auto;
+  }
+
+  .pswp .pswp__preloader .pswp__icn {
+    left: auto;
+    inset-inline-start: 9px;
+  }
+}

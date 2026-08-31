@@ -1,0 +1,222 @@
+@layer arts-lightbox {
+  // Our backdrop replaces PhotoSwipe's (bgOpacity is forced to 0, but the
+  // node still exists — keep it out of the paint entirely).
+  .pswp__bg {
+    display: none;
+  }
+
+  // Native parity with Elementor's lightbox (it sits at 9999): where the
+  // admin bar exists, the whole lightbox layers UNDER its 99999 so the bar
+  // stays visible and clickable. Two declarations on purpose — the vendored
+  // `.pswp` rule re-declares the var, so inheritance from body loses there,
+  // while the close-flight detached to `body` reaches it only through
+  // inheritance. Accepted edge: a theme element at 99998+ could cover the
+  // lightbox for logged-in users.
+  body.admin-bar {
+    --pswp-root-z-index: 99997;
+  }
+
+  body.admin-bar .pswp {
+    --pswp-root-z-index: 99997;
+  }
+
+  // The four layers, bottom to top, named in one place so paint order is a
+  // decision rather than a side effect of DOM order.
+  //
+  // Container and chrome are MIRRORS of values the vendored stylesheet owns
+  // (`.pswp__item` and `.pswp__hide-on-close`). They are written here to state
+  // the scale and to show what the flight slots between — do not "fix" a
+  // mismatch by editing `_photoswipe.scss`; change these to match it.
+  .pswp {
+    --arts-lightbox-z-backdrop: 0;
+    --arts-lightbox-z-container: 1;
+    --arts-lightbox-z-flight: 5;
+    --arts-lightbox-z-chrome: 10;
+  }
+
+  .arts-lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: var(--arts-lightbox-z-backdrop);
+    background: var(--arts-lightbox-backdrop-color, #121214);
+    will-change: clip-path, opacity;
+  }
+
+  // The promoted element that travels while a transition runs.
+  //
+  // This rule is the DETACHED state: the close moves the flight out to `body`
+  // so it can outlive the root's teardown by a couple of frames, and there it
+  // needs to clear the whole lightbox.
+  .arts-lightbox-flight {
+    --arts-lightbox-flight-fade: 140ms;
+
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: calc(var(--pswp-root-z-index, 100000) + 1);
+    overflow: hidden;
+    pointer-events: none;
+    will-change: transform, width, height;
+    transition: opacity var(--arts-lightbox-flight-fade) ease;
+  }
+
+  // The open hand-off dissolves the flight into the slide it just landed on
+  // rather than cutting to it. The close never gets this class: its flight is
+  // covering the returning element while a video's texture re-attaches, and
+  // fading that cover would expose the frame it exists to hide.
+  .arts-lightbox-flight_leaving {
+    opacity: 0;
+  }
+
+  // Mounted state — above the slides, below the controls, so the travelling
+  // image passes UNDER the chrome instead of blanking it mid-fade.
+  .pswp .arts-lightbox-flight {
+    z-index: var(--arts-lightbox-z-flight);
+  }
+
+  // The img clone the flight carries, repainted per frame.
+  .arts-lightbox-flight__media {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    width: 100%;
+    object-fit: cover;
+    will-change: transform, height;
+  }
+
+  // The real slide stays hidden until the flight lands exactly on it.
+  //
+  // The container, NOT the scroll wrap. The wrap also holds the top bar and
+  // the arrows, so hiding it took every piece of bar and wrapper chrome down
+  // with the slides — pinned at zero for the whole flight and then revealed in
+  // one untransitioned step the instant this class came off, which is why the
+  // chrome arrived with no fade no matter what the clock was doing.
+  .pswp.arts-lightbox-transitioning .pswp__container {
+    opacity: 0;
+  }
+
+  // Chrome (counter, captions, our buttons) rides the shared clock.
+  // The slide radius is the design default the flight lands on — themable
+  // via the custom property; the transition engine reads it per open. Zero
+  // by default: a photo in a lightbox is a photo, not a card.
+  // stylelint-disable-next-line no-duplicate-selectors -- separate documented
+  // custom-property group, not a mergeable duplicate of the z-layer block
+  .pswp {
+    --arts-lightbox-chrome: 1;
+    --arts-lightbox-slide-radius: 0px;
+  }
+
+  .pswp__img {
+    border-radius: var(--arts-lightbox-slide-radius);
+  }
+
+  // Zoom cursor is fully ours (stock logic needs imageClickAction === 'zoom'
+  // literally; ours is a function). The cursor promises what the click
+  // toggle does: out from anywhere beyond fit, in only at fit. The baseline
+  // CLAIMS the default too — the vendored stylesheet's stock rules key on
+  // pswp--zoom-allowed/--zoomed-in, which the core still stamps, and without
+  // this they promise zoom on slides whose range collapsed to nothing.
+  .pswp .pswp__img {
+    cursor: default;
+  }
+
+  .pswp.arts-lightbox-can-zoom .pswp__img {
+    cursor: zoom-in;
+  }
+
+  .pswp.arts-lightbox-can-zoom.arts-lightbox-zoomed-in .pswp__img {
+    cursor: zoom-out;
+  }
+
+  // Over the SLIDES, a cursor follower draws the pointer, so the OS one steps
+  // aside — two pointers on the same pixels, one of them a glyph naming what
+  // the click does, is worse than either alone. The chrome keeps its own: a
+  // button should look like a button.
+  //
+  // The follower's payloads say this too (they must, or a glyph nudges itself
+  // off the pointer to clear a cursor that isn't there). This states it in CSS
+  // as well because a payload only applies once a rule resolves, which leaves
+  // the first frame after entering showing the OS cursor.
+  //
+  // `has-cursor-follower` is that plugin's documented state class: set
+  // pre-paint from the pointer media query, corrected by its engine, and
+  // flipped off for touch, a filtered page or a failed deploy — where our own
+  // zoom and grab cursors take back over.
+  html.has-cursor-follower .pswp__container,
+  html.has-cursor-follower .pswp__container * {
+    cursor: none !important;
+  }
+
+  // Except a video, which keeps the OS pointer. Its controls are real UI
+  // being aimed at, and a glyph over them obstructs the thing being clicked.
+  // Fullscreen makes it plain: the video moves to the top layer and
+  // ::backdrop hides the follower with the rest of the document, so the rule
+  // above would leave a fullscreen video with no pointer at all. The bridge
+  // states the same thing from its side, with a rule that draws nothing here.
+  //
+  // `cursor` inherits, so this is what the shadow-DOM controls read too —
+  // they then apply their own, which is why the buttons still get a pointer.
+  html.has-cursor-follower .pswp__container video.arts-lightbox-media {
+    cursor: auto !important;
+  }
+
+  // Decoration inside the slide area must not take the pointer: the preloader
+  // is an invisible box over the top of every slide, and hovering it resolved
+  // to no rule at all — the OS cursor blinked back mid-glyph for as long as
+  // the pointer crossed it. Nothing here is clickable; only real chrome
+  // buttons should ever answer.
+  .pswp .pswp__preloader {
+    pointer-events: none;
+  }
+
+  // A closing lightbox answers nothing: the slide is leaving, the chrome is
+  // fading, and every affordance they were offering is about to be gone.
+  // Important-in-layer because it must also outrank the vendored stylesheet's
+  // own `pointer-events: auto` on the bar's children.
+  .pswp.arts-lightbox-closing,
+  .pswp.arts-lightbox-closing * {
+    pointer-events: none !important;
+  }
+
+  // The space around the image is a drag zone on every slide — zoomable or
+  // not, dragging there goes to the next one. Only the draggable class gates
+  // it (one slide, or desktop drag off, and there is nowhere to go).
+  .pswp.arts-lightbox-draggable .pswp__container {
+    cursor: grab;
+  }
+
+  // The image itself only says grab where a click has nothing to offer;
+  // where it zooms, the zoom cursors above speak for it.
+  .pswp.arts-lightbox-draggable:not(.arts-lightbox-can-zoom) .pswp__img {
+    cursor: grab;
+  }
+
+  // Last word: while the button is down the pointer is dragging, whatever it
+  // was offering a moment ago. A cursor follower blanks all of this through
+  // its own no-native-cursor class, so this is the un-enhanced experience.
+  .pswp.arts-lightbox-draggable.arts-lightbox-pressing .pswp__img,
+  .pswp.arts-lightbox-draggable.arts-lightbox-pressing .pswp__container {
+    cursor: grabbing;
+  }
+
+  // Safari compositing quirk: without a paintable background the first
+  // loaded image can render truncated (upstream #1846, never fixed there).
+  .pswp img {
+    background: rgb(255 255 255 / 1%);
+  }
+
+  // Site CSS deliberately wins over this layer — that is what keeps the
+  // chrome themable — but PhotoSwipe's structural sizing must not lose to a
+  // theme's generic `img { max-width: 100%; height: auto }` reset: capped
+  // that way, the slide lands collapsed (PhotoSwipe sizes images with inline
+  // px, and max-* constrains inline styles too). Importance REVERSES layer
+  // order — `!important` inside a layer outranks even a site's own
+  // `!important` — so this guard is theme-proof while everything themable
+  // stays overridable.
+  .pswp img,
+  .arts-lightbox-flight img {
+    max-width: none !important;
+    max-height: none !important;
+  }
+}

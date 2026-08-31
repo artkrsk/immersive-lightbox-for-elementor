@@ -1,0 +1,1 @@
+export { normalizeUrlKey } from './normalizeUrlKey'

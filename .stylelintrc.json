@@ -1,0 +1,4 @@
+{
+  "extends": "@arts/wp-plugin-tooling/stylelint",
+  "ignoreFiles": ["src/styles/_photoswipe.scss"]
+}

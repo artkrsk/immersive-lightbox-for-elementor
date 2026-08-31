@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Immersive Lightbox for Elementor">
+<title>Immersive Lightbox for Elementor</title>
+<defs>
+  <linearGradient id="photo" x1="0" y1="0" x2="0" y2="1">
+    <stop stop-color="#FFC46B"/>
+    <stop offset=".55" stop-color="#EF6F55"/>
+    <stop offset="1" stop-color="#B23A5E"/>
+  </linearGradient>
+  <radialGradient id="vig" cx=".5" cy=".5" r=".72">
+    <stop offset=".55" stop-color="#000000" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000000" stop-opacity=".38"/>
+  </radialGradient>
+  <clipPath id="win"><rect width="256" height="256" rx="54"/></clipPath>
+  <style>
+    /* One 9s loop, no script: the explore pan. The cursor wanders in two
+       darts, settles on the sun, presses — the ring contracts — and the
+       photo spring-punches to 1.45x; the drift carries on inside the crop
+       (zoomed-in is exactly when the live feature pans), then a second
+       press releases everything home. Holds are keyframe PAIRS with
+       identical values, the morph happens between a pair's end and the
+       next pair's start, so the ease sits on the keyframe that CLOSES
+       each hold — and every hold is the same one-second beat (the seam
+       rest is 1.4s, split across the loop point), so the pacing reads as
+       a steady hand rather than wandering attention.
+
+       Nothing in this stylesheet may contain a literal angle bracket or
+       ampersand. Served as an image the file is parsed as XML, where
+       style contents are NOT raw text, so a bare bracket opens a phantom
+       element and the whole SVG fails to parse — silently, as a broken
+       image.
+
+       The cursor leads and the image answers: every pan keyframe is the
+       centred base translate(-37,-37) minus 0.55 times the cursor's
+       offset from centre (the counter-pan), which is also why the cursor
+       lands exactly ON the sun before the press — the meeting point
+       solves that equation rather than being staged. On the darts the pan keyframes
+       run 1% of the loop late so the image trails the hand; during the
+       zoom both ride the SAME keyframes, because a drag does not lag.
+
+       The photo is a 330px square behind a 256px window: at scale 1
+       every translate stays inside [-74,0] on both axes, at 1.45 inside
+       [-222,0], so no edge ever shows. That margin is also why only the
+       CURSOR ease overshoots (the darts) while the pan ease never does.
+
+       The markup attributes double as the resting state — the PNG
+       fallbacks are rendered from exactly this frame. */
+    .pan, .cursor {
+      animation-duration: 9s;
+      animation-iteration-count: infinite;
+      animation-fill-mode: both;
+    }
+    .pan { animation-name: k-pan; }
+    .cursor { animation-name: k-cursor; }
+    .ring { animation: k-ring 9s infinite both; transform-box: fill-box; transform-origin: center; }
+    @keyframes k-cursor {
+      0%, 5.5%     { transform: translate(176px,88px); animation-timing-function: cubic-bezier(.3,1.35,.4,1); }
+      14.5%, 25.5% { transform: translate(84px,170px); animation-timing-function: cubic-bezier(.3,1.35,.4,1); }
+      34.5%, 45.5% { transform: translate(84px,99px); animation-timing-function: cubic-bezier(.34,1.3,.64,1); }
+      55.5%        { transform: translate(122px,126px); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+      69%, 80%     { transform: translate(150px,118px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+      90%, 100%    { transform: translate(176px,88px); }
+    }
+    @keyframes k-pan {
+      0%, 6.5%     { transform: translate(-63px,-15px) scale(1); animation-timing-function: cubic-bezier(.45,0,.2,1); }
+      15.5%, 26.5% { transform: translate(-13px,-60px) scale(1); animation-timing-function: cubic-bezier(.45,0,.2,1); }
+      35.5%, 45.5% { transform: translate(-13px,-21px) scale(1); animation-timing-function: cubic-bezier(.34,1.3,.64,1); }
+      55.5%        { transform: translate(-17px,-48px) scale(1.45); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+      69%, 80%     { transform: translate(-36px,-42px) scale(1.45); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+      90%, 100%    { transform: translate(-63px,-15px) scale(1); }
+    }
+    @keyframes k-ring {
+      0%, 44.5%   { transform: scale(1); }
+      47.5%       { transform: scale(.6); }
+      50.5%, 78%  { transform: scale(1); }
+      81%         { transform: scale(.6); }
+      84%, 100%   { transform: scale(1); }
+    }
+  </style>
+</defs>
+
+<g clip-path="url(#win)">
+  <g class="pan" transform="translate(-63,-15)">
+    <rect width="330" height="330" fill="url(#photo)"/>
+    <circle cx="96" cy="120" r="30" fill="#FFFFFF" fill-opacity=".92"/>
+    <path d="M0 236 L70 150 L120 196 L190 120 L258 190 L330 160 L330 330 L0 330 Z" fill="#0B0B10" fill-opacity=".35"/>
+  </g>
+  <rect width="256" height="256" fill="url(#vig)"/>
+  <g class="cursor" transform="translate(176,88)">
+    <circle class="ring" r="9" fill="none" stroke="#FFFFFF" stroke-opacity=".85" stroke-width="2.5"/>
+  </g>
+</g>
+<rect x="0.75" y="0.75" width="254.5" height="254.5" rx="53.25" fill="none" stroke="#FFFFFF" stroke-opacity="0.1"/>
+</svg>

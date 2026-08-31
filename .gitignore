@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.env
+vendor/
+vendor-prefixed/
+src/php/libraries/
+.DS_Store
+*.zip
+.fallow/
+coverage/
+playwright-report/
+test-results/
+.phpunit.result.cache
+.wp-env.override.json
+dev/wp
+.mcp.json
+
+# Working docs are never committed. Plans, specs, brainstorms, scratch stay
+# local — this is a public repo.
+docs/superpowers/
+drafts/
+.superpowers/

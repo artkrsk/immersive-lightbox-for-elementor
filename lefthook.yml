@@ -1,0 +1,34 @@
+# Sequential on purpose: Biome/stylelint REWRITE staged files and every later
+# step has to read the fixed output. Hooks are advisory (skip with LEFTHOOK=0
+# for a WIP commit) — CI is the authoritative gate.
+#
+# The PHP pair are checks, not fixers: phpcbf stays a manual tool rather than
+# rewriting a commit under you. PHPStan analyses the whole project (it needs
+# the full picture); its glob only decides whether the job runs at all, so a
+# TS-only commit skips it. Both no-op on a clone without `composer install`.
+pre-commit:
+  parallel: false
+  jobs:
+    - name: format (biome)
+      glob: '*.{ts,mts,js,json,jsonc,vue}'
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+    - name: format (stylelint)
+      glob: 'src/styles/**/*.scss'
+      run: pnpm exec stylelint --fix {staged_files}
+      stage_fixed: true
+    - name: typecheck
+      run: pnpm exec tsc --noEmit
+    - name: phpcs
+      glob: 'src/php/**/*.php'
+      run: 'if [ -x vendor/bin/phpcs ]; then vendor/bin/phpcs {staged_files}; else echo "phpcs unavailable — skipped"; fi'
+    - name: phpstan
+      glob: 'src/php/**/*.php'
+      run: 'if [ -x vendor/bin/phpstan ]; then vendor/bin/phpstan analyse --memory-limit=1G --no-progress; else echo "phpstan unavailable — skipped"; fi'
+
+# Proof before sharing: the whole project, under a minute.
+pre-push:
+  parallel: false
+  jobs:
+    - name: test
+      run: pnpm exec vitest run

@@ -1,0 +1,41 @@
+{
+  // Entry points beyond auto-detection, mirroring knip.json:
+  // - global.d.ts: ambient window contract (TGateBoot is consumed there)
+  // - index.scss: the sass entry from project.config.js — the stylesheet graph
+  //   hangs off the build, not off any TS import
+  "entry": [
+    "src/ts/boot.ts",
+    "src/ts/gate.ts",
+    "src/ts/editor.ts",
+    "src/ts/global.d.ts",
+    "src/styles/index.scss",
+    "project.config.js",
+    "tests/ts/setup.ts"
+  ],
+  // Same semantics knip runs with: a type consumed within its own module
+  // is not dead surface.
+  "ignoreExportsUsedInFile": true,
+  "duplicates": {
+    // Test fixtures rhyme by design (same DOM scaffold, different assertion);
+    // the fork keeps upstream's shapes (repeated axis math is upstream code).
+    "ignore": ["tests/**", "src/ts/photoswipe/**"]
+  },
+  "health": {
+    // Complexity gates apply to shipped engine code, not test bodies. The
+    // fork keeps upstream's function shapes (correctZoomPan and friends are
+    // phase-2 first-class work, verified on-device) — but its DEAD CODE is
+    // now analyzed like everything else (a lightbox/-sized find pays for
+    // this line).
+    "ignore": ["tests/**", "src/ts/photoswipe/**"],
+    // CRAP is a coverage-policy metric (cyclomatic² × (1-coverage)³), not a
+    // complexity one, and the vendored fork's upstream shapes would dominate
+    // it. The open/close spine carries its own suites now (the choreographies,
+    // the transition engine, the opener and the core factory), so coverage
+    // there is maintained by those tests rather than by this gate. What stays
+    // verified by hand is FEEL — gesture physics and easing comfort — not the
+    // decision logic. The real complexity gates (maxCyclomatic 20,
+    // maxCognitive 15) stay at their defaults.
+    "maxCrap": 999
+  },
+  "rules": { "dev-dependencies-in-production": "off" }
+}

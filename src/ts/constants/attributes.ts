@@ -1,0 +1,13 @@
+/** The declarative data-attribute vocabulary — the public wire contract. */
+export const ATTR_LIGHTBOX = 'data-arts-lightbox'
+export const ATTR_GROUP = 'data-arts-lightbox-group'
+export const ATTR_ID = 'data-arts-lightbox-id'
+export const ATTR_TYPE = 'data-arts-lightbox-type'
+export const ATTR_CAPTION = 'data-arts-lightbox-caption'
+export const ATTR_DESCRIPTION = 'data-arts-lightbox-description'
+export const ATTR_HTML = 'data-arts-lightbox-html'
+export const ATTR_OFF = 'data-arts-lightbox-off'
+export const ATTR_CLONE = 'data-arts-lightbox-clone'
+export const ATTR_AUTOPLAY = 'data-arts-lightbox-autoplay'
+export const ATTR_WIDTH = 'data-arts-lightbox-width'
+export const ATTR_HEIGHT = 'data-arts-lightbox-height'
