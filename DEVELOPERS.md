@@ -79,6 +79,7 @@ Exactly one is always present on `<html>` after the gate runs:
 | `data-arts-lightbox-description="…"` | link | Caption description line — explicit only, no DOM fallback |
 | `data-arts-lightbox-html="#selector"` | link | Content source for html slides |
 | `data-arts-lightbox-width` / `-height` | link | Full-size dimensions (fall back to the thumb's attributes) |
+| `data-arts-lightbox-thumb="url"` | link | The strip / placeholder thumbnail for a trigger that wraps no media (a text link); wins over a contained `<img>` / `<video poster>`; a wrapped poster-less `<video>` falls back to a frame captured at open time |
 | `data-arts-lightbox-off` | link or ancestor | Opt out (wins over everything) |
 | `data-arts-lightbox-clone` | link or ancestor | Marks a duplicated instance: it joins the slide's DOM instances but never sets its position |
 

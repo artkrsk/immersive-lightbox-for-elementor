@@ -6,6 +6,7 @@ import {
   ATTR_HTML,
   ATTR_ID,
   ATTR_LIGHTBOX,
+  ATTR_THUMB,
   ATTR_TYPE,
   ATTR_WIDTH
 } from '../constants'
@@ -68,18 +69,58 @@ function readDescription(el: HTMLElement): string | undefined {
   return el.getAttribute(ELEMENTOR_ATTR_DESCRIPTION)?.trim() || undefined
 }
 
-/** The low-res stand-in painted before the full source loads. */
+/** The low-res stand-in painted before the full source loads. An author's
+ *  own thumbnail wins — a text trigger (a title, a button) wraps no media to
+ *  borrow one from, so it names its own. */
 function readMsrc(
+  el: HTMLElement,
   img: HTMLImageElement | null,
   video: HTMLVideoElement | null
 ): string | undefined {
   return (
+    el.getAttribute(ATTR_THUMB)?.trim() ||
     img?.currentSrc ||
     img?.getAttribute('src') ||
     video?.poster ||
     video?.getAttribute('poster') ||
+    captureVideoFrame(video) ||
     undefined
   )
+}
+
+/** Longest edge of a frame captured off a wrapped <video>. */
+const CAPTURED_FRAME_EDGE = 320
+
+/**
+ * A wrapped <video> with no poster still shows a picture on the page — the
+ * frame it is on. Galleries are built at click time, so the frame is decoded
+ * by then; a same-origin file draws, a cross-origin one taints the canvas and
+ * the catch hands the tile back to its play glyph.
+ */
+function captureVideoFrame(video: HTMLVideoElement | null): string | undefined {
+  if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) {
+    return undefined
+  }
+  try {
+    const scale = Math.min(1, CAPTURED_FRAME_EDGE / Math.max(video.videoWidth, video.videoHeight))
+    const canvas = video.ownerDocument.createElement('canvas')
+    canvas.width = Math.round(video.videoWidth * scale)
+    canvas.height = Math.round(video.videoHeight * scale)
+    const context = canvas.getContext('2d')
+    if (!context) {
+      return undefined
+    }
+    context.drawImage(video, 0, 0, canvas.width, canvas.height)
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.75)
+    // The canvas is detached and short-lived, but its bitmap counts against the
+    // page's canvas memory until GC (Safari budgets it) — release it now rather
+    // than one capture per click later.
+    canvas.width = 0
+    canvas.height = 0
+    return dataUrl
+  } catch {
+    return undefined
+  }
 }
 
 /**
@@ -202,7 +243,7 @@ export function extractSlideData(el: HTMLElement): ISlideData {
   if (data.type === 'image' && (!data.width || !data.height)) {
     data.dimsGuessed = true
   }
-  const msrc = readMsrc(img, containedVideo)
+  const msrc = readMsrc(el, img, containedVideo)
   if (msrc) {
     data.msrc = msrc
   }

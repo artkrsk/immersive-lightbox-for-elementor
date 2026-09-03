@@ -8,6 +8,7 @@ export {
   ATTR_ID,
   ATTR_LIGHTBOX,
   ATTR_OFF,
+  ATTR_THUMB,
   ATTR_TYPE,
   ATTR_WIDTH
 } from './attributes'

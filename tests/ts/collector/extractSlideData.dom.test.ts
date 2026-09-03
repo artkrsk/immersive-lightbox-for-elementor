@@ -29,6 +29,31 @@ describe('extractSlideData', () => {
     expect(data.caption).toBe('A photo')
   })
 
+  it('takes an authored thumbnail over the contained media', () => {
+    const text = anchor(`
+      <a href="https://example.com/full.jpg" data-arts-lightbox
+         data-arts-lightbox-thumb="https://example.com/thumb-medium.jpg">Open</a>
+    `)
+    expect(extractSlideData(text).msrc).toBe('https://example.com/thumb-medium.jpg')
+
+    const wrapped = anchor(`
+      <a href="https://example.com/full.jpg" data-arts-lightbox
+         data-arts-lightbox-thumb="https://example.com/authored.jpg">
+        <img src="https://example.com/inline.jpg" width="600" height="400" alt="" />
+      </a>
+    `)
+    expect(extractSlideData(wrapped).msrc).toBe('https://example.com/authored.jpg')
+  })
+
+  it('leaves a poster-less wrapped video without a thumbnail when no frame is decoded', () => {
+    const el = anchor(`
+      <a href="https://example.com/clip.mp4" data-arts-lightbox>
+        <video src="https://example.com/clip.mp4" width="1920" height="1080" muted></video>
+      </a>
+    `)
+    expect(extractSlideData(el).msrc).toBeUndefined()
+  })
+
   it('falls back to img dimension attributes when data attrs are absent', () => {
     const el = anchor(`
       <a href="https://example.com/full.jpg" data-arts-lightbox>

@@ -11,3 +11,5 @@ export const ATTR_CLONE = 'data-arts-lightbox-clone'
 export const ATTR_AUTOPLAY = 'data-arts-lightbox-autoplay'
 export const ATTR_WIDTH = 'data-arts-lightbox-width'
 export const ATTR_HEIGHT = 'data-arts-lightbox-height'
+/** An author's own thumbnail URL for triggers that wrap no media (a text link). */
+export const ATTR_THUMB = 'data-arts-lightbox-thumb'
