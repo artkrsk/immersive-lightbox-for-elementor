@@ -7,8 +7,8 @@ const ZOOMED_IN_CLASS = 'arts-lightbox-zoomed-in'
 const EPSILON = 0.001
 
 /**
- * Owns the zoom cursor state. PhotoSwipe's own cursor classes require
- * `imageClickAction === 'zoom'` literally (ours is a function) and exact
+ * Owns the zoom cursor state. PhotoSwipe's own cursor classes require a
+ * literal `imageClickAction` action name (ours is a function) and exact
  * zoom-level equality — both too fragile. We derive from live state:
  * can-zoom = the slide has meaningful zoom range; zoomed-in = ANY level
  * beyond fit. The cursor must promise what the click toggle actually does,

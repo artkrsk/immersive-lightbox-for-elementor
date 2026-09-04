@@ -15,7 +15,9 @@ export interface ISlideData {
   height?: number
   /** Dims aren't author-declared (thumb-guessed, or absent) — upgrade on load. */
   dimsGuessed?: boolean
-  /** Thumbnail currentSrc, used as the PhotoSwipe placeholder. */
+  /** Low-res stand-in PhotoSwipe paints first: the author's own thumb
+   *  attribute, else the trigger's img, a video poster, or a frame
+   *  captured off a wrapped video. */
   msrc?: string
   /** The caption's title line. */
   caption?: string

@@ -4,17 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A PhotoSwipe-powered lightbox that replaces Elementor's native one — curtain/flight transitions, desktop drag between slides, mousemove explore pan, thumbnails, video/HTML slides. Free plugin, GPL-3.0-or-later. Phase 1 built the frontend engine against a VitePress playground, since removed; phase 2 (current) is the WordPress/Elementor integration (PHP printing, Site Settings, kit parity), developed against a real consumer theme. Design specs are gitignored working documents and never committed, so treat this file and `DEVELOPERS.md` as the committed sources of truth.
+A PhotoSwipe-powered lightbox that replaces Elementor's native one — curtain/flight transitions, desktop drag between slides, mousemove explore pan, thumbnails, video/HTML slides. Free plugin, GPL-3.0-or-later, released on wp.org — pushing a `v*` tag is what ships it, and the workflow deploys over SVN. The frontend engine was built first, against a VitePress playground since removed; the WordPress/Elementor layer (PHP printing, Site Settings, kit parity) is developed and verified against a real consumer theme. Design specs are gitignored working documents and never committed, so treat this file and `DEVELOPERS.md` as the committed sources of truth.
 
 ## Commands
 
 - `pnpm test` — Vitest. Single file: `pnpm test tests/ts/transition/curve.test.ts`. The choreographies' *decision logic* — what mounts before what, which branch a coverless slide takes, that every exit path releases its locks — is unit-tested (`openChoreography`/`closeChoreography`/`transitionEngine` suites, driven by `tests/ts/helpers/frameClock.ts`), so a contract regression fails here rather than waiting to be noticed by eye. What no test covers is FEEL — gesture physics and easing comfort — and that only shows on the dev site below, on real hardware.
 - `pnpm exec tsc --noEmit` / `pnpm exec biome check .` / `pnpm exec stylelint "src/**/*.scss"` / `pnpm exec knip` / `pnpm exec fallow` — all hard gates, keep them green per commit. package.json keeps only the human scripts, so the gates run through `pnpm exec`. Fallow's CRAP scores read Istanbul data — run `pnpm test:coverage` first when health findings look stale.
 - `vendor/bin/phpcs` (ArtsFramework ruleset, `src/php`) / `composer phpstan` — the PHP gates, equally hard. Both no-op on a clone without `composer install`; `phpcbf` stays a manual fixer, never wired into a hook.
-- `pnpm build` — release build: stamps versions from `composer.json#version` (the only version source), stages `dist/<slug>/`, zips.
+- `pnpm build` — release build: stamps versions from `composer.json#version` (the only version source), stages `dist/<slug>/`, zips. `pnpm release` bumps `composer.json`, restamps the derived files, commits and tags — pushing that tag is manual, and is what makes CI build and deploy to wp.org.
 - `pnpm dev:plugin` — watch mode; mirrors a full runnable plugin tree into the site named by `DEV_TARGET` in the gitignored `.env` (builds without syncing if unset). Currently pointed at a consumer theme's `wp-sync` staging dir, which Mutagen carries to the remote dev site — **that is where integration is verified**. `.env.example` carries the alternative: a Local site on a stock theme, for wp.org-shaped conditions. Note it also re-stamps the plugin header, `readme.txt` and `package.json` version from `composer.json` on every run, so expect a dirty tree.
 
 Lefthook, sequential because the fixers rewrite what the later steps read: pre-commit is Biome `--write`, then stylelint `--fix` on staged SCSS, then typecheck, then phpcs and PHPStan (both gated on staged PHP, so a TS-only commit skips them); the full test suite runs on pre-push. Hooks are advisory (`LEFTHOOK=0`) — CI is the authoritative gate.
+
+## Layout
+
+- `src/ts/` — the engine. `collector/` reads the DOM into galleries, `core/` composes (options, delegation, the pswp factory, the navigator), `transition/` owns the open/close choreographies and the flight, `interaction/` the pointer layer (zoom, explore pan, wheel nav, cursor state), `content/` the video/html slide types, `ui/` our chrome, `video/` the providers and player bridges, `photoswipe/` the vendored fork. `boot.ts` is the WordPress entry, `gate.ts` the inlined pre-paint gate, `editor.ts` the Elementor editor bundle, `index.ts` the library surface.
+- `src/php/` — the WordPress side. `Plugin.php` prints the gate and owns the filters, `Options.php` resolves kit settings into the boot payload, `Elementor/` holds the kit controls, the upgraded URL control and the cursor-follower bridge.
+- `src/styles/` — SCSS partials, all inside the `arts-lightbox` layer; `editor.css` is the editor-panel companion and deliberately outside it.
+- `src/wordpress-plugin/` — the plugin header file and `readme.txt`, both version-stamped at build. `.wordpress-org/` carries the wp.org assets and blueprint, `dev/` the demo-page seed.
+- `tests/ts/` mirrors `src/ts`, plus `helpers/` (the frame clock, the pswp fake) and `styles/` (the stylesheet is compiled with sass and asserted as text — cascade collisions are invisible to a unit test otherwise).
 
 ## Architecture invariants
 
@@ -36,7 +44,7 @@ Lefthook, sequential because the fixers rewrite what the later steps read: pre-c
 - `@ts/*` alias is test-only (enforced by `tests/ts/aliasBoundary.test.ts`). `@engine`/`@styles` are still declared in tsconfig `paths` but have had no consumer since the playground went; `src/ts` must not import through them either — themes compile it from source with their own config.
 - DOM suites are `*.dom.test.ts` with a `// @vitest-environment happy-dom` docblock; everything else is node env and must not touch `document`. jsdom is not an option (no matchMedia).
 - One declaration per file; `I*`/`T*` prefixes; barrels carry **only exports with live consumers** — knip is a hard gate, so a barrel line lands together with its first consumer.
-- The public API is whatever `src/ts/index.ts` re-exports plus the contract in `DEVELOPERS.md` (discovery global, html classes, data-attribute vocabulary). Everything else is internal.
+- The public API is whatever `src/ts/index.ts` re-exports plus the contract in `DEVELOPERS.md` (discovery global, html classes, event names, data-attribute vocabulary). Everything else is internal, and the published surface is frozen additive-only: the plugin auto-updates from wp.org while consumer themes update on their own cadence, so every version pairing has to keep working.
 - All shipped CSS lives in the `arts-lightbox` cascade layer (partials each declare their own `@layer` block — sass forbids `@use` inside `@layer`). The vendored `_photoswipe.scss` is a one-time hand-wrapped copy of photoswipe@5.4.4's `dist/photoswipe.css` — photoswipe is not an npm dependency and nothing regenerates the file; its own header records the provenance.
 - The gate (`gate.ts`) is a separate bundle: no banner, no sourcemap (PHP prints it inline). It holds a candidate click, lazy-loads CSS→JS serialized, replays the open via the ready promise, and releases the click to native navigation on load failure.
 

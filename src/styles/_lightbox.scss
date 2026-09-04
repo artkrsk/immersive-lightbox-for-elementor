@@ -111,8 +111,8 @@
     border-radius: var(--arts-lightbox-slide-radius);
   }
 
-  // Zoom cursor is fully ours (stock logic needs imageClickAction === 'zoom'
-  // literally; ours is a function). The cursor promises what the click
+  // Zoom cursor is fully ours (stock logic needs a literal imageClickAction
+  // action name; ours is a function). The cursor promises what the click
   // toggle does: out from anywhere beyond fit, in only at fit. The baseline
   // CLAIMS the default too — the vendored stylesheet's stock rules key on
   // pswp--zoom-allowed/--zoomed-in, which the core still stamps, and without
