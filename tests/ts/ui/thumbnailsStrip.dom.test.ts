@@ -192,6 +192,32 @@ describe('registerThumbnailsStrip', () => {
     expect(api.goTo).toHaveBeenCalledWith(2)
   })
 
+  it('releases pointer focus after navigation but keeps keyboard focus', () => {
+    const pswp = fakePswp()
+    const api = fakeApi()
+    registerThumbnailsStrip(
+      pswp as unknown as PhotoSwipe,
+      fakeGallery(['a', 'b', 'c']),
+      api,
+      'bottom'
+    )
+    const strip = pswp.uiElementAt(0)
+    document.body.appendChild(strip)
+    const [, pointerTile, keyboardTile] = buttons(strip) as [HTMLElement, HTMLElement, HTMLElement]
+
+    pointerTile.focus()
+    pointerTile.dispatchEvent(new MouseEvent('click', { detail: 1 }))
+    expect(document.activeElement).not.toBe(pointerTile)
+
+    keyboardTile.focus()
+    keyboardTile.dispatchEvent(new MouseEvent('click', { detail: 0 }))
+    expect(document.activeElement).toBe(keyboardTile)
+    expect(api.goTo).toHaveBeenNthCalledWith(1, 1)
+    expect(api.goTo).toHaveBeenNthCalledWith(2, 2)
+
+    strip.remove()
+  })
+
   it('marks the nearest slide active, not the one being left', () => {
     const pswp = fakePswp()
     registerThumbnailsStrip(

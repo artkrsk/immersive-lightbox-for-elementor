@@ -93,8 +93,16 @@ export function registerThumbnailsStrip(
           button.textContent = String(i + 1)
         }
         fillFromVimeo(button, slide)
-        button.addEventListener('click', () => {
+        button.addEventListener('click', (event) => {
           api.goTo(i)
+
+          // A pointer-selected tile otherwise keeps focus until the next key
+          // press. That key makes its focus-visible ring appear beside the
+          // active ring on the destination tile. Keyboard clicks have detail
+          // zero and deliberately retain focus as their visible affordance.
+          if (event.detail > 0) {
+            button.blur()
+          }
         })
         el.appendChild(button)
         return button
