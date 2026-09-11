@@ -20,7 +20,7 @@ cp .env.example .env   # set DEV_TARGET to your Local site's plugin dir
 |---|---|
 | `pnpm dev:plugin` | watch-compile + mirror the plugin to `DEV_TARGET` |
 | `pnpm build` | release build into `dist/` |
-| `pnpm test` / `pnpm test:coverage` | Vitest |
+| `pnpm test` / `pnpm test:coverage` | Vitest plus PHP contract tests (the latter also writes TS coverage) |
 | `pnpm release <patch\|minor\|major>` | bump, stamp, validate changelog, commit, tag |
 
 Everything else (lint, typecheck, knip, fallow) runs via `pnpm exec` — see the [tooling docs](https://github.com/artkrsk/wp-plugin-tooling). Public API contracts live in [DEVELOPERS.md](DEVELOPERS.md).

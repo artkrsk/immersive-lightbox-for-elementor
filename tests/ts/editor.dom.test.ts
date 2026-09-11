@@ -6,6 +6,9 @@ interface IFakeUrlView {
   setValue(setting: string, value: string): void
   getControlValue(): Record<string, unknown> | undefined
   $el: { find(selector: string): { prop(name: string, value: boolean): void; length: number } }
+  model: { get(key: string): unknown }
+  container?: { settings?: { get(key: string): unknown } }
+  listenTo(obj: unknown, event: string, callback: () => void): void
   onBaseInputChange(event: Event): void
   onReady(): void
 }
@@ -21,6 +24,8 @@ function fakeUrlClass(): {
     setValue = vi.fn()
     getControlValue = vi.fn((): Record<string, unknown> | undefined => ({}))
     $el = { find: vi.fn(() => ({ prop: vi.fn(), length: 0 })) }
+    model = { get: vi.fn() }
+    listenTo = vi.fn()
     onBaseInputChange(_event: Event): void {}
     onReady(): void {}
   }
@@ -195,6 +200,91 @@ describe('editor', () => {
     expect(() => instance.onReady()).not.toThrow()
     expect(checkboxProp).not.toHaveBeenCalled()
   })
+
+  it('keeps the badge and fallback filename synchronized with the live control value', async () => {
+    const { Url } = fakeUrlClass()
+    const addControlView = vi.fn()
+    ;(window as unknown as { elementor: unknown }).elementor = {
+      modules: { controls: { Url } },
+      addControlView
+    }
+    const handler = await importEditorHandler()
+    handler()
+    const ViewClass = addControlView.mock.calls[0]?.[1] as new () => IFakeUrlView
+    const instance = new ViewClass()
+    const field = document.createElement('div')
+    field.className = 'elementor-control-field'
+    field.innerHTML = '<label class="elementor-control-title">Link</label>'
+    const root = document.createElement('div')
+    root.append(field)
+    const input = document.createElement('input')
+    const checkbox = { length: 1, prop: vi.fn() }
+    const find = vi.fn((selector: string) =>
+      selector.includes('arts_lightbox') ? checkbox : { length: 1, 0: input, prop: vi.fn() }
+    )
+    ;(instance as unknown as { $el: unknown }).$el = { 0: root, find }
+    let enabled = true
+    let mediaUrl = 'https://example.test/media/flower.jpg?ver=2'
+    ;(instance as unknown as { getControlValue: () => Record<string, unknown> }).getControlValue =
+      () => ({
+        arts_lightbox: enabled ? 'yes' : '',
+        url: ''
+      })
+    ;(instance as unknown as { model: { get(key: string): unknown } }).model = {
+      get: (key) =>
+        ({
+          arts_lightbox_fallback: 'image',
+          arts_lightbox_badge: 'Opens lightbox',
+          placeholder: 'URL'
+        })[key]
+    }
+    let fallbackListener: (() => void) | undefined
+    ;(instance as unknown as { container: unknown }).container = {
+      settings: { get: () => ({ url: mediaUrl }) }
+    }
+    ;(
+      instance as unknown as {
+        listenTo(_target: unknown, _event: string, callback: () => void): void
+      }
+    ).listenTo = (_target, event, callback) => {
+      if (event === 'change:image') {
+        fallbackListener = callback
+      }
+    }
+
+    instance.onReady()
+    expect(field.querySelector('.arts-lightbox-badge')?.textContent).toBe('Opens lightbox')
+    expect(input.placeholder).toBe('…/flower.jpg')
+
+    enabled = false
+    mediaUrl = ''
+    fallbackListener?.()
+    instance.onBaseInputChange({ target: { dataset: { setting: 'url' } } } as unknown as Event)
+    expect(field.querySelector('.arts-lightbox-badge')).toBeNull()
+    expect(input.placeholder).toBe('URL')
+  })
+
+  it('tolerates a rendered control without the expected field markup', async () => {
+    const { Url } = fakeUrlClass()
+    const addControlView = vi.fn()
+    ;(window as unknown as { elementor: unknown }).elementor = {
+      modules: { controls: { Url } },
+      addControlView
+    }
+    const handler = await importEditorHandler()
+    handler()
+    const ViewClass = addControlView.mock.calls[0]?.[1] as new () => IFakeUrlView
+    const instance = new ViewClass()
+    ;(instance as unknown as { $el: unknown }).$el = {
+      0: document.createElement('div'),
+      find: vi.fn(() => ({ length: 0, prop: vi.fn() }))
+    }
+    ;(instance as unknown as { model: { get(key: string): unknown } }).model = {
+      get: () => 'image'
+    }
+
+    expect(() => instance.onReady()).not.toThrow()
+  })
 })
 
 describe('editor canvas pass', () => {
@@ -256,6 +346,22 @@ describe('editor canvas pass', () => {
 
     expect(() => listener(event)).not.toThrow()
     expect(el.querySelector('#hit')?.hasAttribute('data-arts-lightbox')).toBe(false)
+  })
+
+  it('falls back from an empty edit model to the view model and supports a jQuery-style root', async () => {
+    const listener = await importRenderedListener()
+    const el = widget('<a id="hit" href="/full.jpg"></a>')
+    const model = {
+      get: (key: string) =>
+        key === 'settings' ? { attributes: { link: LIGHTBOX, invalid: null } } : undefined
+    }
+    const event = new CustomEvent('elementor/editor/element-rendered', {
+      detail: { elementView: { $el: { 0: el }, getEditModel: () => undefined, model } }
+    })
+
+    listener(event)
+
+    expect(el.querySelector('#hit')?.hasAttribute('data-arts-lightbox')).toBe(true)
   })
 
   it('is idempotent across re-renders of the same markup', async () => {

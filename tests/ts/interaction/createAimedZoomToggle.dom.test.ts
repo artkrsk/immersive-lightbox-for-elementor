@@ -4,6 +4,7 @@ import { createAimedZoomToggle } from '@ts/interaction/createAimedZoomToggle'
 import type PhotoSwipe from '@ts/photoswipe/photoswipe'
 import { describe, expect, it, vi } from 'vitest'
 import { fakePswp } from '../helpers/fakePswp'
+import { installFrameClock } from '../helpers/frameClock'
 
 function setup(
   over: {
@@ -82,5 +83,51 @@ describe('createAimedZoomToggle', () => {
     const { zoom, onStart } = setup({ fit: 0.47, fill: 0.63, dimsGuessed: true })
     zoom.toggle()
     expect(onStart).not.toHaveBeenCalled()
+  })
+
+  it('ignores a missing current slide or malformed zoom levels', () => {
+    const missingSlide = setup()
+    missingSlide.pswp.currSlide = null
+    missingSlide.zoom.toggle()
+    expect(missingSlide.onStart).not.toHaveBeenCalled()
+
+    const malformedLevels = setup()
+    delete (malformedLevels.slide.zoomLevels as { fit?: number }).fit
+    malformedLevels.zoom.toggle()
+    expect(malformedLevels.onStart).not.toHaveBeenCalled()
+  })
+
+  it('interpolates zoom and pan on one clock, then returns to idle', () => {
+    const frames = installFrameClock()
+    const { zoom, slide } = setup()
+    slide.bounds = {
+      min: { x: 0, y: 0 },
+      max: { x: -400, y: -300 },
+      center: { x: -200, y: -150 }
+    }
+
+    zoom.toggle()
+    zoom.toggle()
+    expect(zoom.active()).toBe(true)
+    frames.step(175)
+    expect(slide.setZoomLevel).toHaveBeenLastCalledWith(0.75)
+    expect(slide.pan).toEqual({ x: -200, y: -150 })
+
+    frames.step(175)
+    expect(slide.setZoomLevel).toHaveBeenLastCalledWith(0.5)
+    expect(zoom.active()).toBe(false)
+  })
+
+  it('keeps the clock safe when the current slide changes mid-animation', () => {
+    const frames = installFrameClock()
+    const { pswp, zoom } = setup()
+
+    zoom.toggle()
+    pswp.currSlide = null
+    frames.step(100)
+    expect(zoom.active()).toBe(true)
+
+    frames.step(250)
+    expect(zoom.active()).toBe(false)
   })
 })
