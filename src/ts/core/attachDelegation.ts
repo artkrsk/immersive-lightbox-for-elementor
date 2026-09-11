@@ -1,5 +1,6 @@
 import { claimCandidateClick } from '../collector/claimCandidateClick'
 import { pointerTravel } from '../collector/pointerTravel'
+import { isRTLDocument } from '../utils/isRTLDocument'
 import { engineState } from './engineState'
 
 /**
@@ -35,12 +36,16 @@ export function attachDelegation(
     if (e.key === 'Escape') {
       e.preventDefault()
       handlers.close()
-    } else if (e.key === 'ArrowRight') {
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
       e.preventDefault()
-      handlers.next()
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault()
-      handlers.prev()
+      // Navigation follows reading order, matching our mirrored arrow
+      // controls. The fork's zoomed-slide pan path remains physical.
+      const forward = e.key === 'ArrowRight'
+      if (isRTLDocument() ? !forward : forward) {
+        handlers.next()
+      } else {
+        handlers.prev()
+      }
     }
   }
 

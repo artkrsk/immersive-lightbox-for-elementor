@@ -1,13 +1,31 @@
 // @vitest-environment happy-dom
 
 import { attachDelegation } from '@ts/core/attachDelegation'
-import { describe, expect, it, vi } from 'vitest'
+import { engineState } from '@ts/core/engineState'
+import type PhotoSwipe from '@ts/photoswipe/photoswipe'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 function handlers() {
   return { open: vi.fn(), close: vi.fn(), next: vi.fn(), prev: vi.fn() }
 }
 
+function activeLightbox(): void {
+  engineState.pswp = {} as PhotoSwipe
+}
+
+function press(key: 'ArrowLeft' | 'ArrowRight'): KeyboardEvent {
+  const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+  document.dispatchEvent(event)
+  return event
+}
+
 describe('attachDelegation', () => {
+  afterEach(() => {
+    engineState.pswp = null
+    document.documentElement.removeAttribute('dir')
+    document.body.innerHTML = ''
+  })
+
   it('stops a claimed click from reaching bubble-phase delegations', () => {
     // Elementor's native lightbox binds a jQuery bubble-phase delegation on
     // document. If a claimed click still reaches it, BOTH lightboxes open —
@@ -78,6 +96,37 @@ describe('attachDelegation', () => {
     expect(h.open).not.toHaveBeenCalled()
     expect(bubble).toHaveBeenCalledTimes(1)
     document.removeEventListener('click', bubble)
+    detach()
+  })
+
+  it('uses ArrowRight for next and ArrowLeft for previous in LTR', () => {
+    const h = handlers()
+    activeLightbox()
+    const detach = attachDelegation(h)
+
+    const right = press('ArrowRight')
+    const left = press('ArrowLeft')
+
+    expect(h.next).toHaveBeenCalledTimes(1)
+    expect(h.prev).toHaveBeenCalledTimes(1)
+    expect(right.defaultPrevented).toBe(true)
+    expect(left.defaultPrevented).toBe(true)
+    detach()
+  })
+
+  it('uses ArrowLeft for next and ArrowRight for previous in RTL', () => {
+    document.documentElement.setAttribute('dir', 'rtl')
+    const h = handlers()
+    activeLightbox()
+    const detach = attachDelegation(h)
+
+    const left = press('ArrowLeft')
+    const right = press('ArrowRight')
+
+    expect(h.next).toHaveBeenCalledTimes(1)
+    expect(h.prev).toHaveBeenCalledTimes(1)
+    expect(left.defaultPrevented).toBe(true)
+    expect(right.defaultPrevented).toBe(true)
     detach()
   })
 })
