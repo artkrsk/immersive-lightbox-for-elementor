@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { extractSlideData } from '@ts/collector/extractSlideData'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 function anchor(html: string): HTMLElement {
   document.body.innerHTML = html
@@ -10,6 +10,19 @@ function anchor(html: string): HTMLElement {
     throw new Error('fixture has no anchor')
   }
   return el
+}
+
+function decodedVideo(el: HTMLElement): HTMLVideoElement {
+  const video = el.querySelector('video')
+  if (!video) {
+    throw new Error('fixture has no video')
+  }
+  Object.defineProperties(video, {
+    readyState: { value: 4 },
+    videoWidth: { value: 1280 },
+    videoHeight: { value: 720 }
+  })
+  return video
 }
 
 describe('extractSlideData', () => {
@@ -51,6 +64,42 @@ describe('extractSlideData', () => {
         <video src="https://example.com/clip.mp4" width="1920" height="1080" muted></video>
       </a>
     `)
+    expect(extractSlideData(el).msrc).toBeUndefined()
+  })
+
+  it('uses a decoded poster-less video frame as its thumbnail', () => {
+    const el = anchor(`
+      <a href="https://example.com/clip.mp4" data-arts-lightbox>
+        <video src="https://example.com/clip.mp4" width="1920" height="1080" muted></video>
+      </a>
+    `)
+    const video = decodedVideo(el)
+    const drawImage = vi.fn()
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage
+    } as unknown as CanvasRenderingContext2D)
+    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue(
+      'data:image/jpeg;base64,frame'
+    )
+
+    expect(extractSlideData(el).msrc).toBe('data:image/jpeg;base64,frame')
+    expect(drawImage).toHaveBeenCalledWith(video, 0, 0, 320, 180)
+  })
+
+  it('keeps the play glyph path when canvas capture is blocked', () => {
+    const el = anchor(`
+      <a href="https://example.com/clip.mp4" data-arts-lightbox>
+        <video src="https://example.com/clip.mp4" width="1920" height="1080" muted></video>
+      </a>
+    `)
+    decodedVideo(el)
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage: vi.fn()
+    } as unknown as CanvasRenderingContext2D)
+    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockImplementation(() => {
+      throw new DOMException('Tainted canvas')
+    })
+
     expect(extractSlideData(el).msrc).toBeUndefined()
   })
 

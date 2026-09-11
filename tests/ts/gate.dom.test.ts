@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import type { ElementorFrontend } from '@artemsemkin/elementor-types'
+import { PRELOAD_TIMEOUT_MS } from '@ts/constants/preload'
 import type { IGateGlobal, ILightbox } from '@ts/interfaces'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -46,6 +47,12 @@ beforeEach(() => {
   Reflect.deleteProperty(window, 'artsCursor')
   Reflect.deleteProperty(window, 'elementorFrontend')
   window.artsImmersiveLightboxBoot = { ...BOOT }
+  // Keep the default test path from leaving a two-second fallback timer
+  // behind when a fixture has a candidate before the gate evaluates.
+  vi.stubGlobal(
+    'requestIdleCallback',
+    vi.fn(() => 1)
+  )
 })
 
 afterEach(async () => {
@@ -55,6 +62,8 @@ afterEach(async () => {
   ;(window.artsLightbox as IGateGlobal | undefined)?.__resolveReady?.(makeLightbox())
   await Promise.resolve()
   await Promise.resolve()
+  vi.useRealTimers()
+  vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
 
@@ -233,6 +242,58 @@ describe('gate', () => {
     a.dispatchEvent(new Event('pointerover', { bubbles: true }))
     expect(document.getElementById('immersive-lightbox-for-elementor-css')).not.toBeNull()
     expect(document.getElementById('immersive-lightbox-for-elementor-js')).toBeNull()
+  })
+
+  it('warms a candidate page once through idle time', async () => {
+    let queued: IdleRequestCallback | undefined
+    const idle = vi.fn((callback: IdleRequestCallback) => {
+      queued = callback
+      return 1
+    })
+    vi.stubGlobal('requestIdleCallback', idle)
+    addCandidate()
+
+    await importGate()
+
+    expect(idle).toHaveBeenCalledWith(expect.any(Function), { timeout: PRELOAD_TIMEOUT_MS })
+    expect(document.getElementById('immersive-lightbox-for-elementor-css')).toBeNull()
+
+    queued?.({ didTimeout: false, timeRemaining: () => 50 })
+    expect(document.getElementById('immersive-lightbox-for-elementor-css')).not.toBeNull()
+
+    window.artsLightbox?.refresh()
+    expect(idle).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not schedule an idle warm when the page has no candidates', async () => {
+    const idle = vi.fn(() => 1)
+    vi.stubGlobal('requestIdleCallback', idle)
+
+    await importGate()
+
+    expect(idle).not.toHaveBeenCalled()
+  })
+
+  it('falls back to the preload timeout when idle callbacks are unavailable', async () => {
+    vi.stubGlobal('requestIdleCallback', undefined)
+    let queued: (() => void) | undefined
+    const timeout = vi.fn((callback: TimerHandler, _delay?: number) => {
+      if (typeof callback !== 'function') {
+        throw new Error('The preload fallback must schedule a callback')
+      }
+      queued = () => callback()
+      return 1
+    })
+    vi.stubGlobal('setTimeout', timeout)
+    addCandidate()
+
+    await importGate()
+
+    expect(timeout).toHaveBeenCalledWith(expect.any(Function), PRELOAD_TIMEOUT_MS)
+    expect(document.getElementById('immersive-lightbox-for-elementor-css')).toBeNull()
+
+    queued?.()
+    expect(document.getElementById('immersive-lightbox-for-elementor-css')).not.toBeNull()
   })
 
   it('releases a held click to native navigation when the engine fails to load', async () => {
