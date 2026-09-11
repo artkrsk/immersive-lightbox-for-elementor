@@ -13,8 +13,11 @@ import { matchCandidateElement } from './matchCandidateElement'
  * (`findCandidates`) — off wins over everything, marks included. Re-running
  * drops stale marks first, so AJAX-swapped DOM converges. Ends by nudging a
  * present cursor follower to re-resolve a hover held across the re-scan.
+ *
+ * Returns how many candidates the page holds — the gate warms the engine off
+ * this count rather than paying for a scan of its own.
  */
-export function markCandidates(nativeFallback: boolean): void {
+export function markCandidates(nativeFallback: boolean): number {
   const selector = nativeFallback ? `${CANDIDATE_SELECTOR}, a[href]` : CANDIDATE_SELECTOR
   const matched = new Set<Element>()
   for (const el of document.querySelectorAll(selector)) {
@@ -32,4 +35,6 @@ export function markCandidates(nativeFallback: boolean): void {
   }
   // Optional CALL: refresh() may be absent on an older follower build.
   window.artsCursor?.get()?.refresh?.()
+
+  return matched.size
 }

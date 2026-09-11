@@ -15,6 +15,7 @@ import { matchCandidateElement } from './collector/matchCandidateElement'
 import { pointerTravel } from './collector/pointerTravel'
 import { GATE_CSS_ID, GATE_JS_ID } from './constants/assetIds'
 import { HTML_ACTIVE, HTML_INACTIVE } from './constants/htmlClasses'
+import { PRELOAD_TIMEOUT_MS } from './constants/preload'
 import type { IGateGlobal, ILightbox } from './interfaces'
 
 // Idempotence: a second print (double-wp_head themes) or a replayed inline
@@ -33,7 +34,11 @@ if (!window.artsLightbox) {
     refresh: () => {
       const b = window.artsImmersiveLightboxBoot
       if (b?.enabled) {
-        markCandidates(b.nativeFallback === true)
+        // The scan the marks already need doubles as the warm's trigger: a
+        // page holding no candidate never pays for the engine.
+        if (markCandidates(b.nativeFallback === true) > 0) {
+          gate.preload?.()
+        }
       }
     },
     __resolveReady: (lightbox) => resolveReady(lightbox)
@@ -47,19 +52,6 @@ if (!window.artsLightbox) {
   html.classList.toggle(HTML_INACTIVE, !enabled)
 
   if (enabled && boot) {
-    // The gate prints in wp_head, before the body exists — the candidate
-    // scan waits for the DOM it marks. PERSISTENT, not once: Arts AJAX
-    // themes re-dispatch DOMContentLoaded after every page transition (the
-    // family's documented third-party hook, fired once the swapped
-    // container and any header/footer partials are in the document), so the
-    // same line re-marks each new page. Through the live global, so the
-    // engine-era implementation takes over once boot replaces the object.
-    // Inert on a plain site — nothing re-emits the event there.
-    document.addEventListener('DOMContentLoaded', () => window.artsLightbox?.refresh())
-    if (document.readyState !== 'loading') {
-      gate.refresh()
-    }
-
     // Elementor rebuilds the DOM it renders — the editor canvas replaces every
     // widget with AJAX-rendered markup on open and on every change, and on the
     // front end popups, load-more and Loop Grid inject theirs — which carries
@@ -130,6 +122,41 @@ if (!window.artsLightbox) {
       }
       link.onerror = fail
       document.head.appendChild(link)
+    }
+
+    // Speculative, so it yields: applying the stylesheet recalcs the whole
+    // document and the engine costs a parse, and neither should land while
+    // the visitor is doing something. A click or hover wants `load()` itself
+    // — there a held click is already waiting. The timeout is the floor: an
+    // idle window that never comes must not strand the warm forever.
+    let preloadScheduled = false
+    gate.preload = () => {
+      if (preloadScheduled) {
+        return
+      }
+      preloadScheduled = true
+      const idle = window.requestIdleCallback
+      if (idle) {
+        idle(() => load(), { timeout: PRELOAD_TIMEOUT_MS })
+      } else {
+        setTimeout(load, PRELOAD_TIMEOUT_MS)
+      }
+    }
+
+    // The gate prints in wp_head, before the body exists — the candidate
+    // scan waits for the DOM it marks. PERSISTENT, not once: Arts AJAX
+    // themes re-dispatch DOMContentLoaded after every page transition (the
+    // family's documented third-party hook, fired once the swapped
+    // container and any header/footer partials are in the document), so the
+    // same line re-marks each new page. Through the live global, so the
+    // engine-era implementation takes over once boot replaces the object.
+    // Inert on a plain site — nothing re-emits the event there.
+    //
+    // Below `preload` on purpose: a replayed gate parses after DOM-ready and
+    // scans on the spot, and that scan schedules the warm.
+    document.addEventListener('DOMContentLoaded', () => window.artsLightbox?.refresh())
+    if (document.readyState !== 'loading') {
+      gate.refresh()
     }
 
     const opts = { capture: true }
