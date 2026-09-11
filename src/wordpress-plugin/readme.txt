@@ -4,7 +4,7 @@ Tags: lightbox, elementor, gallery, photoswipe, video lightbox
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0
 GitHub Plugin URI: https://github.com/artkrsk/immersive-lightbox-for-elementor/
