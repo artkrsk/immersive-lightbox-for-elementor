@@ -118,14 +118,18 @@ registers nothing with the engine:
 
 | Event | Fires when | Detail |
 | --- | --- | --- |
-| `arts-lightbox:open` | root in the DOM, chrome mounted, clock at 0 | `{ root, index, total, caption, description, type }` |
-| `arts-lightbox:change` | the destination changed — at commit, before the slide lands | same shape, plus `{ previousIndex, direction }` |
+| `arts-lightbox:open` | root in the DOM, chrome mounted, clock at 0 | `{ root, sourceElement, index, total, caption, description, type }` |
+| `arts-lightbox:change` | the destination changed — at commit, before the slide lands | `{ root, index, total, caption, description, type, previousIndex, direction }` |
 | `arts-lightbox:destroy` | core being torn down — release your instances | `{ root }` |
 
-Detail is primitives plus the root element: `index`/`total` are numbers,
+Detail is primitives plus DOM elements: `index`/`total` are numbers,
 `caption` and `description` are strings (empty when the slide has none), `type` is
 `'image' | 'video' | 'html'`. No engine objects cross this wire.
 
+- `sourceElement` is the exact opening element, including a clicked clone or
+  caption link when several elements share a URL. Present on `open` only;
+  older versions omit it. Match it to identify an owning widget, then match
+  `root` on the eventual `destroy`.
 - The init-time slide change is silent — `open` already carries the index.
 - `change` fires when a navigation is committed (arrow, key, drag release,
   thumbnail), not when the strip comes to rest — the same moment the stock

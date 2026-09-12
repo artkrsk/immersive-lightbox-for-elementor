@@ -39,7 +39,7 @@ export function createOpener(deps: {
     makePswp(opts, req, (pswp) => {
       // Before the transition wiring, so open reaches themes with the root in
       // the DOM and the chrome mounted but the clock still at 0.
-      attachLightboxEvents(pswp, req.gallery)
+      attachLightboxEvents(pswp, req.gallery, req.sourceElement)
       engineState.closeHandle = attachOpenTransition(pswp, opts, req)
       attachInteractions(pswp, opts, point)
       registerContent(pswp, opts, req.index)

@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { EVENT_OPEN } from '@ts/constants/eventNames'
 import { createOpener } from '@ts/core/createOpener'
 import { engineState } from '@ts/core/engineState'
 import { mergeOptions } from '@ts/core/mergeOptions'
@@ -92,10 +93,17 @@ describe('createOpener', () => {
       close: vi.fn()
     })
 
-    expect(real.open(candidate())).toBe(true)
+    // Deduplicated URL, but the exact opening instance must survive into the event.
+    candidate()
+    const sourceElement = candidate()
+    const onOpen = vi.fn()
+    document.addEventListener(EVENT_OPEN, onOpen, { once: true })
+    expect(real.open(sourceElement)).toBe(true)
     expect(engineState.pswp).not.toBeNull()
     expect(engineState.pswp?.isOpen).toBe(true)
     expect(engineState.closeHandle).not.toBeNull()
+    expect(onOpen).toHaveBeenCalledTimes(1)
+    expect(onOpen.mock.calls[0]?.[0].detail.sourceElement).toBe(sourceElement)
   })
 
   it('refuses a second open while a core is already live', () => {

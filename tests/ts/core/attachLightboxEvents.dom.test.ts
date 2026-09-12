@@ -33,12 +33,12 @@ function collect(name: string): CustomEvent[] {
   return seen
 }
 
-function attached(rootId = '') {
+function attached(rootId = '', sourceElement = document.createElement('a')) {
   const pswp = fakePswp()
   const root = document.createElement('div')
   root.id = rootId
   pswp.element = root
-  attachLightboxEvents(pswp as unknown as PhotoSwipe, fakeGallery())
+  attachLightboxEvents(pswp as unknown as PhotoSwipe, fakeGallery(), sourceElement)
   return pswp
 }
 
@@ -51,21 +51,24 @@ afterEach(() => {
 })
 
 describe('attachLightboxEvents', () => {
-  it('emits open on afterInit with the full primitive detail', () => {
+  it('emits open on afterInit with the source element and slide detail', () => {
     const seen = collect(EVENT_OPEN)
-    const pswp = attached()
+    const sourceElement = document.createElement('a')
+    const pswp = attached('', sourceElement)
 
     pswp.emit('afterInit', {})
 
     expect(seen).toHaveLength(1)
     expect(seen[0]?.detail).toEqual({
       root: pswp.element,
+      sourceElement,
       index: 0,
       total: 3,
       caption: 'First',
       description: 'Of three',
       type: 'image'
     })
+    expect(seen[0]?.detail.sourceElement).toBe(sourceElement)
   })
 
   it('stays silent for the init-time change — open already carries the index', () => {

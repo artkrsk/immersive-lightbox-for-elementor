@@ -23,7 +23,11 @@ import type PhotoSwipe from '../photoswipe/photoswipe'
  * every close in this engine leads to destroy (its own close triggers are
  * disabled), and the root is still queryable at that moment.
  */
-export function attachLightboxEvents(pswp: PhotoSwipe, gallery: IGallery): void {
+export function attachLightboxEvents(
+  pswp: PhotoSwipe,
+  gallery: IGallery,
+  sourceElement: HTMLElement
+): void {
   // -1 doubles as "open not yet emitted": nothing goes out before open.
   let lastIndex = -1
 
@@ -44,9 +48,11 @@ export function attachLightboxEvents(pswp: PhotoSwipe, gallery: IGallery): void 
       return
     }
     lastIndex = pswp.currIndex
-    document.dispatchEvent(
-      new CustomEvent(EVENT_OPEN, { detail: detail(pswp.element, pswp.currIndex) })
-    )
+    const openDetail: ILightboxEventDetail = {
+      ...detail(pswp.element, pswp.currIndex),
+      sourceElement
+    }
+    document.dispatchEvent(new CustomEvent(EVENT_OPEN, { detail: openDetail }))
   })
 
   pswp.on('potentialIndexChange', (e) => {
