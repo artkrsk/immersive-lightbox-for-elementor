@@ -13,9 +13,18 @@ interface IArtsLightboxGlobal {
   /** Resolves once the engine initializes. */
   ready: Promise<ILightbox>
   get(): ILightbox | null
+  observeRoots(listener: (roots: readonly ILightboxRoot[]) => void,
+    options?: { signal?: AbortSignal }): () => void
   version: string
   /** Re-scan for candidate links and re-stamp `arts-lightbox-link`. */
   refresh(): void
+}
+
+interface ILightboxRoot {
+  readonly root: HTMLElement
+  readonly sourceElement: HTMLElement
+  readonly index: number
+  readonly total: number
 }
 
 interface ILightbox {
@@ -29,8 +38,29 @@ interface ILightbox {
 }
 ```
 
-`document` also receives a bubbling `arts-lightbox:ready` CustomEvent
+`document` also receives an `arts-lightbox:ready` CustomEvent
 (detail = the instance) once the engine is live.
+
+`observeRoots()` synchronously replays an immutable snapshot, including `[]`,
+without loading the engine. The namespace and its subscribers survive the
+separately bundled gate/boot handoff and engine replacement. `ready` remains a
+first-initialization promise; it is not a lifecycle subscription.
+
+Root snapshots are added before `arts-lightbox:open`, updated at committed
+navigation before `:change`, and removed by matching root before `:destroy`.
+Normal closing animation stays active for its existing duration. Direct
+destruction withdraws the root before deferred physical removal; do not infer
+active state from `.pswp--open`. `sourceElement` always retains the exact original
+opener, including a clone or caption link, across slide changes and closing.
+
+An owner's `AbortSignal` or the returned unsubscribe function ends observation.
+Already-aborted signals receive no replay; abort/unsubscribe is idempotent and
+safe during callbacks. Subscriber exceptions do not interrupt the provider.
+Use a local root-keyed map to reconcile custom chrome and dispose resources on
+removal or owner teardown. Observe the owning document's namespace, never the
+editor's parent window. If the namespace is absent, listen for the existing
+`:ready` event first, inspect immediately, then remove that discovery listener
+once subscribed. No root DOM scan, polling, or legacy event fallback is needed.
 
 `refresh()` re-scans for candidate links: every one in the current DOM
 carries the marker class again afterward (and a present cursor follower is

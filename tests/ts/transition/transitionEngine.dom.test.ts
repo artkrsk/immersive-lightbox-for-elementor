@@ -22,10 +22,11 @@ beforeEach(() => {
  */
 function engine(o: { flyable?: boolean } = {}) {
   const built = transitionContext()
-  const handlers = new Map<string, () => void>()
+  const handlers = new Map<string, Array<() => void>>()
   const pswp = {
     ...(built.ctx.pswp as unknown as Record<string, unknown>),
-    on: (name: string, fn: () => void) => handlers.set(name, fn)
+    isDestroying: false,
+    on: (name: string, fn: () => void) => handlers.set(name, [...(handlers.get(name) ?? []), fn])
   }
   if (o.flyable) {
     const img = document.createElement('img')
@@ -40,7 +41,10 @@ function engine(o: { flyable?: boolean } = {}) {
   )
   return {
     handle,
-    fire: (name: string) => handlers.get(name)?.(),
+    fire: (name: string) => {
+      for (const handler of handlers.get(name) ?? []) handler()
+    },
+    pswp,
     root: built.root
   }
 }
@@ -60,6 +64,23 @@ function settleClose(): void {
 }
 
 describe('attachOpenTransition', () => {
+  it('does not open after a root observer destroys, and queued close waits for actual destruction', async () => {
+    const { handle, fire, root, pswp } = engine()
+    fire('firstUpdate')
+    const done = handle.close()
+    let settled = false
+    void done.then(() => {
+      settled = true
+    })
+    pswp.isDestroying = true
+    fire('afterInit')
+    await Promise.resolve()
+    expect(settled).toBe(false)
+    expect(frames.pending()).toBe(0)
+    expect(root.classList.contains(CLOSING_CLASS)).toBe(false)
+    fire('destroy')
+    await expect(done).resolves.toBeUndefined()
+  })
   it('reports transitioning from the moment it is attached', () => {
     const { handle } = engine()
 

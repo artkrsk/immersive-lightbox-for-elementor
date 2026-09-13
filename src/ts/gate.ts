@@ -16,34 +16,25 @@ import { pointerTravel } from './collector/pointerTravel'
 import { GATE_CSS_ID, GATE_JS_ID } from './constants/assetIds'
 import { HTML_ACTIVE, HTML_INACTIVE } from './constants/htmlClasses'
 import { PRELOAD_TIMEOUT_MS } from './constants/preload'
-import type { IGateGlobal, ILightbox } from './interfaces'
+import { getLightboxGlobal } from './core/lightboxGlobal'
 
 // Idempotence: a second print (double-wp_head themes) or a replayed inline
 // script (AJAX-transition eval paths) must not clobber the live global.
 if (!window.artsLightbox) {
-  let resolveReady: (lightbox: ILightbox) => void
-  const ready = new Promise<ILightbox>((resolve) => {
-    resolveReady = resolve
-  })
-  const gate: IGateGlobal = {
-    ready,
-    get: () => null,
-    version: __ARTS_IMMERSIVE_LIGHTBOX_VERSION__,
-    // Boot read lazily: the global is built before the boot payload is, and
-    // the same closure serves every later call. Disabled stays a safe no-op.
-    refresh: () => {
-      const b = window.artsImmersiveLightboxBoot
-      if (b?.enabled) {
-        // The scan the marks already need doubles as the warm's trigger: a
-        // page holding no candidate never pays for the engine.
-        if (markCandidates(b.nativeFallback === true) > 0) {
-          gate.preload?.()
-        }
+  const gate = getLightboxGlobal(window)
+  const ready = gate.ready
+  // Boot read lazily: the global is built before the boot payload is, and
+  // the same closure serves every later call. Disabled stays a safe no-op.
+  gate.refresh = () => {
+    const b = window.artsImmersiveLightboxBoot
+    if (b?.enabled) {
+      // The scan the marks already need doubles as the warm's trigger: a
+      // page holding no candidate never pays for the engine.
+      if (markCandidates(b.nativeFallback === true) > 0) {
+        gate.preload?.()
       }
-    },
-    __resolveReady: (lightbox) => resolveReady(lightbox)
+    }
   }
-  window.artsLightbox = gate
 
   const html = document.documentElement
   const boot = window.artsImmersiveLightboxBoot

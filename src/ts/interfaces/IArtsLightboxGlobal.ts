@@ -1,4 +1,6 @@
+import type { TLightboxRootsObserver } from '../types/TLightboxRootsObserver'
 import type { ILightbox } from './ILightbox'
+import type { ILightboxObserveOptions } from './ILightboxObserveOptions'
 
 /**
  * The discovery global (`window.artsLightbox`): exists from parse time with
@@ -7,6 +9,8 @@ import type { ILightbox } from './ILightbox'
 export interface IArtsLightboxGlobal {
   ready: Promise<ILightbox>
   get(): ILightbox | null
+  /** Synchronously replays the current roots, including [], without loading assets. */
+  observeRoots(listener: TLightboxRootsObserver, options?: ILightboxObserveOptions): () => void
   version: string
   /**
    * Re-scan the page for candidate links and re-stamp the marker class —

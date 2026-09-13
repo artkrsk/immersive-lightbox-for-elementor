@@ -165,6 +165,8 @@ class MainScroll {
     // read backwards. Silent for the zero-diff snap-back.
     if (diff) {
       pswp.dispatch('potentialIndexChange', { direction: diff > 0 ? 1 : -1 })
+      // @arts fork: a lifecycle observer may synchronously destroy at commit.
+      if (pswp.isDestroying) return false
     }
 
     pswp.animations.stopMainScroll()

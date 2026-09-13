@@ -59,7 +59,7 @@ afterEach(async () => {
   // Each import() eval arms its own document listeners; the gate's designed
   // teardown is `ready.then(disarm)` — resolve it so evals never leak into
   // the next test. Double-resolves are no-ops.
-  ;(window.artsLightbox as IGateGlobal | undefined)?.__resolveReady?.(makeLightbox())
+  ;(window.artsLightbox as IGateGlobal | undefined)?.__setInstance(makeLightbox())
   await Promise.resolve()
   await Promise.resolve()
   vi.useRealTimers()
@@ -202,9 +202,7 @@ describe('gate', () => {
     expect(script?.getAttribute('src')).toBe(BOOT.js)
 
     const lightbox = makeLightbox()
-    ;(window.artsLightbox as unknown as { __resolveReady(l: ILightbox): void }).__resolveReady(
-      lightbox
-    )
+    ;(window.artsLightbox as IGateGlobal).__setInstance(lightbox)
     await Promise.resolve()
     await Promise.resolve()
     // the held click's viewport point rides along to seed the initial pan

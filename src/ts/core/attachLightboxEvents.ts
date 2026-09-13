@@ -1,5 +1,10 @@
 import { EVENT_CHANGE, EVENT_DESTROY, EVENT_OPEN } from '../constants/eventNames'
-import type { IGallery, ILightboxChangeDetail, ILightboxEventDetail } from '../interfaces'
+import type {
+  IGallery,
+  ILightboxChangeDetail,
+  ILightboxEventDetail,
+  ILightboxRootPublisher
+} from '../interfaces'
 import type PhotoSwipe from '../photoswipe/photoswipe'
 
 /**
@@ -26,10 +31,12 @@ import type PhotoSwipe from '../photoswipe/photoswipe'
 export function attachLightboxEvents(
   pswp: PhotoSwipe,
   gallery: IGallery,
-  sourceElement: HTMLElement
+  sourceElement: HTMLElement,
+  publisher?: ILightboxRootPublisher
 ): void {
   // -1 doubles as "open not yet emitted": nothing goes out before open.
   let lastIndex = -1
+  let revision = 0
 
   const detail = (root: HTMLElement, index: number): ILightboxEventDetail => {
     const slide = gallery.slides[index]
@@ -48,10 +55,18 @@ export function attachLightboxEvents(
       return
     }
     lastIndex = pswp.currIndex
+    const publication = ++revision
     const openDetail: ILightboxEventDetail = {
       ...detail(pswp.element, pswp.currIndex),
       sourceElement
     }
+    publisher?.set({
+      root: pswp.element,
+      sourceElement,
+      index: lastIndex,
+      total: gallery.slides.length
+    })
+    if (publication !== revision) return // Reentrant close/navigation invalidated the announcement.
     document.dispatchEvent(new CustomEvent(EVENT_OPEN, { detail: openDetail }))
   })
 
@@ -66,6 +81,9 @@ export function attachLightboxEvents(
       direction: e.direction
     }
     lastIndex = index
+    const publication = ++revision
+    publisher?.set({ root: pswp.element, sourceElement, index, total: gallery.slides.length })
+    if (publication !== revision) return
     document.dispatchEvent(new CustomEvent(EVENT_CHANGE, { detail: changeDetail }))
   })
 
@@ -76,6 +94,8 @@ export function attachLightboxEvents(
     // Back to "not announced": the trailing pswp `destroy` (and any repeated
     // close call) has nothing left to say for this core.
     lastIndex = -1
+    ++revision
+    publisher?.delete(pswp.element)
     document.dispatchEvent(new CustomEvent(EVENT_DESTROY, { detail: { root: pswp.element } }))
   })
 }

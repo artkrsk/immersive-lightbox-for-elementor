@@ -28,12 +28,24 @@ export function attachOpenTransition(
   })
 
   const ctx = createTransitionContext(pswp, opts, req)
+  let resolveDestroyed: () => void
+  const destroyed = new Promise<void>((resolve) => {
+    resolveDestroyed = resolve
+  })
+  pswp.on('destroy', () => {
+    openSettled()
+    resolveDestroyed()
+  })
 
   pswp.on('firstUpdate', () => {
     mountChrome(ctx)
   })
 
   pswp.on('afterInit', () => {
+    if (pswp.isDestroying) {
+      openSettled()
+      return
+    }
     runOpenChoreography(ctx, () => {
       transitioning = false
       openSettled()
@@ -43,8 +55,9 @@ export function attachOpenTransition(
   // Repeated calls join the close already running — a consumer awaiting the
   // second one still learns when the lightbox is actually gone.
   const close = (): Promise<void> => {
+    if (pswp.isDestroying) return destroyed
     closePromise ??= transitioning
-      ? opened.then(() => runCloseChoreography(ctx))
+      ? opened.then(() => (pswp.isDestroying ? destroyed : runCloseChoreography(ctx)))
       : // Started synchronously when there is nothing to wait for, so the
         // close button and Esc keep the timing they always had.
         runCloseChoreography(ctx)

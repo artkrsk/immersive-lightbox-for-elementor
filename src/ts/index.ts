@@ -8,6 +8,8 @@ export type {
   ILightbox,
   ILightboxChangeDetail,
   ILightboxEventDetail,
+  ILightboxObserveOptions,
+  ILightboxRoot,
   IOptions
 } from './interfaces'
-export type { TDeepPartial } from './types'
+export type { TDeepPartial, TLightboxRootsObserver } from './types'

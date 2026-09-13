@@ -12,6 +12,24 @@ afterEach(() => {
 })
 
 describe('createLightbox', () => {
+  it('a retired instance cannot destroy a newer instance core from the same module', () => {
+    const first = createLightbox()
+    first.init()
+    first.destroy()
+    const next = createLightbox()
+    next.init()
+    const destroy = vi.fn()
+    engineState.pswp = { destroy } as unknown as PhotoSwipe
+    first.destroy()
+    expect(destroy).not.toHaveBeenCalled()
+    next.destroy()
+    expect(destroy).toHaveBeenCalledOnce()
+  })
+  it('standalone construction does not install an optional plugin global', () => {
+    delete window.artsLightbox
+    createLightbox()
+    expect(window.artsLightbox).toBeUndefined()
+  })
   it('returns a lightbox instance with the public surface', () => {
     const lightbox = createLightbox()
     expect(typeof lightbox.init).toBe('function')

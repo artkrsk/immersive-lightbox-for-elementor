@@ -2,7 +2,7 @@ import { buildGalleries } from '../collector/buildGalleries'
 import { resolveOpenRequest } from '../collector/resolveOpenRequest'
 import { registerContent } from '../content/registerContent'
 import { lockPageScroll } from '../interaction/scrollLock'
-import type { ILightboxApi, IOpenRequest, IOptions } from '../interfaces'
+import type { ILightboxApi, ILightboxRootPublisher, IOpenRequest, IOptions } from '../interfaces'
 import { attachOpenTransition } from '../transition/transitionEngine'
 import { registerUi } from '../ui/registerUi'
 import { measureAdminBarOffset } from '../utils/measureAdminBarOffset'
@@ -18,6 +18,7 @@ import { createPswp } from './pswpFactory'
  */
 export function createOpener(deps: {
   opts: IOptions
+  publisher?: ILightboxRootPublisher | undefined
   /** The navigation surface handed on to the UI layer. */
   api: ILightboxApi
   /** Routed through the engine api so the close choreography applies. */
@@ -39,7 +40,7 @@ export function createOpener(deps: {
     makePswp(opts, req, (pswp) => {
       // Before the transition wiring, so open reaches themes with the root in
       // the DOM and the chrome mounted but the clock still at 0.
-      attachLightboxEvents(pswp, req.gallery, req.sourceElement)
+      attachLightboxEvents(pswp, req.gallery, req.sourceElement, deps.publisher)
       engineState.closeHandle = attachOpenTransition(pswp, opts, req)
       attachInteractions(pswp, opts, point)
       registerContent(pswp, opts, req.index)

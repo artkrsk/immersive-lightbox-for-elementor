@@ -2,9 +2,10 @@
 
 import { EVENT_CHANGE, EVENT_DESTROY, EVENT_OPEN } from '@ts/constants/eventNames'
 import { attachLightboxEvents } from '@ts/core/attachLightboxEvents'
+import { getLightboxGlobal } from '@ts/core/lightboxGlobal'
 import type { IGallery } from '@ts/interfaces'
 import type PhotoSwipe from '@ts/photoswipe/photoswipe'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fakePswp } from '../helpers/fakePswp'
 
 function fakeGallery(): IGallery {
@@ -48,9 +49,71 @@ beforeEach(() => {
 
 afterEach(() => {
   abort.abort()
+  delete window.artsLightbox
 })
 
 describe('attachLightboxEvents', () => {
+  it('publishes before DOM events, keeps the opener and withdraws while the root is attached', () => {
+    const hub = getLightboxGlobal(window)
+    const pswp = fakePswp()
+    const root = document.createElement('div')
+    document.body.append(root)
+    pswp.element = root
+    const sourceElement = document.createElement('span')
+    const seen = vi.fn()
+    hub.observeRoots(seen)
+    attachLightboxEvents(pswp as unknown as PhotoSwipe, fakeGallery(), sourceElement, hub.__roots)
+    document.addEventListener(
+      EVENT_OPEN,
+      () => expect(seen.mock.lastCall?.[0]).toEqual([{ root, sourceElement, index: 0, total: 3 }]),
+      { signal: abort.signal }
+    )
+    document.addEventListener(
+      EVENT_CHANGE,
+      () => expect(seen.mock.lastCall?.[0][0].index).toBe(2),
+      {
+        signal: abort.signal
+      }
+    )
+    document.addEventListener(
+      EVENT_DESTROY,
+      () => {
+        expect(seen.mock.lastCall?.[0]).toEqual([])
+        expect(root.isConnected).toBe(true)
+      },
+      { signal: abort.signal }
+    )
+    pswp.emit('afterInit', {})
+    pswp.potentialIndex = 2
+    pswp.emit('potentialIndexChange', { direction: 1 })
+    expect(seen.mock.lastCall?.[0][0].sourceElement).toBe(sourceElement)
+    pswp.emit('close', {})
+    pswp.emit('close', {})
+    expect(seen).toHaveBeenCalledTimes(4)
+    root.remove()
+  })
+
+  it('does not announce an open invalidated by an observer closing synchronously', () => {
+    const hub = getLightboxGlobal(window)
+    const pswp = fakePswp()
+    pswp.element = document.createElement('div')
+    attachLightboxEvents(
+      pswp as unknown as PhotoSwipe,
+      fakeGallery(),
+      document.createElement('a'),
+      hub.__roots
+    )
+    hub.observeRoots((roots) => {
+      if (roots.length) pswp.emit('close', {})
+    })
+    const opened = collect(EVENT_OPEN)
+    const seen = vi.fn()
+    hub.observeRoots(seen)
+    pswp.emit('afterInit', {})
+    expect(opened).toHaveLength(0)
+    expect(seen.mock.lastCall?.[0]).toEqual([])
+  })
+
   it('emits open on afterInit with the source element and slide detail', () => {
     const seen = collect(EVENT_OPEN)
     const sourceElement = document.createElement('a')

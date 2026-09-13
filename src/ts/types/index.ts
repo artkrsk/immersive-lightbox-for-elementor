@@ -3,6 +3,7 @@
 // (interfaces/*.ts) per the direct-import convention.
 export type { TDeepPartial } from './TDeepPartial'
 export type { TEasingName } from './TEasingName'
+export type { TLightboxRootsObserver } from './TLightboxRootsObserver'
 export type { TSlideType } from './TSlideType'
 export type { TVideoEmbed } from './TVideoEmbed'
 export type { TVideoSource } from './TVideoSource'

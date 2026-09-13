@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 
-import type { IGateGlobal, ILightbox } from '@ts/interfaces'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { getLightboxGlobal } from '@ts/core/lightboxGlobal'
+import type { IGateGlobal } from '@ts/interfaces'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 async function importBoot(): Promise<void> {
   vi.resetModules()
@@ -16,31 +17,26 @@ beforeEach(() => {
 })
 
 describe('boot', () => {
-  it('claims the gate resolver so pre-held ready promises resolve', async () => {
-    let resolved: ILightbox | null = null
-    let resolveReady!: (l: ILightbox) => void
-    const ready = new Promise<ILightbox>((resolve) => {
-      resolveReady = resolve
-    })
-    void ready.then((l) => {
-      resolved = l
-    })
-    const gate: IGateGlobal = {
-      ready,
-      get: () => null,
-      version: 'gate',
-      refresh: () => {},
-      __resolveReady: (l) => resolveReady(l)
-    }
-    window.artsLightbox = gate
+  it('preserves the gate namespace, ready promise and observer registry', async () => {
+    const gate = getLightboxGlobal(window)
+    const ready = gate.ready
+    const seen = vi.fn()
+    gate.observeRoots(seen)
 
     await importBoot()
-    await ready
+    const resolved = await ready
     expect(resolved).not.toBeNull()
     expect(window.artsLightbox?.get()).toBe(resolved)
     expect(window.artsLightbox?.version).toBe('0.0.0-test')
-    // the boot global is the clean consumer shape, not the gate shape
-    expect((window.artsLightbox as Partial<IGateGlobal>).__resolveReady).toBeUndefined()
+    expect(window.artsLightbox).toBe(gate)
+    expect(window.artsLightbox?.ready).toBe(ready)
+    gate.__roots.set({
+      root: document.createElement('div'),
+      sourceElement: document.createElement('a'),
+      index: 2,
+      total: 3
+    })
+    expect(seen).toHaveBeenCalledTimes(2)
   })
 
   it('self-creates the global and announces readiness without a gate', async () => {
@@ -52,4 +48,26 @@ describe('boot', () => {
     expect(window.artsLightbox?.get()).not.toBeNull()
     expect(announced).toHaveBeenCalledTimes(1)
   })
+
+  it('keeps the hub on replacement and ignores an outgoing boot disposer', async () => {
+    await importBoot()
+    const hub = getLightboxGlobal(window)
+    const first = hub.get()
+    const dispose = hub.__disposeBoot
+    if (!dispose) throw new Error('Expected a boot owner')
+    await importBoot()
+    const next = hub.get()
+    expect(next).not.toBe(first)
+    dispose()
+    expect(hub.get()).toBe(next)
+    expect(window.artsLightbox).toBe(hub)
+    next?.destroy()
+    expect(hub.get()).toBeNull()
+    next?.init()
+    expect(hub.get()).toBe(next)
+  })
+})
+
+afterEach(() => {
+  ;(window.artsLightbox as IGateGlobal | undefined)?.__disposeBoot?.()
 })
