@@ -132,7 +132,9 @@ export function transitionContext(o: ITransitionCtxOptions = {}): {
   const openSource: IFlightSource = {
     rect: { x: 10, y: 20, w: 300, h: 200 },
     radius: 4,
+    innerWidthPct: 100,
     innerHeightPct: 100,
+    innerOffsetXPct: 0,
     innerOffsetYPct: 0,
     src: o.sourceSrc === false ? '' : (o.sourceSrc ?? '/thumb-a.jpg')
   }

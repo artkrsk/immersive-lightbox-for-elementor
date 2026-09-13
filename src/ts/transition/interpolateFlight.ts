@@ -22,7 +22,9 @@ export function interpolateFlight(from: IFlightSource, to: IFlightTarget, t: num
     w,
     h: lerp(from.rect.h, to.rect.h, t),
     radius: lerp(from.radius * scale, to.radius, t),
+    innerWidthPct: lerp(from.innerWidthPct, 100, t),
     innerHeightPct: lerp(from.innerHeightPct, 100, t),
+    innerOffsetXPct: lerp(from.innerOffsetXPct, 0, t),
     innerOffsetYPct: lerp(from.innerOffsetYPct, 0, t)
   }
 }

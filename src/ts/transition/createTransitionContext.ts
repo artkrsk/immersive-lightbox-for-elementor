@@ -18,7 +18,9 @@ function captureOpenSource(req: IOpenRequest): IFlightSource {
   return {
     rect: { x: 0, y: 0, w: 0, h: 0 },
     radius: 0,
+    innerWidthPct: 100,
     innerHeightPct: 100,
+    innerOffsetXPct: 0,
     innerOffsetYPct: 0,
     src: ''
   }

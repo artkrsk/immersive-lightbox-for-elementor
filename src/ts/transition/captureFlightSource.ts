@@ -34,17 +34,26 @@ function mediaSrc(img: HTMLImageElement | HTMLVideoElement | null): string {
 function measureInner(
   img: HTMLElement | null,
   frameRect: DOMRect
-): { innerHeightPct: number; innerOffsetYPct: number } {
-  if (img && frameRect.height > 0) {
+): {
+  innerWidthPct: number
+  innerHeightPct: number
+  innerOffsetXPct: number
+  innerOffsetYPct: number
+} {
+  if (img) {
     const imgRect = img.getBoundingClientRect()
-    if (imgRect.height > 0) {
+    const hasWidth = frameRect.width > 0 && imgRect.width > 0
+    const hasHeight = frameRect.height > 0 && imgRect.height > 0
+    if (hasWidth || hasHeight) {
       return {
-        innerHeightPct: (imgRect.height / frameRect.height) * 100,
-        innerOffsetYPct: ((imgRect.top - frameRect.top) / frameRect.height) * 100
+        innerWidthPct: hasWidth ? (imgRect.width / frameRect.width) * 100 : 100,
+        innerHeightPct: hasHeight ? (imgRect.height / frameRect.height) * 100 : 100,
+        innerOffsetXPct: hasWidth ? ((imgRect.left - frameRect.left) / frameRect.width) * 100 : 0,
+        innerOffsetYPct: hasHeight ? ((imgRect.top - frameRect.top) / frameRect.height) * 100 : 0
       }
     }
   }
-  return { innerHeightPct: 100, innerOffsetYPct: 0 }
+  return { innerWidthPct: 100, innerHeightPct: 100, innerOffsetXPct: 0, innerOffsetYPct: 0 }
 }
 
 /**

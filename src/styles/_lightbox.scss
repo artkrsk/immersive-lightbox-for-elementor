@@ -82,7 +82,7 @@
     display: block;
     width: 100%;
     object-fit: cover;
-    will-change: transform, height;
+    will-change: transform, width, height;
   }
 
   // The real slide stays hidden until the flight lands exactly on it.

@@ -27,15 +27,17 @@ describe('captureFlightSource', () => {
     `
     const frame = document.querySelector('a') as HTMLElement
     const img = frame.querySelector('img') as HTMLImageElement
-    // Frame 300×400 at (100, 200); img is 20% taller and shifted up 48px —
-    // a mid-scroll parallax state.
+    // Frame 300×400 at (100, 200); img is 20% larger and shifted left/up —
+    // a two-axis parallax state.
     mockRect(frame, { left: 100, top: 200, width: 300, height: 400 })
-    mockRect(img, { left: 100, top: 152, width: 300, height: 480 })
+    mockRect(img, { left: 70, top: 152, width: 360, height: 480 })
 
     const source = captureFlightSource(frame)
     expect(source.rect).toEqual({ x: 100, y: 200, w: 300, h: 400 })
     expect(source.radius).toBe(18)
+    expect(source.innerWidthPct).toBeCloseTo(120, 6)
     expect(source.innerHeightPct).toBeCloseTo(120, 6)
+    expect(source.innerOffsetXPct).toBeCloseTo(-10, 6)
     expect(source.innerOffsetYPct).toBeCloseTo(-12, 6)
     // currentSrc resolves absolute in real browsers and happy-dom alike
     expect(source.src).toContain('/thumb.jpg')
@@ -57,7 +59,9 @@ describe('captureFlightSource', () => {
 
     const source = captureFlightSource(frame)
     expect(source.rect).toEqual({ x: 10, y: 12, w: 300, h: 200 })
+    expect(source.innerWidthPct).toBe(100)
     expect(source.innerHeightPct).toBe(100)
+    expect(source.innerOffsetXPct).toBeCloseTo(0, 10)
     expect(source.innerOffsetYPct).toBeCloseTo(0, 10)
     expect(source.radius).toBe(6)
   })
@@ -67,7 +71,9 @@ describe('captureFlightSource', () => {
     const frame = document.querySelector('a') as HTMLElement
     mockRect(frame, { left: 0, top: 0, width: 200, height: 100 })
     const source = captureFlightSource(frame)
+    expect(source.innerWidthPct).toBe(100)
     expect(source.innerHeightPct).toBe(100)
+    expect(source.innerOffsetXPct).toBe(0)
     expect(source.innerOffsetYPct).toBe(0)
     expect(source.src).toBe('')
   })
@@ -104,7 +110,9 @@ describe('captureFlightSource', () => {
     // the clip box is the visible card — its rect and radius win
     expect(source.rect).toEqual({ x: 100, y: 200, w: 300, h: 400 })
     expect(source.radius).toBe(16)
+    expect(source.innerWidthPct).toBeCloseTo(100, 6)
     expect(source.innerHeightPct).toBeCloseTo(120, 6)
+    expect(source.innerOffsetXPct).toBeCloseTo(0, 6)
     expect(source.innerOffsetYPct).toBeCloseTo(-10, 6)
   })
 

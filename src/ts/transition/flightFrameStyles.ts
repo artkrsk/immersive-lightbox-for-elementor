@@ -6,7 +6,7 @@ import type { IFlightFrame } from '../interfaces'
  * innerTransform is the counterpart to captureFlightSource's geometric
  * measurement: the inner media is sized as a PERCENTAGE of the frame, so its
  * offset — measured in frame terms — has to be re-expressed against that
- * height, not against the frame. This is what makes any parallax mechanism
+ * media axis, not against the frame. This is what makes any parallax mechanism
  * replay identically inside the flight.
  */
 export function flightFrameStyles(frame: IFlightFrame): {
@@ -14,6 +14,7 @@ export function flightFrameStyles(frame: IFlightFrame): {
   width: string
   height: string
   borderRadius: string
+  innerWidth: string
   innerHeight: string
   innerTransform: string
 } {
@@ -22,7 +23,8 @@ export function flightFrameStyles(frame: IFlightFrame): {
     width: `${frame.w}px`,
     height: `${frame.h}px`,
     borderRadius: `${frame.radius}px`,
+    innerWidth: `${frame.innerWidthPct}%`,
     innerHeight: `${frame.innerHeightPct}%`,
-    innerTransform: `translateY(${(frame.innerOffsetYPct / frame.innerHeightPct) * 100}%)`
+    innerTransform: `translate(${(frame.innerOffsetXPct / frame.innerWidthPct) * 100}%, ${(frame.innerOffsetYPct / frame.innerHeightPct) * 100}%)`
   }
 }

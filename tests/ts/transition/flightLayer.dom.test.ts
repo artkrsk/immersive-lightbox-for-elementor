@@ -11,7 +11,9 @@ const frame: IFlightFrame = {
   w: 300,
   h: 400,
   radius: 18,
+  innerWidthPct: 120,
   innerHeightPct: 120,
+  innerOffsetXPct: -10,
   innerOffsetYPct: -12
 }
 
@@ -39,14 +41,24 @@ describe('createFlightLayer', () => {
     expect(el?.style.transform).toBe('translate(10px, 20px)')
     expect(el?.style.width).toBe('300px')
     expect(el?.style.borderRadius).toBe('18px')
+    expect(img?.style.width).toBe('120%')
     expect(img?.style.height).toBe('120%')
-    // -12% of the frame = -10% of the (120%-tall) image's own height
-    expect(img?.style.transform).toBe('translateY(-10%)')
+    // -10%/-12% of the frame becomes offsets in the 120%-sized media axes.
+    expect(img?.style.transform).toBe(`translate(${(-10 / 120) * 100}%, ${(-12 / 120) * 100}%)`)
 
-    layer.paint({ ...frame, x: 50, radius: 6, innerHeightPct: 100, innerOffsetYPct: 0 })
+    layer.paint({
+      ...frame,
+      x: 50,
+      radius: 6,
+      innerWidthPct: 100,
+      innerHeightPct: 100,
+      innerOffsetXPct: 0,
+      innerOffsetYPct: 0
+    })
     expect(el?.style.transform).toBe('translate(50px, 20px)')
     expect(el?.style.borderRadius).toBe('6px')
-    expect(img?.style.transform).toBe('translateY(0%)')
+    expect(img?.style.width).toBe('100%')
+    expect(img?.style.transform).toBe('translate(0%, 0%)')
 
     layer.unmount()
     expect(document.querySelector('.arts-lightbox-flight')).toBeNull()

@@ -8,7 +8,9 @@ const frame = (over: Partial<IFlightFrame> = {}): IFlightFrame => ({
   w: 300,
   h: 200,
   radius: 8,
+  innerWidthPct: 100,
   innerHeightPct: 100,
+  innerOffsetXPct: 0,
   innerOffsetYPct: 0,
   ...over
 })
@@ -23,28 +25,36 @@ describe('flightFrameStyles', () => {
   })
 
   it('sizes the inner media as a percentage of the frame', () => {
+    expect(flightFrameStyles(frame({ innerWidthPct: 120 })).innerWidth).toBe('120%')
     expect(flightFrameStyles(frame({ innerHeightPct: 140 })).innerHeight).toBe('140%')
   })
 
   it('an unoffset inner media does not translate', () => {
-    expect(flightFrameStyles(frame()).innerTransform).toBe('translateY(0%)')
+    expect(flightFrameStyles(frame()).innerTransform).toBe('translate(0%, 0%)')
   })
 
   /**
    * The offset is measured in FRAME terms but applied to an element sized as
    * a percentage of the frame, so it has to be re-expressed against that
-   * height. Getting this wrong scales the parallax drift by the overscan.
+   * media axis. Getting this wrong scales the parallax drift by the overscan.
    */
-  it('re-expresses the offset against the inner height, not the frame', () => {
-    // 20% of the frame, on media that is 140% of the frame → 20/140
+  it('re-expresses offsets against each inner media axis, not the frame', () => {
+    // 10%/20% of the frame on media that is 120%/140% → 10/120, 20/140
     expect(
-      flightFrameStyles(frame({ innerHeightPct: 140, innerOffsetYPct: -20 })).innerTransform
-    ).toBe(`translateY(${(-20 / 140) * 100}%)`)
+      flightFrameStyles(
+        frame({
+          innerWidthPct: 120,
+          innerHeightPct: 140,
+          innerOffsetXPct: -10,
+          innerOffsetYPct: -20
+        })
+      ).innerTransform
+    ).toBe(`translate(${(-10 / 120) * 100}%, ${(-20 / 140) * 100}%)`)
   })
 
   it('is identity when the media exactly fills the frame', () => {
-    const s = flightFrameStyles(frame({ innerHeightPct: 100, innerOffsetYPct: -25 }))
-    expect(s.innerTransform).toBe('translateY(-25%)')
+    const s = flightFrameStyles(frame({ innerOffsetXPct: -10, innerOffsetYPct: -25 }))
+    expect(s.innerTransform).toBe('translate(-10%, -25%)')
   })
 
   it('carries fractional geometry through unrounded', () => {

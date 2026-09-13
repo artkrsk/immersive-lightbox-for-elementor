@@ -5,7 +5,9 @@ import { describe, expect, it } from 'vitest'
 const from: IFlightSource = {
   rect: { x: 100, y: 200, w: 300, h: 400 },
   radius: 18,
+  innerWidthPct: 120,
   innerHeightPct: 120,
+  innerOffsetXPct: -10,
   innerOffsetYPct: -12,
   src: '/full.jpg'
 }
@@ -24,7 +26,9 @@ describe('interpolateFlight', () => {
       w: 300,
       h: 400,
       radius: 18,
+      innerWidthPct: 120,
       innerHeightPct: 120,
+      innerOffsetXPct: -10,
       innerOffsetYPct: -12
     })
   })
@@ -37,7 +41,9 @@ describe('interpolateFlight', () => {
       w: 600,
       h: 800,
       radius: 6,
+      innerWidthPct: 100,
       innerHeightPct: 100,
+      innerOffsetXPct: 0,
       innerOffsetYPct: 0
     })
   })
@@ -50,7 +56,9 @@ describe('interpolateFlight', () => {
     expect(f.h).toBe(600)
     // scale-aware: source 18px at 1.5x rect scale = 27, blended to 6 → 16.5
     expect(f.radius).toBe(16.5)
+    expect(f.innerWidthPct).toBe(110)
     expect(f.innerHeightPct).toBe(110)
+    expect(f.innerOffsetXPct).toBe(-5)
     expect(f.innerOffsetYPct).toBe(-6)
   })
 })

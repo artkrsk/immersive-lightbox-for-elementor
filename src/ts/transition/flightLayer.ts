@@ -28,6 +28,7 @@ export function createFlightLayer(resolveParent: () => HTMLElement): IFlightLaye
     el.style.width = style.width
     el.style.height = style.height
     el.style.borderRadius = style.borderRadius
+    mediaEl.style.width = style.innerWidth
     mediaEl.style.height = style.innerHeight
     mediaEl.style.transform = style.innerTransform
   }

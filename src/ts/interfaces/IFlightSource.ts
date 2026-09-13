@@ -8,8 +8,12 @@ import type { IRect } from './IRect'
 export interface IFlightSource {
   rect: IRect
   radius: number
+  /** Inner image width as % of the frame (100 = no overscan). */
+  innerWidthPct: number
   /** Inner image height as % of the frame (100 = no overscan). */
   innerHeightPct: number
+  /** Inner image left offset as % of the frame width (0 = flush). */
+  innerOffsetXPct: number
   /** Inner image top offset as % of the frame height (0 = flush). */
   innerOffsetYPct: number
   /** The source element's displayed image — the img's own src, or a video's
