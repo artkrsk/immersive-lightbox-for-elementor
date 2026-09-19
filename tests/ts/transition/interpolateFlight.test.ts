@@ -9,7 +9,9 @@ const from: IFlightSource = {
   innerHeightPct: 120,
   innerOffsetXPct: -10,
   innerOffsetYPct: -12,
-  src: '/full.jpg'
+  src: '/full.jpg',
+  // Node env: interpolation never reads the element.
+  element: {} as HTMLElement
 }
 
 const to: IFlightTarget = {

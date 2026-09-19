@@ -100,6 +100,7 @@ export function captureFlightSource(sourceEl: HTMLElement): IFlightSource {
     rect: { x: frameRect.left, y: frameRect.top, w: frameRect.width, h: frameRect.height },
     radius,
     src: mediaSrc(img),
+    element: frame,
     ...measureInner(img, frameRect)
   }
 }

@@ -38,7 +38,8 @@ export function createHiddenSources(
     const key = req.gallery.slides[pswp.currIndex]?.key
     const instances = key ? (req.gallery.elementsByKey.get(key) ?? []) : []
     for (const el of hidden) {
-      if (!instances.includes(el)) {
+      // A hidden box may sit inside its instance (a card's image frame).
+      if (!instances.some((instance) => instance.contains(el))) {
         el.style.visibility = ''
         hidden.delete(el)
       }

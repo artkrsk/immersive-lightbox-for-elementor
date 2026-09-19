@@ -71,7 +71,7 @@ export function runOpenChoreography(ctx: ITransitionContext, onSettled: () => vo
   const flies = Boolean(initialTarget && openSource.src)
   if (flies && initialTarget) {
     flight.mount(interpolateFlight(openSource, initialTarget, 0), { src: openSource.src })
-    hidden.hideAfterFrames(ctx.req.sourceElement, SOURCE_HANDOFF_FRAMES)
+    hidden.hideAfterFrames(openSource.element, SOURCE_HANDOFF_FRAMES)
     upgradeFlight(ctx)
   }
   // The landing rect is LIVE: explore mode already pans the (hidden) slide

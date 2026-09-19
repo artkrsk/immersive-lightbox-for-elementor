@@ -40,7 +40,7 @@ function mountCloseFlight(
     // fade the cover in instead.
     ctx.flight.arrive()
   }
-  ctx.hidden.hide(sourceEl)
+  ctx.hidden.hide(closeSource.element)
   return true
 }
 

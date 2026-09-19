@@ -19,4 +19,8 @@ export interface IFlightSource {
   /** The source element's displayed image — the img's own src, or a video's
    *  poster. */
   src: string
+  /** The box `rect` measured — the one the flight stands in for, so it is the
+   *  one that hides while the flight covers it. Chrome around it (a caption,
+   *  a counter) inside the same clicked element stays on the page. */
+  element: HTMLElement
 }

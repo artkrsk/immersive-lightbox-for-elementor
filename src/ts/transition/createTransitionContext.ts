@@ -22,7 +22,8 @@ function captureOpenSource(req: IOpenRequest): IFlightSource {
     innerHeightPct: 100,
     innerOffsetXPct: 0,
     innerOffsetYPct: 0,
-    src: ''
+    src: '',
+    element: req.sourceElement
   }
 }
 

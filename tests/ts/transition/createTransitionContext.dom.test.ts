@@ -59,7 +59,7 @@ describe('createTransitionContext', () => {
     const { req } = request('html')
     const ctx = createTransitionContext(pswp as unknown as PhotoSwipe, mergeOptions(), req)
 
-    expect(ctx.openSource).toEqual(DEFAULT_OPEN_SOURCE)
+    expect(ctx.openSource).toEqual({ ...DEFAULT_OPEN_SOURCE, element: req.sourceElement })
   })
 
   it('starts backdrop empty and wires up flight and hidden trackers', () => {
