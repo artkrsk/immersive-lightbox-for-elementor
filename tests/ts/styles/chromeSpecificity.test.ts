@@ -95,10 +95,10 @@ describe('shipped stylesheet', () => {
     )
     expect(uiOff?.body).toContain('--arts-lightbox-ui-visible: 0')
 
-    // The factor is a registered property so the flip can FADE — and it
-    // transitions on the root, never on `opacity`, which stays the clock's.
-    expect(css).toMatch(/@property --arts-lightbox-ui-visible \{[^}]*initial-value: 1/)
-    expect(css).toMatch(/@property --arts-lightbox-ui-visible \{[^}]*inherits: true/)
+    // The factor is a registered property so the flip can FADE — registered by
+    // the gate, never here (a late `@property` restyles the whole document) —
+    // and it transitions on the root, never on `opacity`, which stays the clock's.
+    expect(css).not.toContain('@property --arts-lightbox-ui-visible')
     const root = rulesTouching(css, ['transition']).filter(
       ({ selector, body }) =>
         selector.trim().endsWith('.pswp') && body.includes('transition: --arts-lightbox-ui-visible')

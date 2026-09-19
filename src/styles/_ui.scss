@@ -1,12 +1,8 @@
-// The tap-toggle factor (see the chrome group below). Registered so the
-// flip can FADE: a transition can only animate a custom property the
-// browser knows is a number. Where @property is unsupported the toggle
-// still works — it just cuts instead of fading.
-@property --arts-lightbox-ui-visible {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 1;
-}
+// The tap-toggle factor (see the chrome group below) is registered as a
+// `<number>` so the flip can FADE — by the gate, pre-paint, never by an
+// `@property` rule here: this stylesheet loads lazily, and a late
+// registration restyles the whole document. Unregistered, the toggle still
+// works — it just cuts instead of fading.
 
 // Every button centres a 24px icon box — the default `icons.prev/next` SVGs
 // and the square the close bars fit in. This is the distance from the

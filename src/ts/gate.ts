@@ -43,6 +43,22 @@ if (!window.artsLightbox) {
   html.classList.toggle(HTML_INACTIVE, !enabled)
 
   if (enabled && boot) {
+    // The chrome's tap-toggle factor (`_ui.scss`) is registered HERE, pre-paint,
+    // so the flip can fade: a registration arriving after first paint — an
+    // `@property` rule in the lazily loaded stylesheet included, even for a name
+    // already registered — restyles the whole document. Unsupported: the toggle
+    // cuts instead of fading.
+    try {
+      CSS.registerProperty({
+        name: '--arts-lightbox-ui-visible',
+        syntax: '<number>',
+        inherits: true,
+        initialValue: '1'
+      })
+    } catch {
+      // Already registered, or no support.
+    }
+
     // Elementor rebuilds the DOM it renders — the editor canvas replaces every
     // widget with AJAX-rendered markup on open and on every change, and on the
     // front end popups, load-more and Loop Grid inject theirs — which carries
