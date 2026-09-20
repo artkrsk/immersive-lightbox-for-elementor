@@ -1,7 +1,7 @@
 {
   "name": "arts/immersive-lightbox",
   "description": "A PhotoSwipe lightbox that replaces Elementor's native one: cinematic transitions, mousemove explore pan, video galleries, any link as a trigger.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "wordpress-plugin",
   "license": "GPL-3.0-or-later",
   "authors": [
