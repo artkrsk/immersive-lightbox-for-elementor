@@ -1,5 +1,6 @@
 import type { IFlightSource } from '../interfaces'
 import { isTagElement } from '../utils/isTagElement'
+import { measureFlightAxis } from './measureFlightAxis'
 
 const CLIPS = /hidden|clip|scroll|auto/
 
@@ -40,20 +41,23 @@ function measureInner(
   innerOffsetXPct: number
   innerOffsetYPct: number
 } {
-  if (img) {
-    const imgRect = img.getBoundingClientRect()
-    const hasWidth = frameRect.width > 0 && imgRect.width > 0
-    const hasHeight = frameRect.height > 0 && imgRect.height > 0
-    if (hasWidth || hasHeight) {
-      return {
-        innerWidthPct: hasWidth ? (imgRect.width / frameRect.width) * 100 : 100,
-        innerHeightPct: hasHeight ? (imgRect.height / frameRect.height) * 100 : 100,
-        innerOffsetXPct: hasWidth ? ((imgRect.left - frameRect.left) / frameRect.width) * 100 : 0,
-        innerOffsetYPct: hasHeight ? ((imgRect.top - frameRect.top) / frameRect.height) * 100 : 0
-      }
-    }
+  if (!img) {
+    return { innerWidthPct: 100, innerHeightPct: 100, innerOffsetXPct: 0, innerOffsetYPct: 0 }
   }
-  return { innerWidthPct: 100, innerHeightPct: 100, innerOffsetXPct: 0, innerOffsetYPct: 0 }
+  const imgRect = img.getBoundingClientRect()
+  const [innerWidthPct, innerOffsetXPct] = measureFlightAxis(
+    imgRect.left,
+    imgRect.width,
+    frameRect.left,
+    frameRect.width
+  )
+  const [innerHeightPct, innerOffsetYPct] = measureFlightAxis(
+    imgRect.top,
+    imgRect.height,
+    frameRect.top,
+    frameRect.height
+  )
+  return { innerWidthPct, innerHeightPct, innerOffsetXPct, innerOffsetYPct }
 }
 
 /**

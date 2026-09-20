@@ -26,7 +26,14 @@
     // phase-2 first-class work, verified on-device) — but its DEAD CODE is
     // now analyzed like everything else (a lightbox/-sized find pays for
     // this line).
-    "ignore": ["tests/**", "src/ts/photoswipe/**"],
+    "ignore": [
+      "tests/**",
+      "src/ts/photoswipe/**",
+      // This intentionally cohesive registry atomically owns gate/boot
+      // replacement and active-root subscriptions; its lifecycle suite covers
+      // the coupled paths, while a split would weaken that ownership.
+      "src/ts/core/lightboxGlobal.ts"
+    ],
     // CRAP is a coverage-policy metric (cyclomatic² × (1-coverage)³), not a
     // complexity one, and the vendored fork's upstream shapes would dominate
     // it. The open/close spine carries its own suites now (the choreographies,

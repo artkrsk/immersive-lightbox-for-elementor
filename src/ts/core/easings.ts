@@ -1,8 +1,9 @@
 import type { TEasingName } from '../types'
+import { power2InOut } from './power2InOut'
 
 /** GSAP-named curves; numbers validated against the design-phase mockup. */
 export const EASINGS: Record<TEasingName, (t: number) => number> = {
-  'power2.inOut': (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2),
+  'power2.inOut': power2InOut,
   'power4.inOut': (t) => (t < 0.5 ? 16 * t * t * t * t * t : 1 - (-2 * t + 2) ** 5 / 2),
   'expo.inOut': (t) =>
     t === 0 || t === 1 ? t : t < 0.5 ? 2 ** (20 * t - 10) / 2 : (2 - 2 ** (-20 * t + 10)) / 2,

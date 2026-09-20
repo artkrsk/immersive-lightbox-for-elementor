@@ -1,7 +1,12 @@
 import { EASINGS } from '@ts/core/easings'
+import { power2InOut } from '@ts/core/power2InOut'
 import { describe, expect, it } from 'vitest'
 
 describe('EASINGS', () => {
+  it('shares power2.inOut with aimed zoom', () => {
+    expect(EASINGS['power2.inOut']).toBe(power2InOut)
+  })
+
   it('maps 0 to 0 and 1 to 1 for every curve', () => {
     for (const ease of Object.values(EASINGS)) {
       expect(ease(0)).toBeCloseTo(0, 12)

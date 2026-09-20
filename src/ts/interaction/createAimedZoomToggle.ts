@@ -1,4 +1,4 @@
-import { EASINGS } from '../core/easings'
+import { power2InOut } from '../core/power2InOut'
 import type PhotoSwipe from '../photoswipe/photoswipe'
 import { createClock } from '../transition/clock'
 import { canSlideZoom } from './canSlideZoom'
@@ -6,7 +6,7 @@ import { mapPointerToPan } from './mapPointerToPan'
 
 const FIT_EPSILON = 0.001
 const AIMED_ZOOM_MS = 350
-const AIMED_ZOOM_EASE = EASINGS['power2.inOut']
+const AIMED_ZOOM_EASE = power2InOut
 
 /**
  * Click-toggle between fit and the model's zoomed level on our own clock,
