@@ -284,6 +284,13 @@ included):
 | `arts-lightbox-zoomed-in` | zoomed beyond fit |
 | `arts-lightbox-has-thumbs_left` (`_right` / `_top` / `_bottom`) | a thumbnail rail claims that edge |
 
+The root itself sits in `arts-lightbox-host`, a `display: contents` child of
+`body` that holds it while it is open and is removed once empty. The
+plugin's own stylesheet is scoped to it, because the root's class names are
+PhotoSwipe's and a page can carry another PhotoSwipe — WooCommerce prints
+one. Scope theme rules the same way, `.arts-lightbox-host .pswp`, to reach
+this lightbox and nothing else.
+
 And one class on the page rather than in the lightbox:
 `arts-lightbox-link` is stamped on every candidate link while the plugin owns
 clicks — style it, or key cursor-plugin rules on it. Stamped at DOM-ready,
@@ -345,10 +352,11 @@ types without a cast.
 ## WordPress integration
 
 The plugin replaces Elementor's native lightbox by claiming eligible clicks
-in capture phase — nothing server-side is suppressed or rewritten, so
-deactivating (or filtering `enabled` off) restores the native lightbox
-untouched. The governing rule: **Elementor decides whether a link opens in
-a lightbox, we decide how.**
+in capture phase — nothing of Elementor's is suppressed or rewritten
+server-side, so deactivating (or filtering `enabled` off) restores the native
+lightbox untouched. The governing rule: **Elementor decides whether a link
+opens in a lightbox, we decide how.** WooCommerce's product gallery lightbox
+is the one thing switched off server-side (below).
 
 ### Filters
 
@@ -371,6 +379,28 @@ both are present on an element.
 | `data-elementor-lightbox-slideshow` | Group id (below our own group attribute) |
 | `data-elementor-lightbox-title` / `-description` | The two caption lines, as native shows them: the title sits between our attribute and `figcaption` in the title tiers; the description is its own line |
 | `data-e-action-hash` / `#elementor-action` hrefs | Lightbox action deep links: clicks and `location.hash` on load both open; other actions (popup, scroll-to) pass through untouched |
+
+### WooCommerce product galleries
+
+When the theme declares `wc-product-gallery-lightbox`, WooCommerce ships its
+own PhotoSwipe (4.x), and its unlayered stylesheet outranks the plugin's
+layer on the lightbox root. So while the plugin is enabled:
+
+- the theme support is removed for the request on `wp_enqueue_scripts`
+  (priority 1), which drops WooCommerce's PhotoSwipe CSS, JS and footer root,
+  and `woocommerce_single_product_photoswipe_enabled` is forced to `false`;
+- each gallery image's anchor is stamped through
+  `woocommerce_single_product_image_thumbnail_html` with `data-arts-lightbox`,
+  a per-product `data-arts-lightbox-group`, and `data-arts-lightbox-caption`
+  from the attachment caption when it has one. The group id is internal. These
+  are explicit opt-ins, so product images open whatever the kit's Image
+  Lightbox switch says, and attributes the markup already carries win;
+- with `wc-product-gallery-zoom`, jquery.zoom's overlay would take every click,
+  so a small head style (in its own `arts-lightbox-woocommerce` layer) lets
+  clicks through to the anchor. The hover zoom keeps working.
+
+Filtering `arts_immersive_lightbox/enabled` off gives WooCommerce its
+lightbox back.
 
 ### Elementor Site Settings
 

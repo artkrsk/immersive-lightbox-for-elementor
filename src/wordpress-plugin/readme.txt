@@ -37,6 +37,7 @@ Your Elementor images, galleries and videos already open in a lightbox. This plu
 = Works with =
 
 * Elementor Free — Image, Basic Gallery, Image Carousel and every widget that opens the native lightbox. Elementor Pro widgets, including the Media Carousel's video slides, work too.
+* WooCommerce — when your theme turns on WooCommerce's product gallery lightbox, product images open in this lightbox instead, one gallery per product. The hover zoom stays.
 * Any theme.
 * Arts Cursor Follower for Elementor — adds a hover hint (magnifier, plus, or a text pill) over lightbox links.
 
@@ -80,9 +81,13 @@ Yes. Widgets already grouped by Elementor's slideshow setting stay grouped, and 
 
 No. Nothing heavy loads up front — the engine and its styles are fetched the first time a visitor opens the lightbox, and the plugin has zero dependencies.
 
+= Does it work with WooCommerce product galleries? =
+
+Yes. If your theme turns on WooCommerce's gallery lightbox, the plugin switches that one off and opens product images here, so a product page runs one lightbox instead of two. Each product's images form one gallery, with the image caption when it has one.
+
 = What happens if I deactivate the plugin? =
 
-Elementor's native lightbox returns exactly as it was. The plugin claims clicks in the browser and never rewrites your content.
+Elementor's native lightbox returns exactly as it was, and so does WooCommerce's product gallery lightbox. The plugin claims clicks in the browser and never rewrites your content.
 
 == Screenshots ==
 
