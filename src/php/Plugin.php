@@ -18,6 +18,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * them, and when this plugin is deactivated (or soft-disabled via the
  * `arts_immersive_lightbox/enabled` filter) the gate simply never prints — the
  * native lightbox is back untouched.
+ *
+ * WooCommerce's product gallery lightbox is the one exception, switched off
+ * server-side while the plugin is enabled: it ships a second PhotoSwipe whose
+ * unlayered CSS no capture-phase claim can keep off our root (see
+ * WooCommerce\ProductGallery).
  */
 class Plugin {
 	private static ?Plugin $instance = null;
@@ -46,6 +51,13 @@ class Plugin {
 			add_action( 'elementor/loaded', array( $this, 'init_elementor' ) );
 		}
 
+		// Same load-order hedge: WooCommerce fires this on plugins_loaded.
+		if ( did_action( 'woocommerce_loaded' ) ) {
+			$this->init_woocommerce();
+		} else {
+			add_action( 'woocommerce_loaded', array( $this, 'init_woocommerce' ) );
+		}
+
 		// Only the standalone plugin has a Plugins-page row to attach a link
 		// to — the constant comes from the bootstrap file, absent when src/php
 		// is consumed as a composer package.
@@ -64,6 +76,10 @@ class Plugin {
 		( new Elementor\UrlControlManager() )->register();
 		( new Elementor\KitLightboxSettings() )->register();
 		( new Elementor\CursorFollowerBridge() )->register();
+	}
+
+	public function init_woocommerce(): void {
+		( new WooCommerce\ProductGallery() )->register();
 	}
 
 	/** @param \Elementor\Controls_Manager $controls_manager */
