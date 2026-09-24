@@ -61,7 +61,12 @@ function rulesTouching(css: string, properties: string[]): { selector: string; b
 }
 
 describe('shipped stylesheet', () => {
-  const css = compile('src/styles/index.scss', { loadPaths: ['src/styles', 'node_modules'] }).css
+  // The host scope is `:where()` — zero specificity, so it changes no tie this
+  // file asserts. Stripped here so the exact selectors below still read as the
+  // cascade sees them; rootScope.test.ts owns the scope itself.
+  const css = compile('src/styles/index.scss', {
+    loadPaths: ['src/styles', 'node_modules']
+  }).css.replaceAll(':where(.arts-lightbox-host) ', '')
 
   it('scopes every contested chrome declaration under .pswp', () => {
     const unscoped = rulesTouching(css, CONTESTED)
@@ -475,6 +480,19 @@ describe('shipped stylesheet', () => {
     ]) {
       expect(css, `${prop} is never declared`).not.toContain(`${prop}:`)
     }
+  })
+
+  it('armors the button backing against an important sprite rule', () => {
+    // The fork gives our registered buttons `pswp__button`, and WooCommerce
+    // styles that class with `background-image: url(sprite) !important` —
+    // unlayered, so only an important declaration inside our layer outranks
+    // it. The shorthand resets the image along with the color.
+    const armor = rulesTouching(css, ['background']).find(
+      ({ selector }) =>
+        selector.includes('.pswp .arts-lightbox-close') &&
+        selector.includes('.pswp .arts-lightbox-arrow')
+    )
+    expect(armor?.body).toContain('background: transparent !important')
   })
 
   it('takes the blink icon off the text baseline, or it centres high', () => {

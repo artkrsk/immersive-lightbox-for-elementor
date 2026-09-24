@@ -1,8 +1,14 @@
-// Vendored from photoswipe@5.4.4 dist/photoswipe.css (MIT) — wrapped in our
-// cascade layer so unlayered site CSS keeps winning over all plugin styles.
-// Our UI layer replaces the stock buttons; the structural rules stay.
+// Vendored from photoswipe@5.4.4 dist/photoswipe.css (MIT) — wrapped twice.
+// First in our cascade layer, so unlayered site CSS keeps winning over all
+// plugin styles. Then in our host scope, because these class names are shared
+// with every other PhotoSwipe on the page — WooCommerce prints a 4.x `.pswp`
+// of its own, and unscoped, these rules restyled it. The scope is two wrapper
+// lines and no re-indent, so the body still diffs cleanly against the layer-
+// wrapped copy. Our UI layer replaces the stock buttons; the structural rules
+// stay.
 @layer arts-lightbox {
   /*! PhotoSwipe main CSS by Dmytro Semenov | photoswipe.com */
+  :where(.arts-lightbox-host) {
   
   .pswp {
     --pswp-bg: #000;
@@ -421,5 +427,6 @@
   
   .pswp--one-slide .pswp__counter {
     display: none;
+  }
   }
 }
