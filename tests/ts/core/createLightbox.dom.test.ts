@@ -9,16 +9,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 afterEach(() => {
   engineState.pswp = null
   engineState.closeHandle = null
-  Reflect.deleteProperty(window, 'artsImmersiveLightboxBoot')
 })
 
 describe('createLightbox', () => {
   it('refuses a direct open while WooCommerce owns the request', () => {
-    window.artsImmersiveLightboxBoot = { css: '', js: '', enabled: false }
     const lightbox = createLightboxWithLifecycle(undefined, {
       roots: { set() {}, delete() {} },
       initialized() {},
-      destroying() {}
+      destroying() {},
+      isActive: () => false
     })
     expect(lightbox.open(document.createElement('a'))).toBe(false)
   })
