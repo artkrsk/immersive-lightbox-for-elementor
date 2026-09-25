@@ -8,21 +8,22 @@ import { matchCandidateElement } from './matchCandidateElement'
  * selector (the kit's bare-link switch, Elementor's anchor guard, the
  * action-hash release are all predicates).
  *
- * Routes through `matchCandidateElement` like every other input path, plus
- * the explicit `off`-ancestor filter that resolver leaves to collection
- * (`findCandidates`) — off wins over everything, marks included. Re-running
+ * Routes through `matchCandidateElement` like every other input path; its
+ * opt-out and WooCommerce-native vetoes apply to marks too. Re-running
  * drops stale marks first, so AJAX-swapped DOM converges. Ends by nudging a
  * present cursor follower to re-resolve a hover held across the re-scan.
  *
  * Returns how many candidates the page holds — the gate warms the engine off
  * this count rather than paying for a scan of its own.
  */
-export function markCandidates(nativeFallback: boolean): number {
+export function markCandidates(nativeFallback: boolean, enabled = true): number {
   const selector = nativeFallback ? `${CANDIDATE_SELECTOR}, a[href]` : CANDIDATE_SELECTOR
   const matched = new Set<Element>()
-  for (const el of document.querySelectorAll(selector)) {
-    if (matchCandidateElement(el, nativeFallback) === el && !el.closest(`[${ATTR_OFF}]`)) {
-      matched.add(el)
+  if (enabled) {
+    for (const el of document.querySelectorAll(selector)) {
+      if (matchCandidateElement(el, nativeFallback) === el && !el.closest(`[${ATTR_OFF}]`)) {
+        matched.add(el)
+      }
     }
   }
   for (const el of document.querySelectorAll(`.${LINK_CLASS}`)) {

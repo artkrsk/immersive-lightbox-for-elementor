@@ -20,7 +20,8 @@ function fixture() {
   const lightbox = createLightboxWithLifecycle(undefined, {
     roots: hub.__roots,
     initialized: (instance) => hub.__setInstance(instance),
-    destroying: () => hub.__setInstance(null)
+    destroying: () => hub.__setInstance(null),
+    isActive: () => true
   })
   const sourceElement = document.createElement('a')
   sourceElement.href = 'https://example.com/photo.jpg'

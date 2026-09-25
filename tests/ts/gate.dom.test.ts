@@ -45,6 +45,7 @@ beforeEach(() => {
   document.documentElement.className = ''
   Reflect.deleteProperty(window, 'artsLightbox')
   Reflect.deleteProperty(window, 'artsCursor')
+  Reflect.deleteProperty(window, 'jQuery')
   Reflect.deleteProperty(window, 'elementorFrontend')
   window.artsImmersiveLightboxBoot = { ...BOOT }
   // Keep the default test path from leaving a two-second fallback timer
@@ -68,6 +69,53 @@ afterEach(async () => {
 })
 
 describe('gate', () => {
+  it('suspends an existing gate when WooCommerce takes the page, then resumes it', async () => {
+    const a = addCandidate()
+    await importGate()
+    expect(a.classList.contains('arts-lightbox-link')).toBe(true)
+
+    if (!window.artsImmersiveLightboxBoot) throw new Error('Expected boot payload')
+    window.artsImmersiveLightboxBoot.enabled = false
+    window.artsLightbox?.refresh()
+    expect(a.classList.contains('arts-lightbox-link')).toBe(false)
+    const nativeClick = new MouseEvent('click', { bubbles: true, cancelable: true })
+    a.dispatchEvent(nativeClick)
+    expect(nativeClick.defaultPrevented).toBe(false)
+    expect(document.getElementById('immersive-lightbox-for-elementor-css')).toBeNull()
+
+    window.artsImmersiveLightboxBoot.enabled = true
+    window.artsLightbox?.refresh()
+    expect(a.classList.contains('arts-lightbox-link')).toBe(true)
+    const claimed = new MouseEvent('click', { bubbles: true, cancelable: true })
+    a.dispatchEvent(claimed)
+    expect(claimed.defaultPrevented).toBe(true)
+  })
+
+  it('re-marks a replaced WooCommerce variation gallery', async () => {
+    const handlers: Array<() => void> = []
+    window.jQuery = () => ({
+      on: (_events, _selector, handler) => {
+        handlers.push(handler)
+      }
+    })
+    await importGate()
+    if (handlers.length === 0) {
+      document.dispatchEvent(new Event('DOMContentLoaded'))
+    }
+    expect(handlers).toHaveLength(1)
+
+    document.body.innerHTML = `
+      <div class="woocommerce-product-gallery arts-lightbox-wc-gallery">
+        <div class="woocommerce-product-gallery__image"><a href="/variation.jpg"><img></a></div>
+      </div>
+    `
+    const link = document.querySelector('a') as HTMLAnchorElement
+    expect(link.classList.contains('arts-lightbox-link')).toBe(false)
+    handlers[0]?.()
+    await nextFrame()
+    expect(link.classList.contains('arts-lightbox-link')).toBe(true)
+  })
+
   it('stamps candidates at boot and re-marks through refresh()', async () => {
     const a = addCandidate()
     const cursorRefresh = vi.fn()

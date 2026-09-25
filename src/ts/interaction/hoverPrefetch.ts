@@ -10,7 +10,10 @@ import type { IOptions } from '../interfaces'
  * fetch); `pointerdown` covers touch, where the press still buys the
  * open transition's duration. One request per URL, images only.
  */
-export function attachHoverPrefetch(opts: IOptions): () => void {
+export function attachHoverPrefetch(
+  opts: IOptions,
+  isActive: () => boolean = () => true
+): () => void {
   if (!opts.prefetch.onHover) {
     return () => {}
   }
@@ -19,6 +22,9 @@ export function attachHoverPrefetch(opts: IOptions): () => void {
   const pending = new Map<string, HTMLImageElement>()
 
   const trigger = (e: Event): void => {
+    if (!isActive()) {
+      return
+    }
     const el = matchCandidateElement(e.target as Element | null, opts.elementor.nativeFallback)
     if (!el || el.closest(`[${ATTR_OFF}]`)) {
       return

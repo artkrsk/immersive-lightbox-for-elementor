@@ -20,7 +20,7 @@ class CursorFollowerBridgeTest extends TestCase {
 			array( 'targetScopes' => array( array( 'scope' => '.existing', 'rules' => array() ) ) )
 		);
 
-		self::assertSame( array( '.existing', '.pswp', 'body' ), array_column( $options['targetScopes'], 'scope' ) );
+		self::assertSame( array( '.existing', '.arts-lightbox-host > .pswp', 'body' ), array_column( $options['targetScopes'], 'scope' ) );
 		$rules = $options['targetScopes'][1]['rules'];
 		self::assertSame(
 			array(
@@ -53,7 +53,7 @@ class CursorFollowerBridgeTest extends TestCase {
 		);
 		$options = $bridge->add_scope( array() );
 
-		self::assertSame( array( '.pswp' ), array_column( $options['targetScopes'], 'scope' ) );
+		self::assertSame( array( '.arts-lightbox-host > .pswp' ), array_column( $options['targetScopes'], 'scope' ) );
 		self::assertSame(
 			array(
 				':scope:not(.arts-lightbox-can-zoom) .pswp__img',

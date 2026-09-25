@@ -62,3 +62,47 @@ describe('matchCandidateElement', () => {
     expect(matchCandidateElement(document.querySelector('#pp'), false)).toBeNull()
   })
 })
+
+describe('WooCommerce gallery ownership', () => {
+  it('claims image and video anchors only inside our marked gallery', () => {
+    document.body.innerHTML = `
+      <div class="woocommerce-product-gallery arts-lightbox-wc-gallery">
+        <div class="woocommerce-product-gallery__image"><a href="/photo.jpg"><img></a></div>
+        <div class="woocommerce-product-gallery__image"><a href="/clip.mp4"><video></video></a></div>
+      </div>
+      <div class="woocommerce-product-gallery">
+        <div class="woocommerce-product-gallery__image"><a href="/other.jpg"><img></a></div>
+      </div>
+    `
+    const [photo, clip, other] = [...document.querySelectorAll('a')]
+    expect(matchCandidateElement(photo ?? null, false)).toBe(photo)
+    expect(matchCandidateElement(clip ?? null, false)).toBe(clip)
+    expect(matchCandidateElement(other ?? null, false)).toBeNull()
+  })
+
+  it('honors opt-outs and refuses implicit downloads', () => {
+    document.body.innerHTML = `
+      <div class="arts-lightbox-wc-gallery">
+        <div class="woocommerce-product-gallery__image">
+          <a id="off" href="/off.jpg" data-arts-lightbox-off><img></a>
+          <a id="download" href="/download.jpg" download><img></a>
+          <a id="elementor-no" href="/no.jpg" data-elementor-open-lightbox="no"><img></a>
+        </div>
+      </div>
+    `
+    for (const id of ['off', 'download', 'elementor-no']) {
+      expect(matchCandidateElement(document.getElementById(id), true)).toBeNull()
+    }
+  })
+
+  it('lets WooCommerce own even explicitly opted-in links when it reclaims support', () => {
+    document.body.innerHTML = `
+      <div class="woocommerce-product-gallery arts-lightbox-wc-native">
+        <div class="woocommerce-product-gallery__image">
+          <a href="/photo.jpg" data-arts-lightbox><img></a>
+        </div>
+      </div>
+    `
+    expect(matchCandidateElement(document.querySelector('img'), true)).toBeNull()
+  })
+})

@@ -1,3 +1,4 @@
+import { WC_GALLERY_SELECTOR } from '../constants'
 import type { ICandidate, IGallery, IOptions } from '../interfaces'
 import { findCandidates } from './findCandidates'
 
@@ -57,7 +58,10 @@ export function buildGalleries(
     } else if (candidate.groupId !== null) {
       gallery = galleryFor(galleries, byBucket, `group:${candidate.groupId}`, candidate.groupId)
     } else {
-      const bucket = candidate.element.parentElement ?? candidate.element
+      const bucket =
+        candidate.element.closest(WC_GALLERY_SELECTOR) ??
+        candidate.element.parentElement ??
+        candidate.element
       gallery = galleryFor(galleries, byBucket, bucket, `gallery-${++generated}`)
     }
     if (candidate.isClone) {

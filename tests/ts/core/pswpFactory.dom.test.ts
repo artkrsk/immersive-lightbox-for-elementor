@@ -100,6 +100,49 @@ describe('createPswp', () => {
     expect(engineState.closeHandle).toBeNull()
   })
 
+  it('mounts the root in the host the stylesheet is scoped to', () => {
+    const pswp = createPswp(options(), request())
+    const host = pswp.element?.parentElement
+
+    expect(host?.classList.contains('arts-lightbox-host')).toBe(true)
+    expect(host?.parentElement).toBe(document.body)
+  })
+
+  it('keeps the root in the document for destroy listeners, then drops the host', async () => {
+    let connected: boolean | undefined
+    const pswp = createPswp(options(), request(), (p) => {
+      p.on('destroy', () => {
+        connected = p.element?.isConnected
+      })
+    })
+    const host = pswp.element?.parentElement
+
+    pswp.destroy()
+
+    await vi.waitFor(() => {
+      expect(host?.isConnected).toBe(false)
+    })
+    // The documented contract: `root` is still in the DOM when destroy fires.
+    expect(connected).toBe(true)
+  })
+
+  it('keeps the host while an overlapping session still uses it', async () => {
+    const first = createPswp(options(), request())
+    const second = createPswp(options(), request())
+    const host = second.element?.parentElement
+    const destroyed = new Promise<void>((resolve) => {
+      first.on('destroy', () => resolve())
+    })
+    expect(first.element?.parentElement).toBe(host)
+
+    first.destroy()
+    await destroyed
+    await Promise.resolve()
+
+    expect(host?.isConnected).toBe(true)
+    expect(second.element?.parentElement).toBe(host)
+  })
+
   it('does not clear a newer core when a stale one is destroyed', async () => {
     const first = createPswp(options(), request())
     const second = createPswp(options(), request())

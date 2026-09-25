@@ -1,9 +1,17 @@
-import { ATTR_LIGHTBOX } from '../constants'
+import { ATTR_LIGHTBOX, ATTR_OFF, WC_NATIVE_CLASS } from '../constants'
 import { ELEMENTOR_ATTR_OPEN_LIGHTBOX } from '../constants/elementorAttributes'
-import { CANDIDATE_SELECTOR } from '../constants/selectors'
+import { CANDIDATE_SELECTOR, WC_ANCHOR_SELECTOR } from '../constants/selectors'
 import { isEligibleBareLink } from './isEligibleBareLink'
 import { isLightboxActionHash } from './isLightboxActionHash'
 import { passesElementorAnchorGuard } from './passesElementorAnchorGuard'
+
+/** Woo gallery links are implicit opt-ins; downloads and Elementor "no" still win. */
+function refusesWooGalleryAnchor(el: HTMLElement): boolean {
+  if (!el.matches(WC_ANCHOR_SELECTOR) || el.hasAttribute(ATTR_LIGHTBOX)) {
+    return false
+  }
+  return el.hasAttribute('download') || el.getAttribute(ELEMENTOR_ATTR_OPEN_LIGHTBOX) === 'no'
+}
 
 /**
  * The one click-time candidate resolver — every input path (the gate, the
@@ -15,6 +23,12 @@ export function matchCandidateElement(
   target: Element | null,
   nativeFallback: boolean
 ): HTMLElement | null {
+  // WooCommerce regained its complete gallery, or the author opted out:
+  // neither explicit vocabulary nor Elementor's bare-link fallback may claim
+  // a click here.
+  if (target?.closest(`.${WC_NATIVE_CLASS}, [${ATTR_OFF}]`)) {
+    return null
+  }
   const explicit = target?.closest<HTMLElement>(CANDIDATE_SELECTOR)
   if (explicit) {
     // The selector's action-hash arm is broader than what we own: a popup or
@@ -22,6 +36,9 @@ export function matchCandidateElement(
     // preventDefault. Only the lightbox action is ours.
     const href = explicit.getAttribute('href') ?? ''
     if (href.startsWith('#elementor-action') && !isLightboxActionHash(href)) {
+      return null
+    }
+    if (refusesWooGalleryAnchor(explicit)) {
       return null
     }
     // Elementor-stamped anchors keep Elementor's own anchor guard: its

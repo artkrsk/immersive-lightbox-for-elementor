@@ -12,6 +12,16 @@ export {
   ATTR_TYPE,
   ATTR_WIDTH
 } from './attributes'
-export { CLOSING_CLASS, LINK_CLASS, TRANSITIONING_CLASS } from './classNames'
+export {
+  CLOSING_CLASS,
+  HOST_CLASS,
+  LINK_CLASS,
+  TRANSITIONING_CLASS,
+  WC_NATIVE_CLASS
+} from './classNames'
 export { DEFAULT_OPTIONS } from './defaults'
-export { CANDIDATE_SELECTOR, CLONE_SELECTOR } from './selectors'
+export {
+  CANDIDATE_SELECTOR,
+  CLONE_SELECTOR,
+  WC_GALLERY_SELECTOR
+} from './selectors'
