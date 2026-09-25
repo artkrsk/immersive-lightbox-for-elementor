@@ -14,9 +14,25 @@ beforeEach(() => {
   document.body.innerHTML = ''
   Reflect.deleteProperty(window, 'artsLightbox')
   Reflect.deleteProperty(window, 'artsImmersiveLightboxOptions')
+  Reflect.deleteProperty(window, 'artsImmersiveLightboxBoot')
 })
 
 describe('boot', () => {
+  it('drops candidate marks while WooCommerce owns an AJAX page', async () => {
+    document.body.innerHTML = '<a href="/photo.jpg" data-arts-lightbox></a>'
+    await importBoot()
+    const a = document.querySelector('a') as HTMLAnchorElement
+    window.artsLightbox?.refresh()
+    expect(a.classList.contains('arts-lightbox-link')).toBe(true)
+
+    window.artsImmersiveLightboxBoot = { css: '', js: '', enabled: false }
+    window.artsLightbox?.refresh()
+    expect(a.classList.contains('arts-lightbox-link')).toBe(false)
+    window.artsImmersiveLightboxBoot.enabled = true
+    window.artsLightbox?.refresh()
+    expect(a.classList.contains('arts-lightbox-link')).toBe(true)
+  })
+
   it('preserves the gate namespace, ready promise and observer registry', async () => {
     const gate = getLightboxGlobal(window)
     const ready = gate.ready

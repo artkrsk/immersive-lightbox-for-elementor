@@ -1,5 +1,10 @@
 import { ATTR_CLONE, ATTR_LIGHTBOX, ATTR_TYPE } from './attributes'
+import { WC_GALLERY_CLASS } from './classNames'
 import { ELEMENTOR_ATTR_LIGHTBOX_JSON, ELEMENTOR_ATTR_OPEN_LIGHTBOX } from './elementorAttributes'
+
+/** WooCommerce owns the DOM shape; PHP only marks a gallery we take over. */
+export const WC_GALLERY_SELECTOR = `.${WC_GALLERY_CLASS}`
+export const WC_ANCHOR_SELECTOR = `${WC_GALLERY_SELECTOR} .woocommerce-product-gallery__image a[href]`
 
 /**
  * What the collector (and the delegated click handler) considers openable.
@@ -24,7 +29,7 @@ import { ELEMENTOR_ATTR_LIGHTBOX_JSON, ELEMENTOR_ATTR_OPEN_LIGHTBOX } from './el
 export const CANDIDATE_SELECTOR =
   `a[${ATTR_LIGHTBOX}], [${ATTR_LIGHTBOX}][${ATTR_TYPE}="html"], ` +
   `a[${ELEMENTOR_ATTR_OPEN_LIGHTBOX}="yes"], [${ELEMENTOR_ATTR_LIGHTBOX_JSON}], ` +
-  `a[href^="#elementor-action"]`
+  `a[href^="#elementor-action"], ${WC_ANCHOR_SELECTOR}`
 
 /**
  * A duplicated instance of a candidate: it joins its slide's DOM instances

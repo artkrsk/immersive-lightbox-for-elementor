@@ -20,15 +20,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  * native lightbox is back untouched.
  *
  * WooCommerce's product gallery lightbox is the one exception, switched off
- * server-side while the plugin is enabled: it ships a second PhotoSwipe whose
- * unlayered CSS no capture-phase claim can keep off our root (see
- * WooCommerce\ProductGallery).
+ * server-side while the plugin takes it over: it ships a second PhotoSwipe
+ * whose unlayered CSS no capture-phase claim can keep off our root (see
+ * WooCommerce\ProductGallery). A timely re-add of its support yields the page
+ * back to WooCommerce and Elementor's native lightbox.
  */
 class Plugin {
 	private static ?Plugin $instance = null;
 
 	/** Memoized `arts_immersive_lightbox/enabled` verdict for this request. */
 	private ?bool $enabled = null;
+
+	private ?WooCommerce\ProductGallery $woocommerce_gallery = null;
 
 	public static function instance(): Plugin {
 		return self::$instance ??= new self();
@@ -79,7 +82,8 @@ class Plugin {
 	}
 
 	public function init_woocommerce(): void {
-		( new WooCommerce\ProductGallery() )->register();
+		$this->woocommerce_gallery = new WooCommerce\ProductGallery();
+		$this->woocommerce_gallery->register();
 	}
 
 	/** @param \Elementor\Controls_Manager $controls_manager */
@@ -219,6 +223,26 @@ class Plugin {
 	 */
 	public function print_gate(): void {
 		if ( ! $this->is_enabled() ) {
+			return;
+		}
+
+		// WooCommerce's unlayered PhotoSwipe CSS also reaches our root when an
+		// extension re-adds its support. Its win has to be page-wide: Elementor's
+		// native lightbox resumes alongside WooCommerce's, with no competing gate.
+		if ( $this->woocommerce_gallery?->native_owns_gallery() ) {
+			echo "<!--noptimize-->\n";
+			wp_print_inline_script_tag(
+				"if (window.artsImmersiveLightboxBoot) window.artsImmersiveLightboxBoot.enabled = false;\n"
+				. "document.documentElement.classList.remove('has-arts-lightbox');\n"
+				. "document.documentElement.classList.add('no-arts-lightbox');",
+				array(
+					'data-no-optimize' => '1',
+					'data-cfasync'     => 'false',
+					'nowprocket'       => true,
+				)
+			);
+			echo "<!--/noptimize-->\n";
+
 			return;
 		}
 

@@ -24,6 +24,40 @@ describe('attachDelegation', () => {
     engineState.pswp = null
     document.documentElement.removeAttribute('dir')
     document.body.innerHTML = ''
+    Reflect.deleteProperty(window, 'artsImmersiveLightboxBoot')
+  })
+
+  it('releases clicks while WooCommerce owns the page and resumes afterward', () => {
+    document.body.innerHTML = '<a href="/a.jpg" data-arts-lightbox><img></a>'
+    window.artsImmersiveLightboxBoot = { css: '', js: '', enabled: false }
+    const h = handlers()
+    const detach = attachDelegation(
+      h,
+      false,
+      () => window.artsImmersiveLightboxBoot?.enabled !== false
+    )
+    const img = document.querySelector('img') as HTMLImageElement
+    const nativeClick = new MouseEvent('click', { bubbles: true, cancelable: true })
+    img.dispatchEvent(nativeClick)
+    expect(h.open).not.toHaveBeenCalled()
+    expect(nativeClick.defaultPrevented).toBe(false)
+
+    window.artsImmersiveLightboxBoot.enabled = true
+    const claimed = new MouseEvent('click', { bubbles: true, cancelable: true })
+    img.dispatchEvent(claimed)
+    expect(h.open).toHaveBeenCalledOnce()
+    expect(claimed.defaultPrevented).toBe(true)
+    detach()
+  })
+
+  it('keeps standalone delegation independent of a WordPress boot flag', () => {
+    document.body.innerHTML = '<a href="/a.jpg" data-arts-lightbox><img></a>'
+    window.artsImmersiveLightboxBoot = { css: '', js: '', enabled: false }
+    const h = handlers()
+    const detach = attachDelegation(h)
+    document.querySelector('img')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(h.open).toHaveBeenCalledOnce()
+    detach()
   })
 
   it('stops a claimed click from reaching bubble-phase delegations', () => {

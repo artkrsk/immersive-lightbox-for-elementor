@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * wrap). Running both on one page cannot be made clean, so while the plugin
  * is enabled we switch WooCommerce's off and open the product gallery in
  * ours, as one gallery per product. The theme asked for a lightbox on
- * product images; this is still a lightbox on product images.
+ * product media; images and enabled product videos still open as one gallery.
  *
  * The switch is the theme support itself, removed for the request before
  * anything reads it. That is the one flag every WooCommerce path consults:
@@ -30,6 +30,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ProductGallery {
 
 	private const SUPPORT = 'wc-product-gallery-lightbox';
+
+	private const TAKEOVER_CLASS = 'arts-lightbox-wc-gallery';
+
+	private const NATIVE_CLASS = 'arts-lightbox-wc-native';
 
 	private const ZOOM_SUPPORT = 'wc-product-gallery-zoom';
 
@@ -49,8 +53,14 @@ class ProductGallery {
 	 */
 	private const ZOOM_CSS = '@layer arts-lightbox-woocommerce{.woocommerce-product-gallery__image .zoomImg{pointer-events:none}}';
 
-	/** Memoized: the answer must outlive our own removal of the support. */
-	private ?bool $taking_over = null;
+	/** Memoized before we remove the support ourselves. */
+	private ?bool $eligible = null;
+
+	private bool $removed_support = false;
+
+	private bool $zoom_style_enqueued = false;
+
+	private bool $needs_gallery_script = false;
 
 	public function register(): void {
 		// Ahead of WooCommerce's enqueue (10) and its block gallery's (20).
@@ -58,16 +68,18 @@ class ProductGallery {
 		add_action( 'wp_enqueue_scripts', array( $this, 'sweep' ), PHP_INT_MAX );
 		add_action( 'wp_footer', array( $this, 'sweep' ), 1 );
 		add_filter( 'woocommerce_single_product_photoswipe_enabled', array( $this, 'filter_photoswipe_enabled' ), PHP_INT_MAX );
-		add_filter( 'woocommerce_single_product_image_thumbnail_html', array( $this, 'stamp_gallery_image' ), PHP_INT_MAX, 2 );
+		add_filter( 'woocommerce_single_product_image_gallery_classes', array( $this, 'mark_gallery_classes' ), PHP_INT_MAX );
 	}
 
 	/**
 	 * Evaluated first on `wp_enqueue_scripts`, while the support is still
 	 * there. AJAX and REST renders never fire that hook, so there it is first
-	 * evaluated by the stamping filter, against the support as declared.
+	 * evaluated by the gallery-class filter, against the support as declared.
 	 */
 	public function is_taking_over(): bool {
-		return $this->taking_over ??= Plugin::instance()->is_enabled() && current_theme_supports( self::SUPPORT );
+		$this->eligible ??= Plugin::instance()->is_enabled() && current_theme_supports( self::SUPPORT );
+
+		return $this->eligible && ! $this->native_owns_gallery();
 	}
 
 	public function take_over(): void {
@@ -76,18 +88,19 @@ class ProductGallery {
 		}
 
 		remove_theme_support( self::SUPPORT );
+		$this->removed_support = ! current_theme_supports( self::SUPPORT );
 
 		if ( current_theme_supports( self::ZOOM_SUPPORT ) ) {
 			wp_register_style( self::ZOOM_STYLE_HANDLE, false, array(), null );
 			wp_enqueue_style( self::ZOOM_STYLE_HANDLE );
 			wp_add_inline_style( self::ZOOM_STYLE_HANDLE, self::ZOOM_CSS );
+			$this->zoom_style_enqueued = true;
 		}
 	}
 
 	/**
-	 * A theme that forces the script flag on past the support still gets
-	 * nothing to open: the flag would bind WooCommerce's click handlers to a
-	 * PhotoSwipe that is no longer on the page.
+	 * A timely re-add of the theme support leaves WooCommerce's complete
+	 * lightbox in charge, including its own click handler.
 	 *
 	 * @param mixed $enabled
 	 * @return mixed
@@ -98,14 +111,28 @@ class ProductGallery {
 
 	/**
 	 * Backstop for paths that enqueue WooCommerce's PhotoSwipe outside the
-	 * support check. Only while the support is still removed: something that
-	 * re-added it wants WooCommerce's lightbox, and must get it whole. A
-	 * footer root without its stylesheet would print the stock sprite buttons
-	 * at the bottom of the page.
+	 * support check. A re-add that happened before WooCommerce's enqueue gets
+	 * its complete lightbox. One that arrived after the enqueue cannot: remove
+	 * that too-late support again so neither lightbox is left half-working.
 	 */
 	public function sweep(): void {
-		if ( ! $this->is_taking_over() || current_theme_supports( self::SUPPORT ) ) {
+		if ( $this->native_owns_gallery() ) {
+			if ( $this->zoom_style_enqueued ) {
+				wp_dequeue_style( self::ZOOM_STYLE_HANDLE );
+				$this->zoom_style_enqueued = false;
+			}
+
 			return;
+		}
+
+		if ( ! $this->is_taking_over() ) {
+			return;
+		}
+
+		$this->ensure_gallery_script();
+
+		if ( $this->removed_support && current_theme_supports( self::SUPPORT ) ) {
+			remove_theme_support( self::SUPPORT );
 		}
 
 		wp_dequeue_style( 'photoswipe-default-skin' );
@@ -121,88 +148,61 @@ class ProductGallery {
 	}
 
 	/**
-	 * Opts each gallery image's anchor into our lightbox with the public
-	 * vocabulary. Explicit on purpose: the kit's Image Lightbox switch governs
-	 * Elementor's bare links, while this gallery had a lightbox because the
-	 * theme asked for one. Only missing attributes are set, so markup a theme
-	 * already stamps wins.
+	 * One class on the gallery root lets the gate and engine find every image
+	 * and video anchor without rewriting WooCommerce's markup. A native marker
+	 * vetoes every claim when WooCommerce owns clicks.
 	 *
-	 * @param mixed $html
-	 * @param mixed $attachment_id
+	 * @param mixed $classes
 	 * @return mixed
 	 */
-	public function stamp_gallery_image( $html, $attachment_id ) {
-		if ( ! is_string( $html ) || '' === $html || ! $this->is_taking_over() ) {
-			return $html;
+	public function mark_gallery_classes( $classes ) {
+		if ( ! is_array( $classes ) ) {
+			return $classes;
 		}
 
-		$tags = new \WP_HTML_Tag_Processor( $html );
-
-		if ( ! $tags->next_tag( array( 'tag_name' => 'A' ) ) ) {
-			return $html;
-		}
-
-		$href = $tags->get_attribute( 'href' );
-
-		if ( ! is_string( $href ) || '' === $href || null !== $tags->get_attribute( 'data-arts-lightbox-off' ) ) {
-			return $html;
-		}
-
-		foreach ( $this->gallery_attributes( is_numeric( $attachment_id ) ? (int) $attachment_id : 0 ) as $name => $value ) {
-			if ( null === $tags->get_attribute( $name ) ) {
-				$tags->set_attribute( $name, $value );
+		if ( $this->native_owns_gallery() ) {
+			if ( ! in_array( self::NATIVE_CLASS, $classes, true ) ) {
+				$classes[] = self::NATIVE_CLASS;
 			}
+		} elseif ( $this->is_taking_over() ) {
+			if ( ! in_array( self::TAKEOVER_CLASS, $classes, true ) ) {
+				$classes[] = self::TAKEOVER_CLASS;
+			}
+			$this->needs_gallery_script = true;
+			$this->ensure_gallery_script();
 		}
 
-		return $tags->get_updated_html();
+		return $classes;
+	}
+
+	/** WooCommerce has already queued the pieces its own gallery needs. */
+	public function native_owns_gallery(): bool {
+		if ( ! Plugin::instance()->is_enabled() || ! current_theme_supports( self::SUPPORT ) ) {
+			return false;
+		}
+
+		$script_ready = wp_script_is( 'wc-photoswipe-ui-default', 'enqueued' ) || wp_script_is( 'wc-photoswipe-ui-default', 'done' );
+		$style_ready  = wp_style_is( 'photoswipe-default-skin', 'enqueued' ) || wp_style_is( 'photoswipe-default-skin', 'done' );
+
+		return $script_ready && $style_ready;
 	}
 
 	/**
-	 * The group keeps one product's images together — they sit in separate
-	 * wrappers, and ungrouped links would each open alone. Width and height
-	 * are left to the engine: it upgrades guessed dimensions once the file
-	 * loads, and stamped ones would go stale when a variation swaps the image
-	 * client-side. The caption is the attachment's, which is what
-	 * WooCommerce's own lightbox showed; without one the engine falls back to
-	 * the image's alt, as for any other link.
-	 *
-	 * @return array<string, string|true>
+	 * Legacy Product Image Gallery blocks skip wc-single-product if lightbox
+	 * support was their only gallery feature. The script still initializes the
+	 * gallery and releases its initial opacity: 0. A gallery can render before
+	 * WooCommerce registers the handle, so sweep retries after its enqueue.
 	 */
-	public function gallery_attributes( int $attachment_id ): array {
-		$attributes = array( 'data-arts-lightbox' => true );
-
-		$product_id = $this->product_id();
-
-		if ( $product_id > 0 ) {
-			$attributes['data-arts-lightbox-group'] = 'woocommerce-product-' . $product_id;
+	private function ensure_gallery_script(): void {
+		if (
+			! $this->needs_gallery_script ||
+			! wp_script_is( 'wc-single-product', 'registered' ) ||
+			wp_script_is( 'wc-single-product', 'enqueued' ) ||
+			wp_script_is( 'wc-single-product', 'done' )
+		) {
+			return;
 		}
 
-		$caption = $attachment_id > 0 ? wp_get_attachment_caption( $attachment_id ) : false;
-		$caption = is_string( $caption ) ? trim( wp_strip_all_tags( $caption ) ) : '';
-
-		if ( '' !== $caption ) {
-			$attributes['data-arts-lightbox-caption'] = $caption;
-		}
-
-		return $attributes;
-	}
-
-	/**
-	 * WooCommerce sets the `product` global around every gallery render,
-	 * AJAX re-renders of a variation's gallery included. The loop's post is
-	 * the fallback for a template that renders the gallery without it.
-	 */
-	private function product_id(): int {
-		$product = $GLOBALS['product'] ?? null;
-
-		if ( is_object( $product ) && method_exists( $product, 'get_id' ) ) {
-			$id = $product->get_id();
-
-			return is_numeric( $id ) ? (int) $id : 0;
-		}
-
-		$id = get_the_ID();
-
-		return is_int( $id ) ? $id : 0;
+		wp_enqueue_script( 'wc-single-product' );
 	}
 }

@@ -389,18 +389,27 @@ layer on the lightbox root. So while the plugin is enabled:
 - the theme support is removed for the request on `wp_enqueue_scripts`
   (priority 1), which drops WooCommerce's PhotoSwipe CSS, JS and footer root,
   and `woocommerce_single_product_photoswipe_enabled` is forced to `false`;
-- each gallery image's anchor is stamped through
-  `woocommerce_single_product_image_thumbnail_html` with `data-arts-lightbox`,
-  a per-product `data-arts-lightbox-group`, and `data-arts-lightbox-caption`
-  from the attachment caption when it has one. The group id is internal. These
-  are explicit opt-ins, so product images open whatever the kit's Image
-  Lightbox switch says, and attributes the markup already carries win;
+- `woocommerce_single_product_image_gallery_classes` marks the gallery root.
+  The gate and engine recognize its image and video anchors and group by that
+  root, independent of the kit's Image Lightbox switch. Nothing rewrites the
+  anchors: the current `href` and media `data-caption` are read per open, so
+  variation changes are reflected. Authored `data-arts-lightbox-*` attributes
+  and opt-outs keep their usual priority;
 - with `wc-product-gallery-zoom`, jquery.zoom's overlay would take every click,
   so a small head style (in its own `arts-lightbox-woocommerce` layer) lets
-  clicks through to the anchor. The hover zoom keeps working.
+  clicks through to the anchor. The hover zoom keeps working. Legacy Product
+  Image Gallery blocks retain WooCommerce's gallery initializer even when
+  lightbox support was their only reason to enqueue it.
 
 Filtering `arts_immersive_lightbox/enabled` off gives WooCommerce its
-lightbox back.
+lightbox back. A theme or extension that re-adds the support before
+WooCommerce enqueues its assets also keeps WooCommerce's lightbox. The plugin
+does not print its gate on that request, so Elementor's native lightbox also
+handles other links and the two PhotoSwipe stylesheets never compete. A
+re-add after WooCommerce's enqueue cannot load the missing assets, so the
+plugin keeps its takeover for that request. Theme template overrides must preserve
+the gallery-class filter to participate; WooCommerce's modern Product Gallery
+block uses its own dialog and is not part of this takeover.
 
 ### Elementor Site Settings
 

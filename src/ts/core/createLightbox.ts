@@ -23,6 +23,9 @@ export function createLightboxWithLifecycle(
   let disposePrefetch: (() => void) | null = null
   let destroying = false
   let destroyed = false
+  // The library constructor has no WordPress gate; only the booted instance
+  // follows a later request's handoff back to WooCommerce.
+  const isActive = (): boolean => !hooks || window.artsImmersiveLightboxBoot?.enabled !== false
 
   const close = (): Promise<void> => {
     // Sound never survives into the close choreography.
@@ -61,9 +64,10 @@ export function createLightboxWithLifecycle(
           next: api.next,
           prev: api.prev
         },
-        opts.elementor.nativeFallback
+        opts.elementor.nativeFallback,
+        isActive
       )
-      disposePrefetch = attachHoverPrefetch(opts)
+      disposePrefetch = attachHoverPrefetch(opts, isActive)
       hooks?.initialized(instance)
     },
     destroy: () => {
@@ -79,7 +83,7 @@ export function createLightboxWithLifecycle(
       destroying = false
     },
     close,
-    open: opener.open,
+    open: (el, point) => (isActive() ? opener.open(el, point) : false),
     version: __ARTS_IMMERSIVE_LIGHTBOX_VERSION__
   }
   return instance

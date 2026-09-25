@@ -75,6 +75,11 @@ namespace {
 	 */
 	$GLOBALS['arts_lightbox_test_theme_supports'] = array();
 	$GLOBALS['arts_lightbox_test_calls']          = array();
+	$GLOBALS['arts_lightbox_test_queued_scripts'] = array();
+	$GLOBALS['arts_lightbox_test_registered_scripts'] = array();
+	$GLOBALS['arts_lightbox_test_queued_styles']  = array();
+	$GLOBALS['arts_lightbox_test_done_scripts']   = array();
+	$GLOBALS['arts_lightbox_test_done_styles']    = array();
 
 	function arts_lightbox_test_record( string $function, mixed ...$args ): void {
 		$GLOBALS['arts_lightbox_test_calls'][] = array( $function, $args );
@@ -116,6 +121,32 @@ namespace {
 		return true;
 	}
 
+	function wp_script_is( string $handle, string $status = 'enqueued' ): bool {
+		$key = match ( $status ) {
+			'registered' => 'arts_lightbox_test_registered_scripts',
+			'done'       => 'arts_lightbox_test_done_scripts',
+			default      => 'arts_lightbox_test_queued_scripts',
+		};
+
+		return in_array( $handle, $GLOBALS[ $key ], true );
+	}
+
+	function wp_style_is( string $handle, string $status = 'enqueued' ): bool {
+		$key = 'done' === $status ? 'arts_lightbox_test_done_styles' : 'arts_lightbox_test_queued_styles';
+
+		return in_array( $handle, $GLOBALS[ $key ], true );
+	}
+
+	function arts_lightbox_test_native_gallery_ready(): void {
+		$GLOBALS['arts_lightbox_test_queued_scripts'][] = 'wc-photoswipe-ui-default';
+		$GLOBALS['arts_lightbox_test_queued_styles'][]  = 'photoswipe-default-skin';
+	}
+
+	function wp_enqueue_script( string $handle ): void {
+		arts_lightbox_test_record( __FUNCTION__, $handle );
+		$GLOBALS['arts_lightbox_test_queued_scripts'][] = $handle;
+	}
+
 	function wp_register_style( string $handle, string|false $src, array $deps = array(), string|bool|null $ver = false ): bool {
 		arts_lightbox_test_record( __FUNCTION__, $handle, $src );
 
@@ -124,6 +155,7 @@ namespace {
 
 	function wp_enqueue_style( string $handle ): void {
 		arts_lightbox_test_record( __FUNCTION__, $handle );
+		$GLOBALS['arts_lightbox_test_queued_styles'][] = $handle;
 	}
 
 	function wp_add_inline_style( string $handle, string $data ): bool {
@@ -132,28 +164,24 @@ namespace {
 		return true;
 	}
 
+	/** @param array<string, mixed> $attributes */
+	function wp_print_inline_script_tag( string $data, array $attributes = array() ): void {
+		arts_lightbox_test_record( __FUNCTION__, $data, $attributes );
+		echo '<script>' . $data . '</script>';
+	}
+
 	function wp_dequeue_style( string $handle ): void {
 		arts_lightbox_test_record( __FUNCTION__, $handle );
+		$GLOBALS['arts_lightbox_test_queued_styles'] = array_values(
+			array_diff( $GLOBALS['arts_lightbox_test_queued_styles'], array( $handle ) )
+		);
 	}
 
 	function wp_dequeue_script( string $handle ): void {
 		arts_lightbox_test_record( __FUNCTION__, $handle );
-	}
-
-	$GLOBALS['arts_lightbox_test_captions'] = array();
-
-	function wp_get_attachment_caption( int $post_id = 0 ): string|false {
-		return $GLOBALS['arts_lightbox_test_captions'][ $post_id ] ?? false;
-	}
-
-	function wp_strip_all_tags( string $text ): string {
-		return trim( strip_tags( $text ) );
-	}
-
-	$GLOBALS['arts_lightbox_test_post_id'] = false;
-
-	function get_the_ID(): int|false {
-		return $GLOBALS['arts_lightbox_test_post_id'];
+		$GLOBALS['arts_lightbox_test_queued_scripts'] = array_values(
+			array_diff( $GLOBALS['arts_lightbox_test_queued_scripts'], array( $handle ) )
+		);
 	}
 
 	if ( ! class_exists( 'WP_HTML_Tag_Processor' ) ) {
@@ -338,8 +366,11 @@ namespace {
 		$GLOBALS['arts_lightbox_test_filters']        = array();
 		$GLOBALS['arts_lightbox_test_theme_supports'] = array();
 		$GLOBALS['arts_lightbox_test_calls']          = array();
-		$GLOBALS['arts_lightbox_test_captions']       = array();
-		$GLOBALS['arts_lightbox_test_post_id']        = false;
+		$GLOBALS['arts_lightbox_test_queued_scripts'] = array();
+		$GLOBALS['arts_lightbox_test_registered_scripts'] = array();
+		$GLOBALS['arts_lightbox_test_queued_styles']  = array();
+		$GLOBALS['arts_lightbox_test_done_scripts']   = array();
+		$GLOBALS['arts_lightbox_test_done_styles']    = array();
 		\Elementor\Plugin::$instance                 = null;
 		unset( $GLOBALS['product'] );
 

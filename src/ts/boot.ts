@@ -18,7 +18,10 @@ hub.__replaceBoot(() => {
   }
   hub.__disposeBoot = dispose
   hub.refresh = () => {
-    markCandidates(window.artsImmersiveLightboxOptions?.elementor?.nativeFallback === true)
+    markCandidates(
+      window.artsImmersiveLightboxOptions?.elementor?.nativeFallback === true,
+      window.artsImmersiveLightboxBoot?.enabled !== false
+    )
   }
   delete hub.preload
 

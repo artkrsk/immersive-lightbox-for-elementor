@@ -10,3 +10,6 @@ export const LINK_CLASS = 'arts-lightbox-link'
  * the same class names) never picks up our styles.
  */
 export const HOST_CLASS = 'arts-lightbox-host'
+/** Internal WooCommerce gallery ownership markers, stamped on its root. */
+export const WC_GALLERY_CLASS = 'arts-lightbox-wc-gallery'
+export const WC_NATIVE_CLASS = 'arts-lightbox-wc-native'

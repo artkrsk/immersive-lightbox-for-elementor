@@ -33,6 +33,8 @@ if (!window.artsLightbox) {
       if (markCandidates(b.nativeFallback === true) > 0) {
         gate.preload?.()
       }
+    } else {
+      markCandidates(false, false)
     }
   }
 
@@ -89,6 +91,19 @@ if (!window.artsLightbox) {
       window.addEventListener('elementor/frontend/init', subscribe)
     }
 
+    // WooCommerce can replace the entire classic gallery after a variation
+    // request. The new root carries PHP's ownership class, so clicks work
+    // immediately; refresh the per-link class for cursor followers and CSS.
+    const subscribeWoo = (): void => {
+      window
+        .jQuery?.(document)
+        .on('wc-product-gallery-after-init.artsLightbox', '.woocommerce-product-gallery', remark)
+    }
+    document.addEventListener('DOMContentLoaded', subscribeWoo, { once: true })
+    if (document.readyState !== 'loading') {
+      subscribeWoo()
+    }
+
     let loading = false
     let heldHref: string | null = null
     // The first cold click on a bare image link must hold like any other
@@ -106,7 +121,11 @@ if (!window.artsLightbox) {
     }
 
     const load = (): void => {
-      if (loading || document.getElementById(GATE_JS_ID)) {
+      if (
+        window.artsImmersiveLightboxBoot?.enabled === false ||
+        loading ||
+        document.getElementById(GATE_JS_ID)
+      ) {
         return
       }
       loading = true
@@ -169,6 +188,9 @@ if (!window.artsLightbox) {
     const opts = { capture: true }
 
     const onClick = (e: MouseEvent): void => {
+      if (window.artsImmersiveLightboxBoot?.enabled === false) {
+        return
+      }
       const claim = claimCandidateClick(e, nativeFallback)
       if (!claim) {
         return
@@ -185,6 +207,9 @@ if (!window.artsLightbox) {
     }
 
     const onOver = (e: Event): void => {
+      if (window.artsImmersiveLightboxBoot?.enabled === false) {
+        return
+      }
       if (matchCandidateElement(e.target as Element | null, nativeFallback)) {
         load()
       }
