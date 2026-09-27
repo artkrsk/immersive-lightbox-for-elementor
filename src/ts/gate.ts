@@ -89,6 +89,19 @@ if (!window.artsLightbox) {
       window.addEventListener('elementor/frontend/init', subscribe)
     }
 
+    // WooCommerce can replace the entire classic gallery after a variation
+    // request. The new root carries PHP's ownership class, so clicks work
+    // immediately; refresh the per-link class for cursor followers and CSS.
+    const subscribeWoo = (): void => {
+      window
+        .jQuery?.(document)
+        .on('wc-product-gallery-after-init.artsLightbox', '.woocommerce-product-gallery', remark)
+    }
+    document.addEventListener('DOMContentLoaded', subscribeWoo, { once: true })
+    if (document.readyState !== 'loading') {
+      subscribeWoo()
+    }
+
     let loading = false
     let heldHref: string | null = null
     // The first cold click on a bare image link must hold like any other

@@ -1,6 +1,7 @@
 import type { IOpenRequest, IOptions } from '../interfaces'
 import PhotoSwipe from '../photoswipe/photoswipe'
 import { engineState } from './engineState'
+import { acquireLightboxHost, releaseLightboxHost } from './lightboxHost'
 import { mapToPswpOptions } from './mapToPswpOptions'
 
 /**
@@ -12,13 +13,20 @@ import { mapToPswpOptions } from './mapToPswpOptions'
  * non-touch devices, but its only consumer reads the option live during the
  * drag — so flipping it back after construction (before any drag can start)
  * re-enables mouse-drag between slides without patching the source.
+ *
+ * The root mounts in our host rather than straight in body — the stylesheet
+ * is scoped to it (see lightboxHost).
  */
 export function createPswp(
   opts: IOptions,
   req: IOpenRequest,
   configure?: (pswp: PhotoSwipe) => void
 ): PhotoSwipe {
-  const pswp = new PhotoSwipe(mapToPswpOptions(opts, req.gallery, req.index))
+  const host = acquireLightboxHost()
+  const pswp = new PhotoSwipe({
+    ...mapToPswpOptions(opts, req.gallery, req.index),
+    appendToEl: host
+  })
   if (opts.desktopDrag) {
     pswp.on('beforeOpen', () => {
       pswp.options.allowPanToNext = true
@@ -29,6 +37,9 @@ export function createPswp(
       engineState.pswp = null
       engineState.closeHandle = null
     }
+    // The core removes its root only after this dispatch returns — and the
+    // root must still be in the document for every destroy listener.
+    queueMicrotask(() => releaseLightboxHost(host))
   })
   engineState.pswp = pswp
   configure?.(pswp)

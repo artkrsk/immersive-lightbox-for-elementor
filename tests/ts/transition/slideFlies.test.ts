@@ -2,7 +2,7 @@
 
 import type { ISlideData } from '@ts/interfaces'
 import { slideFlies } from '@ts/transition/slideFlies'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 function slide(over: Partial<ISlideData>): ISlideData {
   return { key: 'k', type: 'image', src: 's', ...over }
@@ -16,6 +16,23 @@ function trigger(html: string): HTMLElement {
 
 const PHOTO = '<img src="photo.jpg" width="1400" height="1648" alt="" />'
 const PLAYER = '<video src="clip.mp4" width="1280" height="720" poster="p.jpg"></video>'
+
+/** A WooCommerce gallery image with jquery.zoom's overlay beside the anchor. */
+function wooTrigger(zoomOpacity: string | null): HTMLElement {
+  const wrapper = document.createElement('div')
+  wrapper.className = 'woocommerce-product-gallery__image'
+  const zoom =
+    zoomOpacity === null
+      ? ''
+      : `<img class="zoomImg" src="full.jpg" style="opacity:${zoomOpacity}" />`
+  wrapper.innerHTML = `<a href="full.jpg">${PHOTO}</a>${zoom}`
+  document.body.append(wrapper)
+  return wrapper.querySelector('a') as HTMLElement
+}
+
+afterEach(() => {
+  document.body.innerHTML = ''
+})
 
 describe('slideFlies', () => {
   it('flies an image whatever it wrapped', () => {
@@ -40,6 +57,15 @@ describe('slideFlies', () => {
   it('refuses a video slide whose trigger has no visual at all', () => {
     expect(slideFlies(slide({ type: 'video' }), trigger('Watch the film'))).toBe(false)
     expect(slideFlies(slide({ type: 'video' }), null)).toBe(false)
+  })
+
+  // jquery.zoom paints its magnified crop over the trigger; a flight starting
+  // from the base image would not read as the same picture. A faded or absent
+  // overlay leaves the base image as what the page shows, so that flies.
+  it('refuses an image while its WooCommerce zoom overlay is showing', () => {
+    expect(slideFlies(slide({ type: 'image' }), wooTrigger('1'))).toBe(false)
+    expect(slideFlies(slide({ type: 'image' }), wooTrigger('0'))).toBe(true)
+    expect(slideFlies(slide({ type: 'image' }), wooTrigger(null))).toBe(true)
   })
 
   it('says nothing about slides it does not judge', () => {

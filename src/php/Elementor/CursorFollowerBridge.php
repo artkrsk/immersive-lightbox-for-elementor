@@ -21,6 +21,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class CursorFollowerBridge {
 
+	/**
+	 * Our root, and only ours. A bare `.pswp` also matched the PhotoSwipe
+	 * WooCommerce prints, so the follower drew our close glyph over a lightbox
+	 * that is not ours. Their engine substitutes the scope into each rule's
+	 * `:scope` as text and resolves the instance with `closest()`, so a complex
+	 * selector expands cleanly — a selector LIST would not.
+	 */
+	private const SCOPE = '.arts-lightbox-host > .pswp';
+
 	public function register(): void {
 		add_filter( 'arts_cursor_follower/options', array( $this, 'add_scope' ) );
 	}
@@ -49,7 +58,7 @@ class CursorFollowerBridge {
 			: array();
 
 		$scopes[] = array(
-			'scope' => '.pswp',
+			'scope' => self::SCOPE,
 			'rules' => $rules,
 		);
 

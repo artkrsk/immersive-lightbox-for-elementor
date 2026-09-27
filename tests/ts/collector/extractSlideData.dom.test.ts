@@ -385,3 +385,50 @@ describe('extractSlideData', () => {
     expect(data.videoHash).toBe('abc1234567')
   })
 })
+
+describe('WooCommerce live media data', () => {
+  it('reads the current variation URL and caption instead of stale attachment text', () => {
+    document.body.innerHTML = `
+      <div class="woocommerce-product-gallery arts-lightbox-wc-gallery">
+        <div class="woocommerce-product-gallery__image">
+          <a href="/base.jpg"><img data-caption="&lt;em&gt;Base&lt;/em&gt;" alt="Base alt"></a>
+        </div>
+      </div>
+    `
+    const el = document.querySelector('a') as HTMLAnchorElement
+    const img = el.querySelector('img') as HTMLImageElement
+    expect(extractSlideData(el).caption).toBe('Base')
+
+    el.href = '/variation.jpg'
+    img.setAttribute('data-caption', '<strong>Variation</strong> &amp; detail')
+    img.alt = 'Variation alt'
+    const updated = extractSlideData(el)
+    expect(updated.src).toBe('/variation.jpg')
+    expect(updated.caption).toBe('Variation & detail')
+
+    el.setAttribute('data-arts-lightbox-caption', 'Authored')
+    expect(extractSlideData(el).caption).toBe('Authored')
+  })
+
+  it('uses WooCommerce video metadata even for an extensionless URL', () => {
+    document.body.innerHTML = `
+      <div class="woocommerce-product-gallery arts-lightbox-wc-gallery">
+        <div class="woocommerce-product-gallery__image woocommerce-product-gallery__video">
+          <a href="/stream?file=7">
+            <video poster="/poster.jpg" data-caption="<em>Behind the scenes</em>"
+              aria-label="Video label"></video>
+          </a>
+        </div>
+      </div>
+    `
+    const el = document.querySelector('a') as HTMLAnchorElement
+    const video = el.querySelector('video') as HTMLVideoElement
+    const data = extractSlideData(el)
+    expect(data.type).toBe('video')
+    expect(data.caption).toBe('Behind the scenes')
+    expect(data.msrc).toMatch(/\/poster\.jpg$/)
+
+    video.removeAttribute('data-caption')
+    expect(extractSlideData(el).caption).toBe('Video label')
+  })
+})

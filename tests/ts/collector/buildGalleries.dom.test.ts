@@ -163,3 +163,40 @@ describe('resolveOpenRequest', () => {
     expect(resolveOpenRequest(stranger, galleries)).toBeNull()
   })
 })
+
+describe('WooCommerce gallery roots', () => {
+  it('groups each marked product separately and includes native videos', () => {
+    document.body.innerHTML = `
+      <div class="woocommerce-product-gallery arts-lightbox-wc-gallery">
+        <div class="woocommerce-product-gallery__image"><a href="/one.jpg"><img alt="One"></a></div>
+        <div class="woocommerce-product-gallery__image woocommerce-product-gallery__video">
+          <a href="/clip.mp4"><video aria-label="Clip"></video></a>
+        </div>
+      </div>
+      <div class="woocommerce-product-gallery arts-lightbox-wc-gallery">
+        <div class="woocommerce-product-gallery__image"><a href="/two.jpg"><img alt="Two"></a></div>
+      </div>
+    `
+    const galleries = buildGalleries(document, galleryOpts())
+    expect(galleries).toHaveLength(2)
+    expect(galleries[0]?.slides.map((slide) => slide.src)).toEqual(['/one.jpg', '/clip.mp4'])
+    expect(galleries[0]?.slides[1]?.type).toBe('video')
+    expect(galleries[1]?.slides.map((slide) => slide.src)).toEqual(['/two.jpg'])
+  })
+
+  it('keeps an authored group above the WooCommerce root bucket', () => {
+    document.body.innerHTML = `
+      <div class="woocommerce-product-gallery arts-lightbox-wc-gallery">
+        <div class="woocommerce-product-gallery__image">
+          <a href="/one.jpg" data-arts-lightbox-group="custom"><img></a>
+        </div>
+        <div class="woocommerce-product-gallery__image">
+          <a href="/two.jpg" data-arts-lightbox-group="custom"><img></a>
+        </div>
+      </div>
+    `
+    const galleries = buildGalleries(document, galleryOpts())
+    expect(galleries).toHaveLength(1)
+    expect(galleries[0]?.id).toBe('custom')
+  })
+})

@@ -8,7 +8,8 @@ import {
   ATTR_LIGHTBOX,
   ATTR_THUMB,
   ATTR_TYPE,
-  ATTR_WIDTH
+  ATTR_WIDTH,
+  WC_GALLERY_SELECTOR
 } from '../constants'
 import {
   ELEMENTOR_ATTR_DESCRIPTION,
@@ -37,10 +38,29 @@ function readDimension(
   return Number.isFinite(fallback) && fallback > 0 ? fallback : undefined
 }
 
-function readCaption(el: HTMLElement, img: HTMLImageElement | null): string | undefined {
+function readCaption(
+  el: HTMLElement,
+  img: HTMLImageElement | null,
+  video: HTMLVideoElement | null
+): string | undefined {
   const attr = el.getAttribute(ATTR_CAPTION)
   if (attr) {
     return attr
+  }
+  // WooCommerce updates data-caption in place when a variation replaces the
+  // image. Read it at open time rather than freezing the attachment caption
+  // into an anchor attribute. A detached template decodes markup to text
+  // without inserting author content into the page.
+  if (el.closest(WC_GALLERY_SELECTOR)) {
+    const raw = (img ?? video)?.getAttribute('data-caption')
+    if (raw) {
+      const template = el.ownerDocument.createElement('template')
+      template.innerHTML = raw
+      const caption = template.content.textContent?.trim()
+      if (caption) {
+        return caption
+      }
+    }
   }
   // Elementor resolves its lightbox_title_src kit setting server-side into
   // this attribute, so reading it inherits that setting for free.
@@ -52,7 +72,7 @@ function readCaption(el: HTMLElement, img: HTMLImageElement | null): string | un
   if (figcaption) {
     return figcaption
   }
-  const alt = img?.getAttribute('alt')?.trim()
+  const alt = (img?.getAttribute('alt') ?? video?.getAttribute('aria-label'))?.trim()
   return alt || undefined
 }
 
@@ -220,6 +240,36 @@ function applyElementorOverrides(
   }
 }
 
+function resolveType(
+  el: HTMLElement,
+  src: string,
+  video: HTMLVideoElement | null,
+  elementor: ReturnType<typeof resolveElementorSource>
+): ISlideData['type'] {
+  if (elementor) {
+    return elementor.type
+  }
+  const explicitType = el.getAttribute(ATTR_TYPE)
+  const wcVideo = video && el.closest(WC_GALLERY_SELECTOR)
+  return detectSlideType(src, explicitType ?? (wcVideo ? 'video' : null))
+}
+
+function readText(
+  data: ISlideData,
+  el: HTMLElement,
+  img: HTMLImageElement | null,
+  video: HTMLVideoElement | null
+): void {
+  const caption = readCaption(el, img, video)
+  if (caption) {
+    data.caption = caption
+  }
+  const description = readDescription(el)
+  if (description) {
+    data.description = description
+  }
+}
+
 /** Reads one candidate element into the engine's slide model. */
 export function extractSlideData(el: HTMLElement): ISlideData {
   const img = el.querySelector('img')
@@ -227,7 +277,7 @@ export function extractSlideData(el: HTMLElement): ISlideData {
   const { src, hrefSrc, markerWins, elementor } = resolveSource(el)
   const data: ISlideData = {
     key: el.getAttribute(ATTR_ID) ?? normalizeUrlKey(src, el.ownerDocument.baseURI),
-    type: elementor ? elementor.type : detectSlideType(src, el.getAttribute(ATTR_TYPE)),
+    type: resolveType(el, src, containedVideo, elementor),
     src
   }
   // A trigger <img> on a VIDEO slide is a poster, not the player: its aspect
@@ -252,14 +302,7 @@ export function extractSlideData(el: HTMLElement): ISlideData {
   if (!data.msrc && markerWins && hrefSrc) {
     data.msrc = hrefSrc
   }
-  const caption = readCaption(el, img)
-  if (caption) {
-    data.caption = caption
-  }
-  const description = readDescription(el)
-  if (description) {
-    data.description = description
-  }
+  readText(data, el, img, containedVideo)
   if (data.type === 'video') {
     readVideoData(data, el)
   }

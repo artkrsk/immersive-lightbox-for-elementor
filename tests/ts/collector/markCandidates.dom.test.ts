@@ -56,3 +56,16 @@ describe('markCandidates', () => {
     expect(refresh).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('WooCommerce link markers', () => {
+  it('marks owned image and video links', () => {
+    document.body.innerHTML = `
+      <div class="woocommerce-product-gallery arts-lightbox-wc-gallery">
+        <div class="woocommerce-product-gallery__image"><a href="/one.jpg"><img></a></div>
+        <div class="woocommerce-product-gallery__image"><a href="/clip.mp4"><video></video></a></div>
+      </div>
+    `
+    markCandidates(true)
+    expect(marked()).toEqual(['/one.jpg', '/clip.mp4'])
+  })
+})

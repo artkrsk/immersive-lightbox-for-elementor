@@ -16,13 +16,33 @@ import type { ISlideData } from '../interfaces'
  * its own aspect. That covers every provider at once — an embed has no
  * `<video>` to wrap, and neither does a bare `.mp4` link on a photograph.
  *
+ * An IMAGE stops flying in one case: WooCommerce's hover zoom is showing its
+ * magnified crop over the trigger. The flight paints the base image, so it
+ * would launch from (or land on) a picture the page is not showing. Judged per
+ * transition, on the overlay's current opacity: a close after the overlay has
+ * faded flies as usual.
+ *
  * This narrows the existing rules rather than replacing them — a slide with no
  * visual at either end is already caught by the empty flight source.
  */
 export function slideFlies(slide: ISlideData | undefined, sourceEl: HTMLElement | null): boolean {
+  if (zoomOverlayShowing(sourceEl)) {
+    return false
+  }
   if (slide?.type !== 'video') {
     return true
   }
   // The same lookup extraction uses for dims and the capture uses for pixels.
   return Boolean(sourceEl?.querySelector('video'))
+}
+
+/** jquery.zoom appends `img.zoomImg` beside the anchor and fades its opacity inline. */
+function zoomOverlayShowing(sourceEl: HTMLElement | null): boolean {
+  const zoom = sourceEl
+    ?.closest('.woocommerce-product-gallery__image')
+    ?.querySelector('img.zoomImg')
+  if (!zoom) {
+    return false
+  }
+  return Number.parseFloat(getComputedStyle(zoom).opacity) > 0
 }

@@ -8,11 +8,10 @@ import { matchCandidateElement } from './matchCandidateElement'
  * selector (the kit's bare-link switch, Elementor's anchor guard, the
  * action-hash release are all predicates).
  *
- * Routes through `matchCandidateElement` like every other input path, plus
- * the explicit `off`-ancestor filter that resolver leaves to collection
- * (`findCandidates`) — off wins over everything, marks included. Re-running
- * drops stale marks first, so AJAX-swapped DOM converges. Ends by nudging a
- * present cursor follower to re-resolve a hover held across the re-scan.
+ * Routes through `matchCandidateElement` like every other input path; its
+ * opt-out veto applies to marks too. Re-running drops stale marks first, so
+ * AJAX-swapped DOM converges. Ends by nudging a present cursor follower to
+ * re-resolve a hover held across the re-scan.
  *
  * Returns how many candidates the page holds — the gate warms the engine off
  * this count rather than paying for a scan of its own.
