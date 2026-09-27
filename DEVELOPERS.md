@@ -397,19 +397,17 @@ layer on the lightbox root. So while the plugin is enabled:
   and opt-outs keep their usual priority;
 - with `wc-product-gallery-zoom`, jquery.zoom's overlay would take every click,
   so a small head style (in its own `arts-lightbox-woocommerce` layer) lets
-  clicks through to the anchor. The hover zoom keeps working. Legacy Product
-  Image Gallery blocks retain WooCommerce's gallery initializer even when
-  lightbox support was their only reason to enqueue it.
+  clicks through to the anchor. The hover zoom keeps working; while its
+  magnified overlay is showing, the open and close use the fade instead of the
+  flight, since a flight painting the base image would not match what the page
+  shows. Legacy Product Image Gallery blocks retain WooCommerce's gallery
+  initializer even when lightbox support was their only reason to enqueue it.
 
-Filtering `arts_immersive_lightbox/enabled` off gives WooCommerce its
-lightbox back. A theme or extension that re-adds the support before
-WooCommerce enqueues its assets also keeps WooCommerce's lightbox. The plugin
-does not print its gate on that request, so Elementor's native lightbox also
-handles other links and the two PhotoSwipe stylesheets never compete. A
-re-add after WooCommerce's enqueue cannot load the missing assets, so the
-plugin keeps its takeover for that request. Theme template overrides must preserve
-the gallery-class filter to participate; WooCommerce's modern Product Gallery
-block uses its own dialog and is not part of this takeover.
+The takeover holds for every request while the plugin is enabled; filtering
+`arts_immersive_lightbox/enabled` off gives WooCommerce its lightbox back.
+Theme template overrides must preserve the gallery-class filter to
+participate; WooCommerce's modern Product Gallery block uses its own dialog
+and is not part of this takeover.
 
 ### Elementor Site Settings
 

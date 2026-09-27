@@ -16,8 +16,7 @@ export {
   CLOSING_CLASS,
   HOST_CLASS,
   LINK_CLASS,
-  TRANSITIONING_CLASS,
-  WC_NATIVE_CLASS
+  TRANSITIONING_CLASS
 } from './classNames'
 export { DEFAULT_OPTIONS } from './defaults'
 export {

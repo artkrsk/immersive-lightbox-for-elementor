@@ -94,15 +94,4 @@ describe('WooCommerce gallery ownership', () => {
       expect(matchCandidateElement(document.getElementById(id), true)).toBeNull()
     }
   })
-
-  it('lets WooCommerce own even explicitly opted-in links when it reclaims support', () => {
-    document.body.innerHTML = `
-      <div class="woocommerce-product-gallery arts-lightbox-wc-native">
-        <div class="woocommerce-product-gallery__image">
-          <a href="/photo.jpg" data-arts-lightbox><img></a>
-        </div>
-      </div>
-    `
-    expect(matchCandidateElement(document.querySelector('img'), true)).toBeNull()
-  })
 })

@@ -18,10 +18,7 @@ hub.__replaceBoot(() => {
   }
   hub.__disposeBoot = dispose
   hub.refresh = () => {
-    markCandidates(
-      window.artsImmersiveLightboxOptions?.elementor?.nativeFallback === true,
-      window.artsImmersiveLightboxBoot?.enabled !== false
-    )
+    markCandidates(window.artsImmersiveLightboxOptions?.elementor?.nativeFallback === true)
   }
   delete hub.preload
 
@@ -34,8 +31,7 @@ hub.__replaceBoot(() => {
       },
       destroying(lightbox) {
         if (hub.__disposeBoot === dispose && hub.get() === lightbox) hub.__setInstance(null)
-      },
-      isActive: () => window.artsImmersiveLightboxBoot?.enabled !== false
+      }
     })
     instance.init()
     document.dispatchEvent(new CustomEvent('arts-lightbox:ready', { detail: instance }))

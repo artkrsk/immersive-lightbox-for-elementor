@@ -12,7 +12,6 @@ use function add_theme_support;
 use function arts_lightbox_test_calls;
 use function arts_lightbox_test_did_action;
 use function arts_lightbox_test_filter;
-use function arts_lightbox_test_native_gallery_ready;
 use function arts_lightbox_test_reset;
 use function current_theme_supports;
 use function wp_style_is;
@@ -61,39 +60,16 @@ class ProductGalleryTest extends TestCase {
 		self::assertTrue( current_theme_supports( self::SUPPORT ) );
 	}
 
-	public function test_enqueues_legacy_gallery_initializer_when_lightbox_was_the_only_support(): void {
-		add_theme_support( self::SUPPORT );
-		$gallery = new ProductGallery();
-		$gallery->take_over();
-		$GLOBALS['arts_lightbox_test_registered_scripts'][] = 'wc-single-product';
-
-		$gallery->mark_gallery_classes( array() );
-
-		self::assertSame( array( array( 'wc-single-product' ) ), arts_lightbox_test_calls( 'wp_enqueue_script' ) );
-	}
-
-	public function test_early_gallery_render_waits_for_woocommerce_to_register_its_script(): void {
-		add_theme_support( self::SUPPORT );
-		$gallery = new ProductGallery();
-		$gallery->mark_gallery_classes( array() );
+	public function test_enqueues_the_legacy_gallery_initializer_only_for_a_taken_over_gallery(): void {
+		( new ProductGallery() )->mark_gallery_classes( array() );
 		self::assertSame( array(), arts_lightbox_test_calls( 'wp_enqueue_script' ) );
 
-		$gallery->take_over();
-		$GLOBALS['arts_lightbox_test_registered_scripts'][] = 'wc-single-product';
-		$gallery->sweep();
-		self::assertSame( array( array( 'wc-single-product' ) ), arts_lightbox_test_calls( 'wp_enqueue_script' ) );
-	}
-
-	public function test_does_not_requeue_an_initialized_gallery(): void {
 		add_theme_support( self::SUPPORT );
 		$gallery = new ProductGallery();
 		$gallery->take_over();
-		$GLOBALS['arts_lightbox_test_registered_scripts'][] = 'wc-single-product';
-		$GLOBALS['arts_lightbox_test_queued_scripts'][]     = 'wc-single-product';
 
-		$gallery->mark_gallery_classes( array() );
-
-		self::assertSame( array(), arts_lightbox_test_calls( 'wp_enqueue_script' ) );
+		self::assertSame( array( 'arts-lightbox-wc-gallery' ), $gallery->mark_gallery_classes( array() ) );
+		self::assertSame( array( array( 'wc-single-product' ) ), arts_lightbox_test_calls( 'wp_enqueue_script' ) );
 	}
 
 	public function test_lets_clicks_through_zoom_only_during_takeover(): void {
@@ -148,42 +124,6 @@ class ProductGalleryTest extends TestCase {
 		self::assertSame( array( array( 'wp_footer', 'woocommerce_photoswipe', 10 ) ), arts_lightbox_test_calls( 'remove_action' ) );
 	}
 
-	public function test_timely_readded_support_returns_the_complete_gallery_to_woocommerce(): void {
-		add_theme_support( self::SUPPORT );
-		add_theme_support( 'wc-product-gallery-zoom' );
-		$gallery = new ProductGallery();
-		$gallery->take_over();
-		add_theme_support( self::SUPPORT );
-		// Legacy blocks use anonymous footer callbacks, not the classic named one.
-		arts_lightbox_test_native_gallery_ready();
-
-		$gallery->sweep();
-
-		self::assertTrue( current_theme_supports( self::SUPPORT ) );
-		self::assertFalse( $gallery->is_taking_over() );
-		self::assertTrue( $gallery->filter_photoswipe_enabled( true ) );
-		self::assertSame( array( 'arts-lightbox-wc-native' ), $gallery->mark_gallery_classes( array() ) );
-		self::assertFalse( wp_style_is( 'immersive-lightbox-for-elementor-woocommerce' ) );
-		self::assertSame( array(), arts_lightbox_test_calls( 'wp_dequeue_script' ) );
-		self::assertSame( array(), arts_lightbox_test_calls( 'remove_action' ) );
-	}
-
-	public function test_too_late_readd_keeps_our_gallery_working(): void {
-		add_theme_support( self::SUPPORT );
-		$gallery = new ProductGallery();
-		$gallery->take_over();
-		add_theme_support( self::SUPPORT );
-
-		$gallery->sweep();
-
-		self::assertFalse( current_theme_supports( self::SUPPORT ) );
-		self::assertTrue( $gallery->is_taking_over() );
-		self::assertFalse( $gallery->filter_photoswipe_enabled( true ) );
-		self::assertSame( array( 'arts-lightbox-wc-gallery' ), $gallery->mark_gallery_classes( array() ) );
-		self::assertCount( 2, arts_lightbox_test_calls( 'remove_theme_support' ) );
-		self::assertCount( 4, arts_lightbox_test_calls( 'wp_dequeue_script' ) );
-	}
-
 	public function test_preserves_non_array_gallery_class_filter_values(): void {
 		add_theme_support( self::SUPPORT );
 		self::assertSame( 'custom', ( new ProductGallery() )->mark_gallery_classes( 'custom' ) );
@@ -193,27 +133,6 @@ class ProductGalleryTest extends TestCase {
 		arts_lightbox_test_did_action( 'woocommerce_loaded', 1 );
 		Plugin::instance();
 		self::assertArrayHasKey( 'woocommerce_single_product_image_gallery_classes', $GLOBALS['arts_lightbox_test_filters'] );
-	}
-
-	public function test_woocommerce_win_releases_our_page_gate_too(): void {
-		add_theme_support( self::SUPPORT );
-		arts_lightbox_test_did_action( 'woocommerce_loaded', 1 );
-		$plugin   = Plugin::instance();
-		$callback = $GLOBALS['arts_lightbox_test_actions']['wp_enqueue_scripts'][0][0];
-		self::assertIsArray( $callback );
-		$gallery = $callback[0];
-		self::assertInstanceOf( ProductGallery::class, $gallery );
-		$gallery->take_over();
-		add_theme_support( self::SUPPORT );
-		arts_lightbox_test_native_gallery_ready();
-
-		ob_start();
-		$plugin->print_gate();
-		$output = ob_get_clean();
-		self::assertIsString( $output );
-		self::assertStringContainsString( "classList.add('no-arts-lightbox')", $output );
-		self::assertStringContainsString( 'artsImmersiveLightboxBoot.enabled = false', $output );
-		self::assertStringNotContainsString( 'window.artsImmersiveLightboxOptions', $output );
 	}
 
 	public function test_plugin_waits_for_woocommerce_to_load(): void {

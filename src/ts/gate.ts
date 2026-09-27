@@ -33,8 +33,6 @@ if (!window.artsLightbox) {
       if (markCandidates(b.nativeFallback === true) > 0) {
         gate.preload?.()
       }
-    } else {
-      markCandidates(false, false)
     }
   }
 
@@ -121,11 +119,7 @@ if (!window.artsLightbox) {
     }
 
     const load = (): void => {
-      if (
-        window.artsImmersiveLightboxBoot?.enabled === false ||
-        loading ||
-        document.getElementById(GATE_JS_ID)
-      ) {
+      if (loading || document.getElementById(GATE_JS_ID)) {
         return
       }
       loading = true
@@ -188,9 +182,6 @@ if (!window.artsLightbox) {
     const opts = { capture: true }
 
     const onClick = (e: MouseEvent): void => {
-      if (window.artsImmersiveLightboxBoot?.enabled === false) {
-        return
-      }
       const claim = claimCandidateClick(e, nativeFallback)
       if (!claim) {
         return
@@ -207,9 +198,6 @@ if (!window.artsLightbox) {
     }
 
     const onOver = (e: Event): void => {
-      if (window.artsImmersiveLightboxBoot?.enabled === false) {
-        return
-      }
       if (matchCandidateElement(e.target as Element | null, nativeFallback)) {
         load()
       }

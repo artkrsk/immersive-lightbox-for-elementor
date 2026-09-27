@@ -15,8 +15,7 @@ export function attachDelegation(
     next(): void
     prev(): void
   },
-  nativeFallback = false,
-  isActive: () => boolean = () => true
+  nativeFallback = false
 ): () => void {
   // The claim's drag-vs-click verdict needs press travel to already be
   // tracked when the click arrives. Deliberately not detached below: it's an
@@ -24,9 +23,6 @@ export function attachDelegation(
   pointerTravel.observe()
 
   const onClick = (e: MouseEvent): void => {
-    if (!isActive()) {
-      return
-    }
     const claim = claimCandidateClick(e, nativeFallback)
     if (claim) {
       handlers.open(claim.el, claim.point)

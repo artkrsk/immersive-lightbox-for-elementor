@@ -1,4 +1,4 @@
-import { ATTR_LIGHTBOX, ATTR_OFF, WC_NATIVE_CLASS } from '../constants'
+import { ATTR_LIGHTBOX, ATTR_OFF } from '../constants'
 import { ELEMENTOR_ATTR_OPEN_LIGHTBOX } from '../constants/elementorAttributes'
 import { CANDIDATE_SELECTOR, WC_ANCHOR_SELECTOR } from '../constants/selectors'
 import { isEligibleBareLink } from './isEligibleBareLink'
@@ -23,10 +23,9 @@ export function matchCandidateElement(
   target: Element | null,
   nativeFallback: boolean
 ): HTMLElement | null {
-  // WooCommerce regained its complete gallery, or the author opted out:
-  // neither explicit vocabulary nor Elementor's bare-link fallback may claim
-  // a click here.
-  if (target?.closest(`.${WC_NATIVE_CLASS}, [${ATTR_OFF}]`)) {
+  // The author opted out: neither explicit vocabulary nor Elementor's
+  // bare-link fallback may claim a click here.
+  if (target?.closest(`[${ATTR_OFF}]`)) {
     return null
   }
   const explicit = target?.closest<HTMLElement>(CANDIDATE_SELECTOR)

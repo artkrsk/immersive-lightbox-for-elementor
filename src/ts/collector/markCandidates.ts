@@ -9,21 +9,19 @@ import { matchCandidateElement } from './matchCandidateElement'
  * action-hash release are all predicates).
  *
  * Routes through `matchCandidateElement` like every other input path; its
- * opt-out and WooCommerce-native vetoes apply to marks too. Re-running
- * drops stale marks first, so AJAX-swapped DOM converges. Ends by nudging a
- * present cursor follower to re-resolve a hover held across the re-scan.
+ * opt-out veto applies to marks too. Re-running drops stale marks first, so
+ * AJAX-swapped DOM converges. Ends by nudging a present cursor follower to
+ * re-resolve a hover held across the re-scan.
  *
  * Returns how many candidates the page holds — the gate warms the engine off
  * this count rather than paying for a scan of its own.
  */
-export function markCandidates(nativeFallback: boolean, enabled = true): number {
+export function markCandidates(nativeFallback: boolean): number {
   const selector = nativeFallback ? `${CANDIDATE_SELECTOR}, a[href]` : CANDIDATE_SELECTOR
   const matched = new Set<Element>()
-  if (enabled) {
-    for (const el of document.querySelectorAll(selector)) {
-      if (matchCandidateElement(el, nativeFallback) === el && !el.closest(`[${ATTR_OFF}]`)) {
-        matched.add(el)
-      }
+  for (const el of document.querySelectorAll(selector)) {
+    if (matchCandidateElement(el, nativeFallback) === el && !el.closest(`[${ATTR_OFF}]`)) {
+      matched.add(el)
     }
   }
   for (const el of document.querySelectorAll(`.${LINK_CLASS}`)) {

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { createLightbox, createLightboxWithLifecycle } from '@ts/core/createLightbox'
+import { createLightbox } from '@ts/core/createLightbox'
 import { engineState } from '@ts/core/engineState'
 import type PhotoSwipe from '@ts/photoswipe/photoswipe'
 import { audioFocus } from '@ts/video/audioFocus'
@@ -12,16 +12,6 @@ afterEach(() => {
 })
 
 describe('createLightbox', () => {
-  it('refuses a direct open while WooCommerce owns the request', () => {
-    const lightbox = createLightboxWithLifecycle(undefined, {
-      roots: { set() {}, delete() {} },
-      initialized() {},
-      destroying() {},
-      isActive: () => false
-    })
-    expect(lightbox.open(document.createElement('a'))).toBe(false)
-  })
-
   it('a retired instance cannot destroy a newer instance core from the same module', () => {
     const first = createLightbox()
     first.init()

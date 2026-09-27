@@ -69,28 +69,6 @@ afterEach(async () => {
 })
 
 describe('gate', () => {
-  it('suspends an existing gate when WooCommerce takes the page, then resumes it', async () => {
-    const a = addCandidate()
-    await importGate()
-    expect(a.classList.contains('arts-lightbox-link')).toBe(true)
-
-    if (!window.artsImmersiveLightboxBoot) throw new Error('Expected boot payload')
-    window.artsImmersiveLightboxBoot.enabled = false
-    window.artsLightbox?.refresh()
-    expect(a.classList.contains('arts-lightbox-link')).toBe(false)
-    const nativeClick = new MouseEvent('click', { bubbles: true, cancelable: true })
-    a.dispatchEvent(nativeClick)
-    expect(nativeClick.defaultPrevented).toBe(false)
-    expect(document.getElementById('immersive-lightbox-for-elementor-css')).toBeNull()
-
-    window.artsImmersiveLightboxBoot.enabled = true
-    window.artsLightbox?.refresh()
-    expect(a.classList.contains('arts-lightbox-link')).toBe(true)
-    const claimed = new MouseEvent('click', { bubbles: true, cancelable: true })
-    a.dispatchEvent(claimed)
-    expect(claimed.defaultPrevented).toBe(true)
-  })
-
   it('re-marks a replaced WooCommerce variation gallery', async () => {
     const handlers: Array<() => void> = []
     window.jQuery = () => ({
