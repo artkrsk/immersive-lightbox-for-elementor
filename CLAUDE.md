@@ -54,3 +54,15 @@ Lefthook, sequential because the fixers rewrite what the later steps read: pre-c
 iOS dynamic toolbar vs fixed positioning, iOS Chrome missing `pointerup` corrupting pinch state, Android dead-tap after swipe-close, fast-swipe race. The `.pswp img` near-transparent background in `_lightbox.scss` is a deliberate Safari compositing fix (upstream #1846) — don't remove it as "cleanup". On-device iOS testing runs against the remote dev site, which is Tailscale-reachable from a phone.
 
 **The flight shares `.pswp`'s coordinate space.** It mounts inside the root so it paints under the chrome, and `.pswp` carries both `contain: layout style size` and `transform: translateZ(0)` — either alone makes it the containing block for a `position: fixed` descendant. So the flight's viewport-relative rects (from `getBoundingClientRect` on the source) now resolve against `.pswp`'s box rather than the viewport. Clipping is NOT part of the deal: the containment is layout/style/size, not paint, `.pswp` sets no `overflow`, and the flight is a direct child of the root rather than of the `overflow: hidden` `.pswp__scroll-wrap`. The coordinate shift is fine while that box tracks the viewport, which is exactly what the dynamic-toolbar hazard above threatens — **checked on iPhone and clean**, so treat a positioning regression there as new information rather than a known risk. Deliberate, not accidental: the flight's *target* is a slide positioned inside `.pswp`, so sharing one coordinate space means source and target move together instead of diverging. The close detaches it to `body` for its last frames (see `closeChoreography`), where the unscoped z-index rule takes over.
+
+## Package integration boundary
+
+`src/ts/contract/index.ts` is the explicit `/contract` entry for themes integrating with the
+installed WordPress provider. Export public types from leaf files, and keep runtime values passive
+(constants or pure helpers). No engine, boot, producer globals, or version define may enter its
+declaration/runtime graph. The package root remains the named factory API for direct library hosts;
+root type imports and legacy source/style subpaths remain compatible.
+
+`tests/ts/packageEntries.test.ts` compiles isolated consumers with no workspace ambient types and
+`skipLibCheck: false`, inspects contract bundles, and checks passive roots plus factory invocation.
+These checks use temporary outputs and never run the WordPress synchronization build.

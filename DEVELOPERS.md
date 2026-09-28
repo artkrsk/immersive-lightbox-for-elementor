@@ -342,7 +342,7 @@ import type {
   ILightboxEventDetail,
   IOptions,
   TDeepPartial
-} from '@arts/immersive-lightbox'
+} from '@arts/immersive-lightbox/contract'
 ```
 
 The four `document` events are declared on `DocumentEventMap`, so
@@ -483,3 +483,36 @@ clip; it only has to be recognisable.
 Unknown to an older plugin, the key is ignored and the field keeps
 Elementor's stock placeholder — the behaviour a theme implements in
 `render()` is unaffected either way.
+
+## TypeScript package entries
+
+Themes integrating with the installed WordPress plugin use `@arts/immersive-lightbox/contract` for public
+types and passive values. This entry does not import the engine, initialize browser globals,
+load assets, install listeners, or depend on producer build defines. Keep the existing optional
+browser discovery checks: updating these compile-time imports does not require a newer installed
+WordPress plugin.
+
+The package root `@arts/immersive-lightbox` remains the passive library entry with its existing named
+factory API and root type exports. Direct library hosts explicitly create and initialize engines;
+WordPress continues to boot through its separate `boot.ts` bundle. The package ships TypeScript
+source for linked consumers, so a host needs a TypeScript-aware compiler. Existing
+`/package.json`, `/src/ts/*`, and `/src/styles/*` paths remain available for compatibility.
+
+`pnpm exec vitest run tests/ts/packageEntries.test.ts` checks isolated consumers with
+`skipLibCheck: false`, inspects bundled contract graphs, and invokes the public root factory
+without building or synchronizing WordPress assets.
+
+Both entries expose the documented `DocumentEventMap` augmentation. The contract exports
+`EVENT_OPEN`, `EVENT_CHANGE`, and `EVENT_DESTROY` from the engine's canonical constants. It
+does not augment unrelated `Window` globals or bring in PhotoSwipe implementation declarations.
+
+A direct factory host must provide the existing version define when compiling the root:
+
+```ts
+// Vite/esbuild define configuration; the value must be a JavaScript string literal.
+define: { __ARTS_IMMERSIVE_LIGHTBOX_VERSION__: JSON.stringify('1.0.2') }
+```
+
+The WordPress producer already supplies this value from `composer.json`. A TypeScript ambient
+declaration only types the name; it cannot supply a runtime value. Importing `/contract` needs
+no version define. Root imports remain passive; calling `createLightbox()` reads the define.

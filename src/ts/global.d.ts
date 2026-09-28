@@ -1,8 +1,6 @@
+/// <reference path="./contract/events.d.ts" />
 import type { ElementorFrontend } from '@artemsemkin/elementor-types'
 import type { IArtsLightboxGlobal } from './interfaces/IArtsLightboxGlobal'
-import type { ILightbox } from './interfaces/ILightbox'
-import type { ILightboxChangeDetail } from './interfaces/ILightboxChangeDetail'
-import type { ILightboxEventDetail } from './interfaces/ILightboxEventDetail'
 import type { IOptions } from './interfaces/IOptions'
 import type { TDeepPartial } from './types/TDeepPartial'
 import type { TGateBoot } from './types/TGateBoot'
@@ -32,13 +30,5 @@ declare global {
      * end. Absent until Elementor's init builds it.
      */
     elementorFrontend?: ElementorFrontend
-  }
-
-  interface DocumentEventMap {
-    /** Announced once the engine is live — load-order-proof discovery. */
-    'arts-lightbox:ready': CustomEvent<ILightbox>
-    'arts-lightbox:open': CustomEvent<ILightboxEventDetail>
-    'arts-lightbox:change': CustomEvent<ILightboxChangeDetail>
-    'arts-lightbox:destroy': CustomEvent<Pick<ILightboxEventDetail, 'root'>>
   }
 }

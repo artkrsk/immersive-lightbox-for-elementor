@@ -1,3 +1,4 @@
+/// <reference path="./contract/events.d.ts" />
 /// <reference path="./env.d.ts" />
 /** Public boundary — the package's API is whatever this file re-exports.
  *  Themes compile src/ts from source, so the ambient declarations ride along

@@ -18,10 +18,12 @@
     "test:php": "vendor/bin/phpunit --configuration phpunit.xml.dist"
   },
   "devDependencies": {
+    "@artemsemkin/elementor-types": "^2.0.0",
     "@arts/wp-plugin-tooling": "github:artkrsk/wp-plugin-tooling",
     "@biomejs/biome": "2.5.3",
     "@types/node": "^26.1.1",
     "@vitest/coverage-v8": "5.0.1",
+    "esbuild": "^0.28.2",
     "fallow": "^3.15.0",
     "happy-dom": "20.11.1",
     "knip": "6.29.0",
@@ -29,7 +31,13 @@
     "sass": "^1.102.0",
     "stylelint": "^17.14.1",
     "typescript": "^7.0.2",
-    "vitest": "5.0.1",
-    "@artemsemkin/elementor-types": "^2.0.0"
+    "vitest": "5.0.1"
+  },
+  "exports": {
+    ".": "./src/ts/index.ts",
+    "./contract": "./src/ts/contract/index.ts",
+    "./package.json": "./package.json",
+    "./src/ts/*": "./src/ts/*",
+    "./src/styles/*": "./src/styles/*"
   }
 }

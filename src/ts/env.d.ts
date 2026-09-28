@@ -2,8 +2,13 @@
 // substitutes import.meta.env.DEV via define (true in the dev channel, false
 // in production, where the guarded blocks are dropped). Optional access keeps
 // the checks safe in any bundler without the define.
+// Match Vite's named augmentation so direct library hosts can include vite/client too.
+interface ImportMetaEnv {
+  readonly DEV: boolean
+}
+
 interface ImportMeta {
-  env?: { DEV?: boolean }
+  readonly env: ImportMetaEnv
 }
 
 /** Stamped from composer.json by the esbuild define — plugin bundle only. */
