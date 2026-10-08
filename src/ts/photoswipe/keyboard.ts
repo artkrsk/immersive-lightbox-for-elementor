@@ -26,7 +26,7 @@ const getKeyboardEventKey = <T extends keyof typeof KeyboardKeyCodesMap>(
  */
 class Keyboard {
   declare pswp: PhotoSwipe
-  private declare _wasFocused: boolean
+  declare private _wasFocused: boolean
 
   constructor(pswp: PhotoSwipe) {
     this.pswp = pswp

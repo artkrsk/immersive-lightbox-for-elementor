@@ -15,7 +15,7 @@ export type SpringAnimationProps = SharedAnimationProps & DefaultSpringAnimation
 class SpringAnimation {
   declare props: SpringAnimationProps
   declare onFinish: () => void
-  private declare _raf: number
+  declare private _raf: number
 
   constructor(props: SpringAnimationProps) {
     this.props = props

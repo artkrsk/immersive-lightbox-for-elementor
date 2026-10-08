@@ -26,9 +26,9 @@ class MainScroll {
   declare x: number
   declare slideWidth: number
   declare itemHolders: ItemHolder[]
-  private declare _currPositionIndex: number
-  private declare _prevPositionIndex: number
-  private declare _containerShiftIndex: number
+  declare private _currPositionIndex: number
+  declare private _prevPositionIndex: number
+  declare private _containerShiftIndex: number
 
   constructor(pswp: PhotoSwipe) {
     this.pswp = pswp

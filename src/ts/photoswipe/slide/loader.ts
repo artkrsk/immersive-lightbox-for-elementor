@@ -80,7 +80,7 @@ export function lazyLoadSlide(index: number, instance: PhotoSwipeBase): Content 
 class ContentLoader {
   declare pswp: PhotoSwipe
   declare limit: number
-  private declare _cachedItems: Content[]
+  declare private _cachedItems: Content[]
 
   constructor(pswp: PhotoSwipe) {
     this.pswp = pswp

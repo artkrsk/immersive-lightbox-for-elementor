@@ -20,17 +20,17 @@ class Opener {
   declare isOpen: boolean
   declare isClosing: boolean
   declare isOpening: boolean
-  private declare _duration: number | false | undefined
-  private declare _useAnimation: boolean
-  private declare _croppedZoom: boolean
-  private declare _animateRootOpacity: boolean
-  private declare _animateBgOpacity: boolean
-  private declare _animateZoom: boolean | undefined
-  private declare _placeholder: HTMLDivElement | HTMLImageElement | null | undefined
-  private declare _opacityElement: HTMLDivElement | undefined
-  private declare _cropContainer1: HTMLDivElement | undefined
-  private declare _cropContainer2: HTMLElement | null | undefined
-  private declare _thumbBounds: Bounds | undefined
+  declare private _duration: number | false | undefined
+  declare private _useAnimation: boolean
+  declare private _croppedZoom: boolean
+  declare private _animateRootOpacity: boolean
+  declare private _animateBgOpacity: boolean
+  declare private _animateZoom: boolean | undefined
+  declare private _placeholder: HTMLDivElement | HTMLImageElement | null | undefined
+  declare private _opacityElement: HTMLDivElement | undefined
+  declare private _cropContainer1: HTMLDivElement | undefined
+  declare private _cropContainer2: HTMLElement | null | undefined
+  declare private _thumbBounds: Bounds | undefined
 
   constructor(pswp: PhotoSwipe) {
     this.pswp = pswp

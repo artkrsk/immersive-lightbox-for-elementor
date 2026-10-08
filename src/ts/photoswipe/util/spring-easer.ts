@@ -8,9 +8,9 @@ class SpringEaser {
   /* `declare` fields erase completely — constructor-assigned like upstream,
      so the emitted JS (and own-property semantics) stay byte-identical. */
   declare velocity: number
-  private declare _dampingRatio: number
-  private declare _naturalFrequency: number
-  private declare _dampedFrequency: number
+  declare private _dampingRatio: number
+  declare private _naturalFrequency: number
+  declare private _dampedFrequency: number
 
   /**
    * @param initialVelocity Initial velocity, px per ms.

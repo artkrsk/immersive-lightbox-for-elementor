@@ -24,7 +24,7 @@ export interface PoolItem {
 }
 
 class DOMEvents {
-  private declare _pool: PoolItem[]
+  declare private _pool: PoolItem[]
 
   constructor() {
     this._pool = []

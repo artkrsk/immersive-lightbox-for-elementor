@@ -81,8 +81,8 @@ class PhotoSwipe extends PhotoSwipeBase {
   declare scrollWheel: ScrollWheel | undefined
   declare ui: UI | undefined
   declare bg: HTMLDivElement | undefined
-  private declare _prevViewportSize: Point
-  private declare _initialItemData: SlideData
+  declare private _prevViewportSize: Point
+  declare private _initialItemData: SlideData
   declare _initialThumbBounds: Bounds | undefined
 
   constructor(options?: PhotoSwipeOptions) {

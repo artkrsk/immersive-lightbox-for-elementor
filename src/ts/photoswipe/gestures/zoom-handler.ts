@@ -16,11 +16,11 @@ function getZoomPointsCenter(p: Point, p1: Point, p2: Point): Point {
 
 class ZoomHandler {
   declare gestures: Gestures
-  private declare _startPan: Point
-  private declare _startZoomPoint: Point
-  private declare _zoomPoint: Point
-  private declare _wasOverFitZoomLevel: boolean
-  private declare _startZoomLevel: number
+  declare private _startPan: Point
+  declare private _startZoomPoint: Point
+  declare private _zoomPoint: Point
+  declare private _wasOverFitZoomLevel: boolean
+  declare private _startZoomLevel: number
 
   constructor(gestures: Gestures) {
     this.gestures = gestures

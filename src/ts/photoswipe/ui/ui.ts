@@ -23,7 +23,7 @@ class UI {
   declare uiElementsData: UIElementData[]
   declare items: (UIElement | UIElementData)[]
   declare updatePreloaderVisibility: () => void
-  private declare _lastUpdatedZoomLevel: number | undefined
+  declare private _lastUpdatedZoomLevel: number | undefined
 
   constructor(pswp: PhotoSwipe) {
     this.pswp = pswp
