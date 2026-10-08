@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { VERSION } from '@ts/constants/version'
 import { createLightbox } from '@ts/core/createLightbox'
 import { engineState } from '@ts/core/engineState'
 import type PhotoSwipe from '@ts/photoswipe/photoswipe'
@@ -36,7 +37,7 @@ describe('createLightbox', () => {
     expect(typeof lightbox.destroy).toBe('function')
     expect(typeof lightbox.close).toBe('function')
     expect(typeof lightbox.open).toBe('function')
-    expect(lightbox.version).toBe('0.0.0-test')
+    expect(lightbox.version).toBe(VERSION)
   })
 
   it('init() wires Escape/ArrowRight/ArrowLeft through attachDelegation to the internal api', () => {

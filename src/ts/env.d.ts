@@ -11,9 +11,6 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
-/** Stamped from composer.json by the esbuild define — plugin bundle only. */
-declare const __ARTS_IMMERSIVE_LIGHTBOX_VERSION__: string
-
 /** The editor bundle imports its companion stylesheet; esbuild emits it as
  * editor.css beside editor.js. The import resolves to nothing in TS. */
 declare module '*.css'

@@ -1,3 +1,4 @@
+import { VERSION } from '../constants/version'
 import { attachHoverPrefetch } from '../interaction/hoverPrefetch'
 import type { ILightbox, ILightboxApi, ILightboxLifecycle, IOptions } from '../interfaces'
 import type { TDeepPartial } from '../types'
@@ -80,7 +81,7 @@ export function createLightboxWithLifecycle(
     },
     close,
     open: opener.open,
-    version: __ARTS_IMMERSIVE_LIGHTBOX_VERSION__
+    version: VERSION
   }
   return instance
 }

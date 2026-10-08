@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { pointerTravel } from '@ts/collector/pointerTravel'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 // isPrimary defaults to false in the constructor init (unlike real pointers,
 // which are primary whenever they're the only one) — set it the way a lone
@@ -35,8 +35,25 @@ function clickAt(x: number, y: number): MouseEvent {
 }
 
 describe('pointerTravel', () => {
+  let releaseObserver: () => void
   beforeEach(() => {
-    pointerTravel.observe()
+    releaseObserver = pointerTravel.observe()
+  })
+  afterEach(() => {
+    releaseObserver()
+  })
+
+  it('keeps another owner observing and detaches after the last owner stops', () => {
+    const stop = pointerTravel.observe()
+    releaseObserver()
+    press(100, 100)
+    move(200, 100)
+    expect(pointerTravel.consumeClick(clickAt(200, 100))).toBe(true)
+    stop()
+    stop()
+    press(100, 100)
+    move(200, 100)
+    expect(pointerTravel.consumeClick(clickAt(200, 100))).toBe(false)
   })
 
   it('reads a clean click as not-a-drag', () => {

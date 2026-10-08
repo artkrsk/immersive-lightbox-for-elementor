@@ -17,10 +17,7 @@ export function attachDelegation(
   },
   nativeFallback = false
 ): () => void {
-  // The claim's drag-vs-click verdict needs press travel to already be
-  // tracked when the click arrives. Deliberately not detached below: it's an
-  // idempotent page-lifetime observer, and the gate bundle arms its own.
-  pointerTravel.observe()
+  const releasePointer = pointerTravel.observe()
 
   const onClick = (e: MouseEvent): void => {
     const claim = claimCandidateClick(e, nativeFallback)
@@ -52,6 +49,7 @@ export function attachDelegation(
   document.addEventListener('click', onClick, true)
   document.addEventListener('keydown', onKey, true)
   return () => {
+    releasePointer()
     document.removeEventListener('click', onClick, true)
     document.removeEventListener('keydown', onKey, true)
   }

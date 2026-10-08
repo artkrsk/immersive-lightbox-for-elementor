@@ -1,4 +1,5 @@
 import { ATTR_OFF, CANDIDATE_SELECTOR, LINK_CLASS } from '../constants'
+import { nudgeCursorFollower } from '../interaction/nudgeCursorFollower'
 import { matchCandidateElement } from './matchCandidateElement'
 
 /**
@@ -33,7 +34,7 @@ export function markCandidates(nativeFallback: boolean): number {
     el.classList.add(LINK_CLASS)
   }
   // Optional CALL: refresh() may be absent on an older follower build.
-  window.artsCursor?.get()?.refresh?.()
+  nudgeCursorFollower()
 
   return matched.size
 }

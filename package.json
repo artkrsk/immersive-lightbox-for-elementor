@@ -3,7 +3,8 @@
   "version": "1.0.2",
   "private": true,
   "type": "module",
-  "types": "./src/ts/index.ts",
+  "types": "./dist/types/index.d.ts",
+  "files": ["dist/esm", "dist/types", "src/ts", "src/styles", "composer.json", "DEVELOPERS.md", "LICENSE"],
   "packageManager": "pnpm@12.10.1",
   "engines": {
     "node": ">=24"
@@ -12,6 +13,7 @@
     "prepare": "[ -n \"$CI\" ] || lefthook install",
     "dev:plugin": "arts-wp dev",
     "build": "arts-wp build",
+    "build:library": "node scripts/build-library.mjs",
     "release": "arts-wp release",
     "test": "vitest run && vendor/bin/phpunit --configuration phpunit.xml.dist",
     "test:coverage": "vitest run --coverage && vendor/bin/phpunit --configuration phpunit.xml.dist",
@@ -34,8 +36,26 @@
     "vitest": "5.0.3"
   },
   "exports": {
-    ".": "./src/ts/index.ts",
-    "./contract": "./src/ts/contract/index.ts",
+    ".": {
+      "arts-source": "./src/ts/index.ts",
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./contract": {
+      "arts-source": "./src/ts/contract/index.ts",
+      "types": "./dist/types/contract/index.d.ts",
+      "import": "./dist/esm/contract.js",
+      "default": "./dist/esm/contract.js"
+    },
+    "./gate": {
+      "arts-source": "./src/ts/gate/index.ts",
+      "types": "./dist/types/gate/index.d.ts",
+      "import": "./dist/esm/gate.js",
+      "default": "./dist/esm/gate.js"
+    },
+    "./styles.scss": "./src/styles/index.scss",
+    "./styles.css": "./dist/esm/styles.css",
     "./package.json": "./package.json",
     "./src/ts/*": "./src/ts/*",
     "./src/styles/*": "./src/styles/*"

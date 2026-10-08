@@ -1,16 +1,21 @@
+import { VERSION } from '../constants/version'
 import type { IGateGlobal, ILightbox, ILightboxRoot } from '../interfaces'
+import type { IArtsLightboxGlobal } from '../interfaces/IArtsLightboxGlobal'
 import type { TLightboxRootsObserver } from '../types'
 
 /** No engine imports: observation at gate time must not warm/load any assets. */
 export function getLightboxGlobal(win: Window): IGateGlobal {
-  if (win.artsLightbox) return win.artsLightbox as IGateGlobal
+  const host = win as Window & { artsLightbox?: IArtsLightboxGlobal }
+  if (host.artsLightbox) {
+    return host.artsLightbox as IGateGlobal
+  }
 
   let instance: ILightbox | null = null
   let resolveReady: (lightbox: ILightbox) => void
   let revision = 0
   let publishing = 0
   let replacing = false
-  let pendingBoot: (() => void) | undefined
+  let pendingBoot: { install: () => void; signal: AbortSignal | undefined } | undefined
   let snapshot: readonly ILightboxRoot[] = Object.freeze([])
   const roots = new Map<HTMLElement, ILightboxRoot>()
   const observers = new Set<TLightboxRootsObserver>()
@@ -33,10 +38,10 @@ export function getLightboxGlobal(win: Window): IGateGlobal {
       resolveReady = resolve
     }),
     get: () => instance,
-    version: __ARTS_IMMERSIVE_LIGHTBOX_VERSION__,
+    version: VERSION,
     refresh() {},
-    __replaceBoot(install) {
-      pendingBoot = install
+    __replaceBoot(install, signal) {
+      pendingBoot = { install, signal }
       const flush = () => {
         if (replacing || publishing) return
         replacing = true
@@ -44,8 +49,13 @@ export function getLightboxGlobal(win: Window): IGateGlobal {
           while (pendingBoot) {
             const next = pendingBoot
             pendingBoot = undefined
+            if (next.signal?.aborted) {
+              continue
+            }
             hub.__disposeBoot?.()
-            if (!pendingBoot) next()
+            if (!pendingBoot && !next.signal?.aborted) {
+              next.install()
+            }
           }
         } finally {
           replacing = false
@@ -95,6 +105,6 @@ export function getLightboxGlobal(win: Window): IGateGlobal {
       }
     }
   }
-  win.artsLightbox = hub
+  host.artsLightbox = hub
   return hub
 }

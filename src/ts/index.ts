@@ -1,9 +1,8 @@
 /// <reference path="./contract/events.d.ts" />
 /// <reference path="./env.d.ts" />
-/** Public boundary — the package's API is whatever this file re-exports.
- *  Themes compile src/ts from source, so the ambient declarations ride along
- *  (`createLightbox` reads the version define). */
+/** Passive library entry; the app publishes discovery only when initialized. */
 export { createLightbox } from './core/createLightbox'
+export { createLightboxApp } from './core/createLightboxApp'
 export type {
   IArtsLightboxGlobal,
   ILightbox,
@@ -13,4 +12,6 @@ export type {
   ILightboxRoot,
   IOptions
 } from './interfaces'
+export type { ILightboxApp } from './interfaces/ILightboxApp'
+export type { ILightboxAppOptions } from './interfaces/ILightboxAppOptions'
 export type { TDeepPartial, TLightboxRootsObserver } from './types'

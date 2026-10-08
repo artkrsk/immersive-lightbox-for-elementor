@@ -1,7 +1,10 @@
 // @vitest-environment happy-dom
+// @vitest-environment-options {"settings":{"disableCSSFileLoading":true,"disableJavaScriptFileLoading":true,"handleDisabledFileLoadingAsSuccess":true}}
 
 import type { ElementorFrontend } from '@artemsemkin/elementor-types'
 import { PRELOAD_TIMEOUT_MS } from '@ts/constants/preload'
+import { createLightboxApp } from '@ts/core/createLightboxApp'
+import { createLightboxGate } from '@ts/gate/createLightboxGate'
 import type { IGateGlobal, ILightbox } from '@ts/interfaces'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -39,7 +42,15 @@ function nextFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()))
 }
 
+const resourceError = (event: Event): void => {
+  event.preventDefault()
+  event.stopImmediatePropagation()
+}
+
 beforeEach(() => {
+  /** Resource outcomes are delivered explicitly by these tests. */
+  document.addEventListener('error', resourceError, { capture: true })
+  document.addEventListener('load', resourceError, { capture: true })
   document.head.innerHTML = ''
   document.body.innerHTML = ''
   document.documentElement.className = ''
@@ -57,18 +68,140 @@ beforeEach(() => {
 })
 
 afterEach(async () => {
-  // Each import() eval arms its own document listeners; the gate's designed
-  // teardown is `ready.then(disarm)` — resolve it so evals never leak into
-  // the next test. Double-resolves are no-ops.
-  ;(window.artsLightbox as IGateGlobal | undefined)?.__setInstance(makeLightbox())
-  await Promise.resolve()
-  await Promise.resolve()
+  ;(window.artsLightbox as IGateGlobal | undefined)?.__disposeGate?.()
+  ;(window.artsLightbox as IGateGlobal | undefined)?.__disposeBoot?.()
+  document.removeEventListener('error', resourceError, true)
+  document.removeEventListener('load', resourceError, true)
   vi.useRealTimers()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
 
 describe('gate', () => {
+  it('releases a failed stylesheet click and leaves later clicks to native navigation', () => {
+    const assign = vi.spyOn(window.location, 'assign').mockImplementation(() => {})
+    const gate = createLightboxGate(BOOT)
+    gate.init()
+    const anchor = addCandidate()
+    anchor.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    const link = document.getElementById('immersive-lightbox-for-elementor-css') as HTMLLinkElement
+    link.onerror?.(new Event('error'))
+    expect(assign).toHaveBeenCalledWith('/full.jpg')
+    const nextClick = new MouseEvent('click', { bubbles: true, cancelable: true })
+    anchor.dispatchEvent(nextClick)
+    expect(nextClick.defaultPrevented).toBe(false)
+  })
+
+  it('releases a held click when the module bootstrap rejects', async () => {
+    const assign = vi.spyOn(window.location, 'assign').mockImplementation(() => {})
+    const gate = createLightboxGate({
+      enabled: true,
+      css: BOOT.css,
+      load: async () => {
+        throw new Error('unavailable module')
+      }
+    })
+    gate.init()
+    const anchor = addCandidate()
+    anchor.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    const link = document.getElementById('immersive-lightbox-for-elementor-css') as HTMLLinkElement
+    link.onload?.(new Event('load'))
+    await vi.waitFor(() => {
+      expect(assign).toHaveBeenCalledWith('/full.jpg')
+    })
+  })
+
+  it('cancels an idle warm and makes a captured late callback inert', () => {
+    let queued: IdleRequestCallback | undefined
+    vi.stubGlobal(
+      'requestIdleCallback',
+      vi.fn((callback: IdleRequestCallback) => {
+        queued = callback
+        return 7
+      })
+    )
+    const cancelIdle = vi.fn()
+    vi.stubGlobal('cancelIdleCallback', cancelIdle)
+    addCandidate()
+    const gate = createLightboxGate(BOOT)
+    expect(window.artsLightbox).toBeUndefined()
+    gate.init()
+    gate.destroy()
+    queued?.({ didTimeout: false, timeRemaining: () => 50 })
+    expect(cancelIdle).toHaveBeenCalledWith(7)
+    expect(document.getElementById('immersive-lightbox-for-elementor-css')).toBeNull()
+  })
+
+  it('cancels a pending stylesheet and held click without navigating or replaying', async () => {
+    const gate = createLightboxGate(BOOT)
+    gate.init()
+    const anchor = addCandidate()
+    anchor.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    const link = document.getElementById('immersive-lightbox-for-elementor-css') as HTMLLinkElement
+    const loaded = link.onload
+    const error = link.onerror
+    const assign = vi.spyOn(window.location, 'assign').mockImplementation(() => {})
+    gate.destroy()
+    loaded?.call(link, new Event('load'))
+    error?.call(link, new Event('error'))
+    const lightbox = makeLightbox()
+    ;(window.artsLightbox as IGateGlobal).__setInstance(lightbox)
+    document.dispatchEvent(new CustomEvent('arts-lightbox:ready', { detail: lightbox }))
+    await Promise.resolve()
+    expect(lightbox.open).not.toHaveBeenCalled()
+    expect(assign).not.toHaveBeenCalled()
+    expect(document.getElementById('immersive-lightbox-for-elementor-js')).toBeNull()
+  })
+
+  it('passes the original lifetime into a delayed module import', async () => {
+    let resume: (() => void) | undefined
+    const load = vi.fn(async (signal: AbortSignal) => {
+      await new Promise<void>((resolve) => {
+        resume = resolve
+      })
+      createLightboxApp({ signal }).init()
+    })
+    const gate = createLightboxGate({ enabled: true, editor: true, css: BOOT.css, load })
+    gate.init()
+    const link = document.getElementById('immersive-lightbox-for-elementor-css') as HTMLLinkElement
+    link.onload?.(new Event('load'))
+    await Promise.resolve()
+    expect(load).toHaveBeenCalledWith(gate.signal)
+    const hub = window.artsLightbox
+    gate.destroy()
+    const replacement = createLightboxApp()
+    replacement.init()
+    const current = replacement.get()
+    resume?.()
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(window.artsLightbox).toBe(hub)
+    expect(window.artsLightbox?.get()).toBe(current)
+  })
+
+  it('removes WordPress refresh subscriptions and pending frames on disposal', async () => {
+    const addAction = vi.fn()
+    const removeAction = vi.fn()
+    const off = vi.fn()
+    window.elementorFrontend = {
+      hooks: { addAction, removeAction }
+    } as unknown as ElementorFrontend
+    window.jQuery = () => ({ on: vi.fn(), off })
+    await importGate()
+    const callback = addAction.mock.calls[0]?.[1] as () => void
+    callback()
+    ;(window.artsLightbox as IGateGlobal).__disposeGate?.()
+    expect(removeAction).toHaveBeenCalledWith('frontend/element_ready/global', callback)
+    expect(off).toHaveBeenCalledWith(
+      'wc-product-gallery-after-init.artsLightbox',
+      '.woocommerce-product-gallery',
+      callback
+    )
+    const anchor = addCandidate()
+    await nextFrame()
+    expect(anchor.classList.contains('arts-lightbox-link')).toBe(false)
+  })
+
   it('re-marks a replaced WooCommerce variation gallery', async () => {
     const handlers: Array<() => void> = []
     window.jQuery = () => ({
@@ -229,6 +362,7 @@ describe('gate', () => {
 
     const lightbox = makeLightbox()
     ;(window.artsLightbox as IGateGlobal).__setInstance(lightbox)
+    document.dispatchEvent(new CustomEvent('arts-lightbox:ready', { detail: lightbox }))
     await Promise.resolve()
     await Promise.resolve()
     // the held click's viewport point rides along to seed the initial pan

@@ -66,3 +66,12 @@ root type imports and legacy source/style subpaths remain compatible.
 `tests/ts/packageEntries.test.ts` compiles isolated consumers with no workspace ambient types and
 `skipLibCheck: false`, inspects contract bundles, and checks passive roots plus factory invocation.
 These checks use temporary outputs and never run the WordPress synchronization build.
+
+`build:library` writes only `dist/esm` and `dist/types`; default package imports use those outputs,
+while `arts-source` selects the included source. `/gate` exports the passive `createLightboxGate`;
+the root exports `createLightboxApp`. ESM hosts pass `load(signal)` to the gate, capture that original
+signal before importing the engine, and pass it to the app. Reading a newer gate's lifetime after
+the import resolves can revive a retired owner. WordPress's classic bootstrap instead reads the
+signal attached to its own `document.currentScript`. `composer.json` supplies the runtime version;
+no consumer version define is required. Source Sass uses the explicit `/styles.scss` subpath so
+`NodePackageImporter` cannot confuse it with compiled `/styles.css`.

@@ -7,7 +7,7 @@ let originY = 0
 let travel = 0
 let pressed = false
 let seen = false
-let observing = false
+let observers = 0
 
 const displacement = (x: number, y: number): number =>
   Math.max(Math.abs(x - originX), Math.abs(y - originY))
@@ -62,22 +62,39 @@ const onDragStart = (): void => {
  * our document-capture claim, so none of them can protect themselves from
  * us. This is the claim's own, library-agnostic measurement.
  *
- * Pure observer: capture + passive listeners that never preventDefault, held
- * for the page's life (`observe` is idempotent, there is no detach — the
- * gate and the engine are separate bundles, each arming its own instance).
+ * Gate and engine share the measurement while their ownership overlaps.
  */
 export const pointerTravel = {
-  observe(): void {
-    if (observing) {
-      return
+  observe(): () => void {
+    let active = true
+    const stop = (): void => {
+      if (!active) {
+        return
+      }
+      active = false
+      observers--
+      if (observers) {
+        return
+      }
+      document.removeEventListener('pointerdown', onDown, true)
+      document.removeEventListener('pointermove', onMove, true)
+      document.removeEventListener('pointerup', onUp, true)
+      document.removeEventListener('pointercancel', onCancel, true)
+      document.removeEventListener('dragstart', onDragStart, true)
+      pressed = seen = false
+      travel = 0
     }
-    observing = true
+    observers++
+    if (observers > 1) {
+      return stop
+    }
     const opts = { capture: true, passive: true }
     document.addEventListener('pointerdown', onDown, opts)
     document.addEventListener('pointermove', onMove, opts)
     document.addEventListener('pointerup', onUp, opts)
     document.addEventListener('pointercancel', onCancel, opts)
     document.addEventListener('dragstart', onDragStart, opts)
+    return stop
   },
   /** One press feeds at most one click: consuming resets the verdict. */
   consumeClick(e: MouseEvent): boolean {

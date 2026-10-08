@@ -492,11 +492,16 @@ load assets, install listeners, or depend on producer build defines. Keep the ex
 browser discovery checks: updating these compile-time imports does not require a newer installed
 WordPress plugin.
 
-The package root `@arts/immersive-lightbox` remains the passive library entry with its existing named
-factory API and root type exports. Direct library hosts explicitly create and initialize engines;
-WordPress continues to boot through its separate `boot.ts` bundle. The package ships TypeScript
-source for linked consumers, so a host needs a TypeScript-aware compiler. Existing
-`/package.json`, `/src/ts/*`, and `/src/styles/*` paths remain available for compatibility.
+The package root `@arts/immersive-lightbox` is passive and exports `createLightbox` and
+`createLightboxApp`. Default imports resolve to built browser ESM with declarations. Set the
+`arts-source` condition in the bundler and TypeScript `customConditions` to compile the included
+source instead. Existing `/package.json`, `/src/ts/*`, and `/src/styles/*` paths remain available.
+Versions come from the included `composer.json`; neither entry requires a host version define.
+
+`pnpm build:library` builds `dist/esm` and `dist/types` without running the WordPress build or
+syncing its assets. Pack the package after this command. Import `@arts/immersive-lightbox/styles.css`
+for the compiled stylesheet, or use `@use 'pkg:@arts/immersive-lightbox/styles.scss'` with Sass's
+`NodePackageImporter`. The library targets browser bundlers, Node 24+ tooling and TypeScript 7+.
 
 `pnpm exec vitest run tests/ts/packageEntries.test.ts` checks isolated consumers with
 `skipLibCheck: false`, inspects bundled contract graphs, and invokes the public root factory
@@ -506,13 +511,52 @@ Both entries expose the documented `DocumentEventMap` augmentation. The contract
 `EVENT_OPEN`, `EVENT_CHANGE`, and `EVENT_DESTROY` from the engine's canonical constants. It
 does not augment unrelated `Window` globals or bring in PhotoSwipe implementation declarations.
 
-A direct factory host must provide the existing version define when compiling the root:
+A direct browser host owns startup and disposal:
 
 ```ts
-// Vite/esbuild define configuration; the value must be a JavaScript string literal.
-define: { __ARTS_IMMERSIVE_LIGHTBOX_VERSION__: JSON.stringify('1.0.2') }
+import { createLightboxApp } from '@arts/immersive-lightbox'
+import '@arts/immersive-lightbox/styles.css'
+
+const app = createLightboxApp({ options: { elementor: { nativeFallback: true } } })
+app.init()
+// Later, after any awaited close:
+app.destroy()
 ```
 
-The WordPress producer already supplies this value from `composer.json`. A TypeScript ambient
-declaration only types the name; it cannot supply a runtime value. Importing `/contract` needs
-no version define. Root imports remain passive; calling `createLightbox()` reads the define.
+The app waits for DOM readiness, retains the stable `window.artsLightbox` namespace and root
+observers across replacements, announces `arts-lightbox:ready`, and opens a matching deep link.
+Repeated `init()` calls are inert. `destroy()` cancels pending initialization and releases the
+instance; a destroyed app handle is terminal. The lower-level `createLightbox()` continues to
+work without publishing a discovery global and retains its existing `init()`/`destroy()` behavior.
+
+Use the separate engine-free `/gate` entry to defer the engine and its CSS. Supply the deployed
+CSS URL and capture the gate's original signal before the asynchronous import starts:
+
+```ts
+import { createLightboxGate } from '@arts/immersive-lightbox/gate'
+import css from '@arts/immersive-lightbox/styles.css?url'
+
+const gate = createLightboxGate({
+  enabled: true,
+  css,
+  nativeFallback: true,
+  load: async signal => {
+    const { createLightboxApp } = await import('@arts/immersive-lightbox')
+    createLightboxApp({ options: { elementor: { nativeFallback: true } }, signal }).init()
+  }
+})
+gate.init()
+// Later:
+gate.destroy()
+```
+
+The `?url` spelling is Vite's asset URL import; another bundler may supply the URL differently.
+The gate keeps CSS-before-engine loading, hover/idle warming, first-click replay and native-link
+fallback on load failure. Its `editor` option and an initial deep link load eagerly. Destroying it
+aborts the captured lifetime, removes its listeners and assets, and prevents delayed imports or
+held clicks from reviving the retired app. The ready promise keeps its original first-instance
+semantics; use `get()` for the current instance after replacement.
+
+WordPress passes `js` instead of `load`: its classic bootstrap reads the lifetime attached to its
+own script node. `gate.ts` adds disposable Elementor and WooCommerce refresh hooks; those adapters
+are absent from `/gate` and the app's public module graph.

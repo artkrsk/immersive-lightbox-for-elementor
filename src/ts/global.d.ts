@@ -24,6 +24,7 @@ declare global {
     /** WooCommerce's own jQuery event for a replaced variation gallery. */
     jQuery?: (target: Document) => {
       on(events: string, selector: string, handler: () => void): void
+      off?(events: string, selector: string, handler: () => void): void
     }
     /**
      * Elementor's frontend global, in both the preview iframe and the front

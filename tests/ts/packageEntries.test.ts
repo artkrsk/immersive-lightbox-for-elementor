@@ -13,6 +13,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 const root = fileURLToPath(new URL('../..', import.meta.url))
 const fixture = mkdtempSync(join(tmpdir(), 'arts-package-consumer-'))
 const packageName = '@arts/immersive-lightbox'
+const version = JSON.parse(readFileSync(join(root, 'composer.json'), 'utf8')).version as string
 const require = createRequire(import.meta.url)
 const tsc = join(dirname(require.resolve('typescript/package.json')), 'bin/tsc')
 mkdirSync(join(fixture, 'node_modules/@arts'), { recursive: true })
@@ -26,6 +27,7 @@ writeFileSync(
       target: 'ES2022',
       module: 'ESNext',
       moduleResolution: 'Bundler',
+      customConditions: ['arts-source'],
       lib: ['ES2022', 'DOM', 'DOM.Iterable'],
       strict: true,
       noEmit: true,
@@ -62,6 +64,7 @@ const bundle = (specifier: string, define: Record<string, string> = {}) =>
     platform: 'browser',
     metafile: true,
     logLevel: 'silent',
+    conditions: ['arts-source'],
     define
   })
 
@@ -122,10 +125,7 @@ document.addEventListener('arts-lightbox:change', event => { const direction: 1 
   })
 
   it('keeps root import passive and invokes the factory under its host contract', async () => {
-    const result = await bundle(packageName, {
-      __ARTS_IMMERSIVE_LIGHTBOX_VERSION__: '"consumer-fixture"',
-      'import.meta.env.DEV': 'false'
-    })
+    const result = await bundle(packageName, { 'import.meta.env.DEV': 'false' })
     const code = result.outputFiles[0]?.text ?? ''
     const passive: Record<string, unknown> = {}
     runInNewContext(code, passive)
@@ -135,7 +135,7 @@ document.addEventListener('arts-lightbox:change', event => { const direction: 1 
     try {
       runInNewContext(
         `${code}
-const instance = Provider.createLightbox(); if (instance.version !== 'consumer-fixture') throw Error('missing host define');`,
+const instance = Provider.createLightbox(); if (instance.version !== ${JSON.stringify(version)}) throw Error('incorrect package version');`,
         { window, document: window.document, performance, AbortController, structuredClone }
       )
       expect(window.document.body.children).toHaveLength(0)
@@ -144,19 +144,38 @@ const instance = Provider.createLightbox(); if (instance.version !== 'consumer-f
     }
   })
 
-  it('requires the documented version define only when constructing the library engine', async () => {
+  it('constructs the engine and a passive app without a host version define', async () => {
     const result = await bundle(packageName)
-    const context: Record<string, unknown> = { structuredClone }
+    const context: Record<string, unknown> = { structuredClone, AbortController }
     runInNewContext(result.outputFiles[0]?.text ?? '', context)
-    expect(() => runInNewContext('Provider.createLightbox()', context)).toThrow(
-      '__ARTS_IMMERSIVE_LIGHTBOX_VERSION__ is not defined'
+    expect(runInNewContext('Provider.createLightbox().version', context)).toBe(version)
+    expect(() => runInNewContext('Provider.createLightboxApp()', context)).not.toThrow()
+  })
+
+  it('keeps the gate passive and excludes the engine graph', async () => {
+    const result = await bundle(`${packageName}/gate`)
+    expect(Object.keys(result.metafile.inputs).join('\n')).not.toMatch(
+      /photoswipe|createLightbox\.ts|engineState|wordpress/
     )
+    const context: Record<string, unknown> = { AbortController }
+    runInNewContext(result.outputFiles[0]?.text ?? '', context)
+    expect(() =>
+      runInNewContext(
+        "Provider.createLightboxGate({ enabled: true, css: 'style.css', js: 'boot.js' })",
+        context
+      )
+    ).not.toThrow()
+    compileTypes(`import { createLightboxGate } from '@arts/immersive-lightbox/gate'
+      import { createLightboxApp } from '@arts/immersive-lightbox'
+      const gate = createLightboxGate({ enabled: true, css: 'style.css', load: async signal => {
+        createLightboxApp({ signal }).init()
+      } })
+      gate.init(); gate.destroy()
+    `)
   })
 
   it('preserves manifest and extensionful source compatibility imports', async () => {
-    const result = await bundle(`${packageName}/src/ts/index.ts`, {
-      __ARTS_IMMERSIVE_LIGHTBOX_VERSION__: '"consumer-fixture"'
-    })
+    const result = await bundle(`${packageName}/src/ts/index.ts`)
     expect(result.outputFiles[0]?.text).toContain('createLightbox')
     const consumerRequire = createRequire(join(fixture, 'consumer.cjs'))
     const manifest = JSON.parse(

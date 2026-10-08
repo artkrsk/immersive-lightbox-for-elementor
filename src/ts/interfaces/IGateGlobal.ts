@@ -7,5 +7,6 @@ export interface IGateGlobal extends IArtsLightboxGlobal {
   __setInstance(lightbox: ILightbox | null): void
   __roots: ILightboxRootPublisher
   __disposeBoot?: () => void
-  __replaceBoot(install: () => void): void
+  __disposeGate?: () => void
+  __replaceBoot(install: () => void, signal?: AbortSignal): void
 }
