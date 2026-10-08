@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+
+* added: the lightbox now takes over the WooCommerce product gallery, including image and video items grouped per product, and hover zoom keeps working.
+* added: themes and custom integrations can now use a standalone browser build of the lightbox with a clean open and close lifecycle.
+* fixed: product pages no longer show a second lightbox without its dark backdrop, and the lightbox styles no longer affect other lightboxes on the page.
+
 ## 1.0.2
 
 * added: active lightbox-root observation and the opening source element in lightbox events make custom widget integrations more reliable.
