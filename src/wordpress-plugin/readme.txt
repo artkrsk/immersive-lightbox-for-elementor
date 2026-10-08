@@ -4,7 +4,7 @@ Tags: lightbox, elementor, gallery, photoswipe, video lightbox
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0
 GitHub Plugin URI: https://github.com/artkrsk/immersive-lightbox-for-elementor/
@@ -99,6 +99,12 @@ Elementor's native lightbox returns exactly as it was, and so does WooCommerce's
 6. Every Elementor URL field gains an "Open in lightbox" checkbox — buttons, icons and text links, including YouTube and Vimeo URLs.
 
 == Changelog ==
+
+= 1.0.3 =
+
+* added: the lightbox now takes over the WooCommerce product gallery, including image and video items grouped per product, and hover zoom keeps working.
+* added: themes and custom integrations can now use a standalone browser build of the lightbox with a clean open and close lifecycle.
+* fixed: product pages no longer show a second lightbox without its dark backdrop, and the lightbox styles no longer affect other lightboxes on the page.
 
 = 1.0.2 =
 
