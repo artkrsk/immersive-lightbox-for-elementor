@@ -40,15 +40,15 @@ class Gestures {
   declare tapHandler: TapHandler
   /** @arts fork — what kind of pointer started the current gesture. */
   declare isMousePointer: boolean | undefined
-  private declare _lastStartP1: Point
-  private declare _intervalP1: Point
-  private declare _numActivePoints: number
-  private declare _ongoingPointers: Point[]
-  private declare _touchEventEnabled: boolean
-  private declare _pointerEventEnabled: boolean
-  private declare _intervalTime: number
-  private declare _velocityCalculated: boolean
-  private declare _tapTimer: ReturnType<typeof setTimeout> | null
+  declare private _lastStartP1: Point
+  declare private _intervalP1: Point
+  declare private _numActivePoints: number
+  declare private _ongoingPointers: Point[]
+  declare private _touchEventEnabled: boolean
+  declare private _pointerEventEnabled: boolean
+  declare private _intervalTime: number
+  declare private _velocityCalculated: boolean
+  declare private _tapTimer: ReturnType<typeof setTimeout> | null
 
   constructor(pswp: PhotoSwipe) {
     this.pswp = pswp

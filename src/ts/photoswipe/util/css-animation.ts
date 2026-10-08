@@ -19,10 +19,10 @@ export type CssAnimationProps = SharedAnimationProps & DefaultCssAnimationProps
 class CSSAnimation {
   declare props: CssAnimationProps
   declare onFinish: () => void
-  private declare _target: HTMLElement
-  private declare _onComplete: VoidFunction | undefined
-  private declare _finished: boolean
-  private declare _helperTimeout: ReturnType<typeof setTimeout>
+  declare private _target: HTMLElement
+  declare private _onComplete: VoidFunction | undefined
+  declare private _finished: boolean
+  declare private _helperTimeout: ReturnType<typeof setTimeout>
 
   /**
    * onComplete can be unpredictable, be careful about current state
