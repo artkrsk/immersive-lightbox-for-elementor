@@ -1,10 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.0.4 – October 29, 2026
 
-* fixed: opening an image no longer flashes the page background where the picture was. The clicked image stays on the page under the flying copy until the transition settles, the flying copy is drawn once at its landing size and moved by the compositor instead of being resized every frame, and it never swaps its file mid-flight.
-* improved: hovering a link now decodes the full-size image as well as fetching it, so the opening transition can carry the sharp file from its first frame.
-* added: a caption or a tint overlay placed over a linked image can ride the opening and closing transition (`data-arts-lightbox-fly`), fading with the picture instead of cutting out the moment it starts moving.
+* added: a card's overlaid caption and hover tint now stay visible and travel with the picture as the lightbox opens and closes.
+* fixed: opening an image no longer flashes the page background where the picture was.
 
 ## 1.0.3 – October 8, 2026
 
