@@ -34,7 +34,13 @@ function mountCloseFlight(
   // The full-size image is what's on screen — paint the flight with it
   // so the swap is invisible; posters for videos, thumb fallback.
   const src = slideData?.type === 'image' ? slideData.src || closeSource.src : closeSource.src
-  ctx.flight.mount(interpolateFlight(closeSource, target, 1), { src })
+  ctx.flight.mount({ w: target.rect.w, h: target.rect.h }, { src })
+  // The open's curve run backwards: progress 0 is the slide, 1 the page.
+  ctx.flight.fly(
+    (progress) => interpolateFlight(closeSource, target, 1 - progress),
+    ctx.opts.transition.duration,
+    ctx.opts.transition.easing
+  )
   if (slideData?.type === 'video') {
     // A poster hard-mounted over a PLAYING video is a visible content cut —
     // fade the cover in instead.
@@ -80,9 +86,6 @@ export function runCloseChoreography(ctx: ITransitionContext): Promise<void> {
       (eased, raw) => {
         const rt = 1 - eased
         backdrop.current?.paint(rt, true)
-        if (flies && target && closeSource) {
-          flight.paint(interpolateFlight(closeSource, target, rt))
-        }
         if (!flies && container) {
           paintCoverlessFade(container, raw, ease)
         }

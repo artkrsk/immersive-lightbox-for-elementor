@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+* fixed: opening an image no longer flashes the page background where the picture was. The clicked image stays on the page under the flying copy until the transition settles, the flying copy is drawn once at its landing size and moved by the compositor instead of being resized every frame, and it never swaps its file mid-flight.
+* improved: hovering a link now decodes the full-size image as well as fetching it, so the opening transition can carry the sharp file from its first frame.
+
 ## 1.0.3 – October 8, 2026
 
 * added: the lightbox now takes over the WooCommerce product gallery, including image and video items grouped per product, and hover zoom keeps working.

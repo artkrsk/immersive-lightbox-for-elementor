@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { TRANSITIONING_CLASS } from '@ts/constants'
+import { decodedImages } from '@ts/transition/decodedImages'
 import { runOpenChoreography } from '@ts/transition/openChoreography'
 import { playingSignal } from '@ts/video/playingSignal'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -22,36 +23,75 @@ function settle(step = 200, times = 6): void {
 }
 
 describe('runOpenChoreography', () => {
-  it('mounts the flight before hiding the source, and only after a handoff delay', () => {
-    const { ctx, flight, hidden, sourceElement } = transitionContext()
+  it('keeps the source on the page for the whole open and hides it only at settle', () => {
+    const { ctx, flight, hidden, sourceElement } = transitionContext({ sourceSrc: '/full-a.jpg' })
 
     runOpenChoreography(ctx, vi.fn())
 
     expect(flight.mount).toHaveBeenCalledTimes(1)
-    // The invariant CLAUDE.md spells out: the clicked element outlives the
-    // flight's first frames, so the compositor has tiles before the hole opens.
-    expect(hidden.hideAfterFrames).toHaveBeenCalledWith(sourceElement, 2)
+    // The invariant CLAUDE.md spells out: the flight covers the original for
+    // every frame of the open, so a clone that has not painted yet shows the
+    // original through it — never the page background.
+    frames.step(200)
+    expect(hidden.hide).not.toHaveBeenCalled()
+
+    settle()
+    expect(hidden.hide).toHaveBeenCalledWith(sourceElement)
     expect(flight.mount.mock.invocationCallOrder[0]).toBeLessThan(
-      hidden.hideAfterFrames.mock.invocationCallOrder[0] as number
+      hidden.hide.mock.invocationCallOrder[0] as number
     )
   })
 
-  it('paints the flight and the backdrop off one clock, then hands over', () => {
-    const { ctx, flight, backdrop } = transitionContext()
+  it('leaves the source alone when a navigation mid-open moved on', () => {
+    const { ctx, hidden, pswp } = transitionContext({ sourceSrc: '/full-a.jpg' })
+
+    runOpenChoreography(ctx, vi.fn())
+    pswp.currIndex = 1
+    settle()
+
+    expect(hidden.hide).not.toHaveBeenCalled()
+  })
+
+  it('flies once on the compositor, paints the backdrop on the clock, then hands over', () => {
+    const { ctx, flight, backdrop } = transitionContext({ sourceSrc: '/full-a.jpg' })
     const onSettled = vi.fn()
 
     runOpenChoreography(ctx, onSettled)
     expect(onSettled).not.toHaveBeenCalled()
+    // The box is the landing rect; the flight is one animation, same duration
+    // and curve as the clock the backdrop reads.
+    expect(flight.mount).toHaveBeenCalledWith({ w: 800, h: 600 }, { src: '/full-a.jpg' })
+    expect(flight.fly).toHaveBeenCalledTimes(1)
+    expect(flight.fly).toHaveBeenCalledWith(expect.any(Function), 800, 'power2.inOut')
 
     frames.step(200)
     expect(backdrop.paint).toHaveBeenCalledTimes(1)
-    expect(flight.paint).toHaveBeenCalledTimes(1)
-    // Same frame count for both — one clock, not two tweens.
-    expect(backdrop.paint.mock.calls.length).toBe(flight.paint.mock.calls.length)
+    // The slide has not moved: nothing to re-aim at.
+    expect(flight.retarget).not.toHaveBeenCalled()
 
     settle()
     expect(onSettled).toHaveBeenCalledTimes(1)
     expect(flight.leave).toHaveBeenCalledTimes(1)
+  })
+
+  it('re-aims the flight when explore pans the slide mid-flight', () => {
+    const slide = placedSlide()
+    const { ctx, flight } = transitionContext({ sourceSrc: '/full-a.jpg', slide })
+
+    runOpenChoreography(ctx, vi.fn())
+    frames.step(200)
+    expect(flight.retarget).not.toHaveBeenCalled()
+
+    slide.pan = { x: 80, y: 30 }
+    frames.step(200)
+    expect(flight.retarget).toHaveBeenCalledTimes(1)
+    const frameAt = flight.retarget.mock.calls[0]?.[0] as (p: number) => { x: number }
+    // The re-aimed curve lands on the panned rect.
+    expect(frameAt(1).x).toBe(80)
+
+    // Still there next frame: no churn while the pointer rests.
+    frames.step(200)
+    expect(flight.retarget).toHaveBeenCalledTimes(1)
   })
 
   it('ramps the chrome property and clears the transitioning class at the end', () => {
@@ -69,38 +109,94 @@ describe('runOpenChoreography', () => {
     expect(root.style.getPropertyValue('--arts-lightbox-chrome')).toBe('1')
   })
 
-  it('upgrades the flight to the full-size image once it decodes', async () => {
-    const decode = vi.fn().mockResolvedValue(undefined)
-    vi.stubGlobal(
-      'Image',
-      class {
-        src = ''
-        decode = decode
-      }
-    )
-    const { ctx, flight } = transitionContext()
+  describe('the file the flight carries', () => {
+    /** A fake Image whose decode the test settles by hand. */
+    function stubImageDecode(): { resolve(): void; reject(): void } {
+      let resolve!: () => void
+      let reject!: () => void
+      const decode = new Promise<void>((res, rej) => {
+        resolve = res
+        reject = rej
+      })
+      vi.stubGlobal(
+        'Image',
+        class {
+          src = ''
+          decode = (): Promise<void> => decode
+        }
+      )
+      return { resolve, reject }
+    }
 
-    runOpenChoreography(ctx, vi.fn())
-    await vi.waitFor(() => {
-      expect(flight.upgrade).toHaveBeenCalledWith('/full-a.jpg')
-    })
-  })
+    it('flies the full-size file from the first frame when the warm-up decoded it', async () => {
+      stubImageDecode().resolve()
+      await decodedImages.warm('/full-warm.jpg')
+      const { ctx, flight } = transitionContext({
+        slides: [{ key: 'w', type: 'image', src: '/full-warm.jpg', width: 1600, height: 1200 }]
+      })
 
-  it('never rejects the open when the full-size decode fails', async () => {
-    vi.stubGlobal(
-      'Image',
-      class {
-        src = ''
-        decode = vi.fn().mockRejectedValue(new Error('decode failed'))
-      }
-    )
-    const { ctx, flight } = transitionContext()
-
-    expect(() => {
       runOpenChoreography(ctx, vi.fn())
-    }).not.toThrow()
-    await Promise.resolve()
-    expect(flight.upgrade).not.toHaveBeenCalled()
+
+      expect(flight.mount).toHaveBeenCalledWith(expect.anything(), { src: '/full-warm.jpg' })
+      settle()
+      // Nothing to wait for: the hand-off is immediate.
+      expect(flight.leave).toHaveBeenCalledTimes(1)
+    })
+
+    it('flies the page candidate when the full-size file is cold, never swapping mid-flight', async () => {
+      const decode = stubImageDecode()
+      const { ctx, flight } = transitionContext({
+        slides: [{ key: 'c', type: 'image', src: '/full-cold.jpg', width: 1600, height: 1200 }]
+      })
+
+      runOpenChoreography(ctx, vi.fn())
+      expect(flight.mount).toHaveBeenCalledWith(expect.anything(), { src: '/thumb-a.jpg' })
+
+      settle()
+      // Landed, but the hand-off waits for the sharp slide to be decodable.
+      expect(flight.leave).not.toHaveBeenCalled()
+
+      decode.resolve()
+      await vi.waitFor(() => {
+        expect(flight.leave).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    it('still hands over when the full-size decode fails', async () => {
+      const decode = stubImageDecode()
+      const { ctx, flight } = transitionContext({
+        slides: [{ key: 'f', type: 'image', src: '/full-failed.jpg', width: 1600, height: 1200 }]
+      })
+
+      expect(() => {
+        runOpenChoreography(ctx, vi.fn())
+      }).not.toThrow()
+      settle()
+      decode.reject()
+
+      await vi.waitFor(() => {
+        expect(flight.leave).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    it('gives up on a stalled decode after the fallback lapses', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout'] })
+      try {
+        stubImageDecode()
+        const { ctx, flight } = transitionContext({
+          slides: [{ key: 's', type: 'image', src: '/full-stalled.jpg', width: 1600, height: 1200 }]
+        })
+
+        runOpenChoreography(ctx, vi.fn())
+        settle()
+        expect(flight.leave).not.toHaveBeenCalled()
+
+        await vi.advanceTimersByTimeAsync(1000)
+        expect(flight.leave).toHaveBeenCalledTimes(1)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
   })
 
   describe('with nothing to fly', () => {

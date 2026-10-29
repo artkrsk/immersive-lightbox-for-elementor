@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 
-import type { IFlightFrame } from '@ts/interfaces'
+import type { IFlightBox, IFlightFrame } from '@ts/interfaces'
 import { createFlightLayer } from '@ts/transition/flightLayer'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { installFrameClock } from '../helpers/frameClock'
 
 const frame: IFlightFrame = {
@@ -17,6 +17,8 @@ const frame: IFlightFrame = {
   innerOffsetYPct: -12
 }
 
+const box: IFlightBox = { w: 600, h: 400 }
+
 /** Stands in for the pswp root, which is where the flight belongs. */
 function fakeRoot(): HTMLElement {
   const root = document.createElement('div')
@@ -29,46 +31,69 @@ describe('createFlightLayer', () => {
   // Roots and detached layers outlive their test otherwise.
   beforeEach(() => {
     document.body.innerHTML = ''
+    vi.restoreAllMocks()
   })
 
-  it('mounts, paints and unmounts the promoted element', () => {
+  it('mounts a box of the landing size, flies it on the compositor and unmounts', () => {
     const layer = createFlightLayer(() => fakeRoot())
-    layer.mount(frame, { src: '/thumb.jpg' })
+    layer.mount(box, { src: '/thumb.jpg' })
     const el = document.querySelector<HTMLDivElement>('.arts-lightbox-flight')
     const img = el?.querySelector('img')
     expect(el).not.toBeNull()
     expect(img?.getAttribute('src')).toBe('/thumb.jpg')
-    expect(el?.style.transform).toBe('translate(10px, 20px)')
-    expect(el?.style.width).toBe('300px')
-    expect(el?.style.borderRadius).toBe('18px')
-    expect(img?.style.width).toBe('120%')
-    expect(img?.style.height).toBe('120%')
-    // -10%/-12% of the frame becomes offsets in the 120%-sized media axes.
-    expect(img?.style.transform).toBe(`translate(${(-10 / 120) * 100}%, ${(-12 / 120) * 100}%)`)
+    // The only size the box ever has — the raster the compositor keeps.
+    expect(el?.style.width).toBe('600px')
+    expect(el?.style.height).toBe('400px')
 
-    layer.paint({
-      ...frame,
-      x: 50,
-      radius: 6,
-      innerWidthPct: 100,
-      innerHeightPct: 100,
-      innerOffsetXPct: 0,
-      innerOffsetYPct: 0
-    })
-    expect(el?.style.transform).toBe('translate(50px, 20px)')
-    expect(el?.style.borderRadius).toBe('6px')
-    expect(img?.style.width).toBe('100%')
-    expect(img?.style.transform).toBe('translate(0%, 0%)')
+    layer.fly(() => frame, 800, 'power2.inOut')
+    // Two transforms (outer box, inner picture) plus the radius, each its own
+    // animation so the transforms stay compositable.
+    expect(el?.getAnimations()).toHaveLength(2)
+    expect(img?.getAnimations()).toHaveLength(1)
 
     layer.unmount()
     expect(document.querySelector('.arts-lightbox-flight')).toBeNull()
   })
 
+  it('re-aims a flight in progress by swapping keyframes, keeping its time', () => {
+    const setKeyframes = vi.fn()
+    const animate = vi.spyOn(HTMLElement.prototype, 'animate').mockImplementation(
+      () =>
+        ({
+          cancel: vi.fn(),
+          finished: Promise.resolve(),
+          effect: { setKeyframes }
+        }) as unknown as Animation
+    )
+    const layer = createFlightLayer(() => fakeRoot())
+    layer.mount(box, { src: '/a.jpg' })
+    layer.fly(() => frame, 800, 'power2.inOut')
+    expect(animate).toHaveBeenCalledTimes(3)
+
+    layer.retarget(() => ({ ...frame, x: 99 }))
+
+    expect(setKeyframes).toHaveBeenCalledTimes(3)
+    expect(animate).toHaveBeenCalledTimes(3)
+  })
+
+  it('a fresh fly cancels the one in progress', () => {
+    const cancel = vi.fn()
+    vi.spyOn(HTMLElement.prototype, 'animate').mockImplementation(
+      () => ({ cancel, finished: Promise.resolve(), effect: null }) as unknown as Animation
+    )
+    const layer = createFlightLayer(() => fakeRoot())
+    layer.mount(box, { src: '/a.jpg' })
+    layer.fly(() => frame, 800, 'power2.inOut')
+    layer.fly(() => frame, 800, 'power2.inOut')
+
+    expect(cancel).toHaveBeenCalledTimes(3)
+  })
+
   it('replaces a stale element on re-mount', () => {
     const root = fakeRoot()
     const layer = createFlightLayer(() => root)
-    layer.mount(frame, { src: '/a.jpg' })
-    layer.mount(frame, { src: '/b.jpg' })
+    layer.mount(box, { src: '/a.jpg' })
+    layer.mount(box, { src: '/b.jpg' })
     const els = document.querySelectorAll('.arts-lightbox-flight')
     expect(els.length).toBe(1)
     expect(els[0]?.querySelector('img')?.getAttribute('src')).toBe('/b.jpg')
@@ -77,7 +102,7 @@ describe('createFlightLayer', () => {
   it('mounts inside the root, so the chrome paints over the travelling image', () => {
     const root = fakeRoot()
     const layer = createFlightLayer(() => root)
-    layer.mount(frame, { src: '/a.jpg' })
+    layer.mount(box, { src: '/a.jpg' })
 
     expect(root.querySelector('.arts-lightbox-flight')).not.toBeNull()
   })
@@ -85,53 +110,30 @@ describe('createFlightLayer', () => {
   it('detaches to body so it can outlive the root being torn down', () => {
     const root = fakeRoot()
     const layer = createFlightLayer(() => root)
-    layer.mount(frame, { src: '/a.jpg' })
+    layer.mount(box, { src: '/a.jpg' })
     const el = root.querySelector('.arts-lightbox-flight')
 
     layer.detach()
     root.remove() // what pswp.destroy() does
 
-    // Still alive, still painted, still carrying its final frame.
+    // Still alive, still its own box, still carrying its final frame.
     expect(el?.parentElement).toBe(document.body)
-    expect((el as HTMLElement).style.transform).toBe('translate(10px, 20px)')
+    expect((el as HTMLElement).style.width).toBe('600px')
   })
 
   it('leaves an already-detached layer alone', () => {
     const layer = createFlightLayer(() => fakeRoot())
-    layer.mount(frame, { src: '/a.jpg' })
+    layer.mount(box, { src: '/a.jpg' })
     layer.detach()
     layer.detach()
 
     expect(document.querySelectorAll('.arts-lightbox-flight')).toHaveLength(1)
   })
 
-  it('repoints the flying image at a better source mid-flight', () => {
-    const root = fakeRoot()
-    const layer = createFlightLayer(() => root)
-    layer.mount(frame, { src: '/thumb.jpg' })
-    const img = root.querySelector('img')
-
-    layer.upgrade('/full.jpg')
-
-    // Same element, so the per-frame height/transform paint() wrote survive.
-    expect(img?.getAttribute('src')).toBe('/full.jpg')
-    expect(img?.style.height).toBe('120%')
-  })
-
-  it('ignores an upgrade that arrives after unmount', () => {
-    const root = fakeRoot()
-    const layer = createFlightLayer(() => root)
-    layer.mount(frame, { src: '/thumb.jpg' })
-    layer.unmount()
-
-    expect(() => layer.upgrade('/full.jpg')).not.toThrow()
-    expect(document.querySelector('.arts-lightbox-flight')).toBeNull()
-  })
-
   it('fades before unmounting, and goes when the fade ends', () => {
     const root = fakeRoot()
     const layer = createFlightLayer(() => root)
-    layer.mount(frame, { src: '/a.jpg' })
+    layer.mount(box, { src: '/a.jpg' })
     const el = root.querySelector('.arts-lightbox-flight') as HTMLElement
 
     layer.leave()
@@ -145,7 +147,7 @@ describe('createFlightLayer', () => {
 
   it('arrive() mounts under a fade-in — the close cover must not hard-swap', () => {
     const layer = createFlightLayer(() => document.body)
-    layer.mount(frame, { src: '/poster.jpg' })
+    layer.mount(box, { src: '/poster.jpg' })
     layer.arrive()
     const el = document.querySelector('.arts-lightbox-flight') as HTMLElement
     // The leaving class was applied and removed within the same call after a
@@ -154,9 +156,10 @@ describe('createFlightLayer', () => {
     layer.unmount()
   })
 
-  it('paint, arrive, leave and detach are no-ops before mount', () => {
+  it('fly, retarget, arrive, leave and detach are no-ops before mount', () => {
     const layer = createFlightLayer(() => fakeRoot())
-    expect(() => layer.paint(frame)).not.toThrow()
+    expect(() => layer.fly(() => frame, 800, 'power2.inOut')).not.toThrow()
+    expect(() => layer.retarget(() => frame)).not.toThrow()
     expect(() => layer.arrive()).not.toThrow()
     expect(() => layer.leave()).not.toThrow()
     expect(() => layer.detach()).not.toThrow()
@@ -165,7 +168,7 @@ describe('createFlightLayer', () => {
   it('leave is a no-op once the layer has already been unmounted', () => {
     const root = fakeRoot()
     const layer = createFlightLayer(() => root)
-    layer.mount(frame, { src: '/a.jpg' })
+    layer.mount(box, { src: '/a.jpg' })
     layer.unmount()
 
     expect(() => layer.leave()).not.toThrow()
@@ -182,10 +185,10 @@ describe('createFlightLayer', () => {
     it('bails out when a later mount replaces the layer mid-chain', () => {
       const root = fakeRoot()
       const layer = createFlightLayer(() => root)
-      layer.mount(frame, { src: '/a.jpg' })
+      layer.mount(box, { src: '/a.jpg' })
 
       layer.unmountLater(2)
-      layer.mount(frame, { src: '/b.jpg' })
+      layer.mount(box, { src: '/b.jpg' })
 
       frames.step()
       frames.step()
@@ -195,13 +198,13 @@ describe('createFlightLayer', () => {
       expect(els[0]?.querySelector('img')?.getAttribute('src')).toBe('/b.jpg')
 
       // The new layer is still live — a buggy chain would have nulled it out.
-      expect(() => layer.paint(frame)).not.toThrow()
+      expect(() => layer.fly(() => frame, 800, 'power2.inOut')).not.toThrow()
     })
 
     it('unmounts once the frame count elapses without a race', () => {
       const root = fakeRoot()
       const layer = createFlightLayer(() => root)
-      layer.mount(frame, { src: '/a.jpg' })
+      layer.mount(box, { src: '/a.jpg' })
 
       layer.unmountLater(2)
 

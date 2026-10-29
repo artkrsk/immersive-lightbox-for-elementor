@@ -2,8 +2,13 @@ import type { IOpenRequest } from '../interfaces'
 import type PhotoSwipe from '../photoswipe/photoswipe'
 
 /**
- * Tracks page elements hidden while their flight clone flies — otherwise
- * the "cloning" is visible (the original still sitting on the page).
+ * Tracks page elements hidden while a flight stands in for them. The OPEN
+ * hides nothing until it settles: the flight launches on the source rect and
+ * only grows, so the original is covered for every frame of the open — and a
+ * clone whose tiles are not painted yet shows the original through it instead
+ * of a hole. The hide lands under an opaque backdrop, where it is invisible,
+ * and what it buys is the close: a return flight that lands on an element
+ * nothing else paints.
  *
  * Everything restores on destroy, whatever path led there. Navigating away
  * from a slide restores its hidden source right away — the backdrop is
@@ -16,15 +21,9 @@ export function createHiddenSources(
   req: IOpenRequest
 ): {
   hide(el: HTMLElement): void
-  hideAfterFrames(el: HTMLElement, frames: number): void
 } {
   const hidden = new Set<HTMLElement>()
   let live = true
-
-  const hide = (el: HTMLElement): void => {
-    el.style.visibility = 'hidden'
-    hidden.add(el)
-  }
 
   pswp.on('destroy', () => {
     live = false
@@ -47,27 +46,16 @@ export function createHiddenSources(
   })
 
   return {
-    hide,
     /**
-     * The same hide, held for `frames` presented frames — for a caller whose
-     * stand-in cannot paint yet and needs the original to cover for it until
-     * it can. A session that ends first drops the pending hide rather than
-     * stranding the element mid-restore.
+     * A session that already ended ignores the hide rather than stranding
+     * the element invisible: the open's clock can outlive a destroy.
      */
-    hideAfterFrames: (el, frames) => {
-      const step = (left: number): void => {
-        if (!live) {
-          return
-        }
-        if (left <= 0) {
-          hide(el)
-          return
-        }
-        requestAnimationFrame(() => {
-          step(left - 1)
-        })
+    hide: (el) => {
+      if (!live) {
+        return
       }
-      step(frames)
+      el.style.visibility = 'hidden'
+      hidden.add(el)
     }
   }
 }

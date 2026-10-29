@@ -19,7 +19,6 @@ export interface ITransitionContext {
   backdrop: { current: IBackdrop | null }
   hidden: {
     hide(el: HTMLElement): void
-    hideAfterFrames(el: HTMLElement, frames: number): void
   }
   /** Measured at click time, before any layout work. */
   openSource: IFlightSource

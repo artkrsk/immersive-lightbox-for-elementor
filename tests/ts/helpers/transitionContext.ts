@@ -18,8 +18,8 @@ import { vi } from 'vitest'
  * the seam `mountChrome.dom.test.ts` already relies on.
  *
  * Every collaborator is a `vi.fn()`, which is the point: the choreographies
- * are ordering machines, and `mock.invocationCallOrder` is how "the flight
- * mounts before the source hides" becomes an assertion.
+ * are ordering machines, and `mock.invocationCallOrder` is how "the source
+ * hides only once the flight has landed" becomes an assertion.
  */
 
 export type TFlightSpy = { [K in keyof IFlightLayer]: ReturnType<typeof vi.fn> }
@@ -28,8 +28,8 @@ export type TBackdropSpy = { [K in keyof IBackdrop]: ReturnType<typeof vi.fn> }
 export function flightSpy(): TFlightSpy {
   return {
     mount: vi.fn(),
-    paint: vi.fn(),
-    upgrade: vi.fn(),
+    fly: vi.fn(),
+    retarget: vi.fn(),
     arrive: vi.fn(),
     leave: vi.fn(),
     detach: vi.fn(),
@@ -104,7 +104,7 @@ export function transitionContext(o: ITransitionCtxOptions = {}): {
   container: HTMLElement
   flight: TFlightSpy
   backdrop: TBackdropSpy
-  hidden: { hide: ReturnType<typeof vi.fn>; hideAfterFrames: ReturnType<typeof vi.fn> }
+  hidden: { hide: ReturnType<typeof vi.fn> }
   destroy: ReturnType<typeof vi.fn>
   sourceElement: HTMLElement
   pswp: { currSlide: unknown; currIndex: number; element: HTMLElement }
@@ -126,7 +126,7 @@ export function transitionContext(o: ITransitionCtxOptions = {}): {
 
   const flight = flightSpy()
   const backdrop = backdropSpy()
-  const hidden = { hide: vi.fn(), hideAfterFrames: vi.fn() }
+  const hidden = { hide: vi.fn() }
   const destroy = vi.fn()
 
   const openSource: IFlightSource = {

@@ -80,7 +80,7 @@ describe('attachHoverPrefetch', () => {
   })
 
   it('dedupes the same href across pointerover and pointerdown', () => {
-    document.body.innerHTML = `<a href="/a.jpg" data-arts-lightbox>x</a>`
+    document.body.innerHTML = `<a href="/dedupe.jpg" data-arts-lightbox>x</a>`
     const anchor = document.querySelector('a') as HTMLAnchorElement
     detach = attachHoverPrefetch(mergeOptions())
 
@@ -91,7 +91,7 @@ describe('attachHoverPrefetch', () => {
   })
 
   it('detach removes both listeners so a later pointerover no longer prefetches', () => {
-    document.body.innerHTML = `<a href="/a.jpg" data-arts-lightbox>x</a>`
+    document.body.innerHTML = `<a href="/detach.jpg" data-arts-lightbox>x</a>`
     const anchor = document.querySelector('a') as HTMLAnchorElement
     detach = attachHoverPrefetch(mergeOptions())
 

@@ -5,7 +5,6 @@ import type PhotoSwipe from '@ts/photoswipe/photoswipe'
 import { createHiddenSources } from '@ts/transition/hiddenSources'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { fakePswp } from '../helpers/fakePswp'
-import { installFrameClock } from '../helpers/frameClock'
 
 function request(): { req: IOpenRequest; a: HTMLElement; aClone: HTMLElement; b: HTMLElement } {
   document.body.innerHTML = `
@@ -68,52 +67,16 @@ describe('createHiddenSources', () => {
     expect(aClone.style.visibility).toBe('')
   })
 
-  describe('hideAfterFrames', () => {
-    let frames: ReturnType<typeof installFrameClock>
+  it('ignores a hide that arrives after the session ended', () => {
+    const pswp = fakePswp()
+    const { req, a } = request()
+    const hidden = createHiddenSources(pswp as unknown as PhotoSwipe, req)
 
-    const flush = (): void => frames.step()
+    pswp.emit('destroy', {})
+    hidden.hide(a)
 
-    beforeEach(() => {
-      frames = installFrameClock()
-    })
-
-    it('leaves the element visible until the frames elapse', () => {
-      const pswp = fakePswp()
-      const { req, a } = request()
-      const hidden = createHiddenSources(pswp as unknown as PhotoSwipe, req)
-
-      hidden.hideAfterFrames(a, 2)
-      expect(a.style.visibility).toBe('')
-      flush()
-      expect(a.style.visibility).toBe('')
-      flush()
-      expect(a.style.visibility).toBe('hidden')
-    })
-
-    it('drops a pending hide when the session ends first', () => {
-      const pswp = fakePswp()
-      const { req, a } = request()
-      const hidden = createHiddenSources(pswp as unknown as PhotoSwipe, req)
-
-      hidden.hideAfterFrames(a, 2)
-      flush()
-      pswp.emit('destroy', {})
-      flush()
-
-      // Hiding after the restore would strand it invisible for the session.
-      expect(a.style.visibility).toBe('')
-    })
-
-    it('still restores on destroy once the deferred hide has landed', () => {
-      const pswp = fakePswp()
-      const { req, a } = request()
-      const hidden = createHiddenSources(pswp as unknown as PhotoSwipe, req)
-
-      hidden.hideAfterFrames(a, 1)
-      flush()
-      expect(a.style.visibility).toBe('hidden')
-      pswp.emit('destroy', {})
-      expect(a.style.visibility).toBe('')
-    })
+    // The open's clock can outlive a destroy; hiding then would strand the
+    // element invisible for the rest of the page's life.
+    expect(a.style.visibility).toBe('')
   })
 })

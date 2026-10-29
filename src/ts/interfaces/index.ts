@@ -1,6 +1,7 @@
 export type { IArtsLightboxGlobal } from './IArtsLightboxGlobal'
 export type { IBackdrop } from './IBackdrop'
 export type { ICandidate } from './ICandidate'
+export type { IFlightBox } from './IFlightBox'
 export type { IFlightFrame } from './IFlightFrame'
 export type { IFlightLayer } from './IFlightLayer'
 export type { IFlightSource } from './IFlightSource'

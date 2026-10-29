@@ -1,7 +1,7 @@
-import type { IFlightFrame, IFlightLayer } from '../interfaces'
-import { isTagElement } from '../utils/isTagElement'
+import { cssEasing } from '../core/cssEasing'
+import type { IFlightBox, IFlightLayer } from '../interfaces'
 import { createFlightMedia } from './createFlightMedia'
-import { flightFrameStyles } from './flightFrameStyles'
+import { flightKeyframes } from './flightKeyframes'
 
 const LAYER_CLASS = 'arts-lightbox-flight'
 const MEDIA_CLASS = 'arts-lightbox-flight__media'
@@ -18,45 +18,72 @@ const LEAVE_FALLBACK_MS = 1000
 export function createFlightLayer(resolveParent: () => HTMLElement): IFlightLayer {
   let el: HTMLDivElement | null = null
   let mediaEl: HTMLElement | null = null
+  let box: IFlightBox = { w: 0, h: 0 }
+  let animations: Animation[] = []
 
-  const paint = (frame: IFlightFrame): void => {
-    if (!el || !mediaEl) {
-      return
+  const stop = (): void => {
+    for (const animation of animations) {
+      // A cancel rejects `finished`; nobody awaits it, so swallow the noise.
+      animation.finished.catch(() => {})
+      animation.cancel()
     }
-    const style = flightFrameStyles(frame)
-    el.style.transform = style.transform
-    el.style.width = style.width
-    el.style.height = style.height
-    el.style.borderRadius = style.borderRadius
-    mediaEl.style.width = style.innerWidth
-    mediaEl.style.height = style.innerHeight
-    mediaEl.style.transform = style.innerTransform
+    animations = []
   }
 
   const unmount = (): void => {
+    stop()
     el?.remove()
     el = null
     mediaEl = null
   }
 
   return {
-    mount: (frame, media) => {
+    mount: (nextBox, media) => {
       if (el) {
-        el.remove()
+        unmount()
       }
+      box = nextBox
       el = document.createElement('div')
       el.className = LAYER_CLASS
+      // The only size this box ever has: the raster the compositor keeps.
+      el.style.width = `${box.w}px`
+      el.style.height = `${box.h}px`
       mediaEl = createFlightMedia(media)
       mediaEl.classList.add(MEDIA_CLASS)
       el.appendChild(mediaEl)
       resolveParent().appendChild(el)
-      paint(frame)
     },
-    upgrade: (src) => {
-      if (!el || !isTagElement(mediaEl, 'img')) {
+    fly: (frameAt, duration, easing) => {
+      if (!el || !mediaEl) {
         return
       }
-      mediaEl.src = src
+      stop()
+      const keyframes = flightKeyframes(frameAt, box)
+      const timing: KeyframeAnimationOptions = { duration, easing: cssEasing(easing), fill: 'both' }
+      // Three animations on purpose. The two transforms ride the compositor,
+      // which is the whole point; an effect that also carried the radius would
+      // drag them onto the main thread (one non-compositable property makes
+      // the effect non-compositable). The radius runs there on its own and
+      // repaints nothing — a rounded clip is a compositor property too.
+      animations = [
+        el.animate(keyframes.outer, timing),
+        mediaEl.animate(keyframes.inner, timing),
+        el.animate(keyframes.radius, timing)
+      ]
+    },
+    retarget: (frameAt) => {
+      if (animations.length === 0) {
+        return
+      }
+      const keyframes = flightKeyframes(frameAt, box)
+      const effects = [keyframes.outer, keyframes.inner, keyframes.radius]
+      animations.forEach((animation, i) => {
+        const effect = animation.effect as KeyframeEffect | null
+        const next = effects[i]
+        if (effect && typeof effect.setKeyframes === 'function' && next) {
+          effect.setKeyframes(next)
+        }
+      })
     },
     arrive: () => {
       // Mount-time fade-in: the close cover must dissolve OVER a playing
@@ -91,14 +118,12 @@ export function createFlightLayer(resolveParent: () => HTMLElement): IFlightLaye
     },
     detach: () => {
       // The close destroys the root while the flight is still needed for two
-      // more frames — see unmountLater. Reparenting is safe here: the layer is
-      // painted per frame by JS, so there is no transition to interrupt, and
-      // by now it is already sitting on its final frame.
+      // more frames — see unmountLater. Reparenting is safe here: the
+      // animations travel with the element and hold their final frame.
       if (el && el.parentElement !== document.body) {
         document.body.appendChild(el)
       }
     },
-    paint,
     unmount,
     unmountLater: (frames) => {
       const current = el
