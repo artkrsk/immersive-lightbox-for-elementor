@@ -128,4 +128,66 @@ describe('captureFlightSource', () => {
     mockRect(img, { left: 0, top: -20, width: 300, height: 480 })
     expect(captureFlightSource(frame).radius).toBe(0)
   })
+
+  describe('extras that ride the flight', () => {
+    it('captures nothing when nothing is marked', () => {
+      document.body.innerHTML =
+        '<a href="/full.jpg" data-arts-lightbox><img src="/thumb.jpg" alt="" /></a>'
+      const frame = document.querySelector('a') as HTMLElement
+      mockRect(frame, { left: 0, top: 0, width: 300, height: 400 })
+      expect(captureFlightSource(frame).extras).toEqual([])
+    })
+
+    it('measures a marked caption against the frame and keeps its computed look', () => {
+      // The caption is OUTSIDE the clip box, a sibling inside the anchor —
+      // the walk starts at the clicked element, not the frame.
+      document.body.innerHTML = `
+        <a href="/full.jpg" data-arts-lightbox>
+          <span class="frame" style="overflow: hidden">
+            <img src="/thumb.jpg" alt="" />
+            <i data-arts-lightbox-fly="veil" style="background-color: rgb(35, 35, 35); opacity: 0.3"></i>
+          </span>
+          <b data-arts-lightbox-fly="caption" style="color: rgb(255, 255, 255)">Garden Curve</b>
+        </a>
+      `
+      const anchor = document.querySelector('a') as HTMLElement
+      const frame = document.querySelector('.frame') as HTMLElement
+      const img = frame.querySelector('img') as HTMLImageElement
+      const veil = document.querySelector('i') as HTMLElement
+      const caption = document.querySelector('b') as HTMLElement
+      mockRect(anchor, { left: 100, top: 200, width: 300, height: 400 })
+      mockRect(frame, { left: 100, top: 200, width: 300, height: 400 })
+      mockRect(img, { left: 100, top: 200, width: 300, height: 400 })
+      mockRect(veil, { left: 100, top: 200, width: 300, height: 400 })
+      mockRect(caption, { left: 130, top: 540, width: 150, height: 40 })
+
+      const { extras } = captureFlightSource(anchor)
+      expect(extras.map((extra) => extra.kind)).toEqual(['veil', 'caption'])
+      const [veilExtra, captionExtra] = extras
+      expect(veilExtra?.opacity).toBeCloseTo(0.3, 6)
+      expect(veilExtra?.styles.backgroundColor).toBe('rgb(35, 35, 35)')
+      // Fractions of the frame: 30/300 across, 340/400 down, 150x40 on screen.
+      expect(captionExtra?.x).toBeCloseTo(0.1, 6)
+      expect(captionExtra?.y).toBeCloseTo(0.85, 6)
+      expect(captionExtra?.w).toBeCloseTo(0.5, 6)
+      expect(captionExtra?.h).toBeCloseTo(0.1, 6)
+      expect(captionExtra?.width).toBe(150)
+      expect(captionExtra?.height).toBe(40)
+      expect(captionExtra?.element).toBe(caption)
+      expect(captionExtra?.hover).toBe(false)
+      expect(captionExtra?.styles.color).toBe('rgb(255, 255, 255)')
+    })
+
+    it('ignores a marker with an unknown kind', () => {
+      document.body.innerHTML = `
+        <a href="/full.jpg" data-arts-lightbox>
+          <img src="/thumb.jpg" alt="" />
+          <b data-arts-lightbox-fly="badge">x</b>
+        </a>
+      `
+      const frame = document.querySelector('a') as HTMLElement
+      mockRect(frame, { left: 0, top: 0, width: 300, height: 400 })
+      expect(captureFlightSource(frame).extras).toEqual([])
+    })
+  })
 })

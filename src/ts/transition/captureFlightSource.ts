@@ -1,5 +1,6 @@
 import type { IFlightSource } from '../interfaces'
 import { isTagElement } from '../utils/isTagElement'
+import { captureFlightExtras } from './captureFlightExtras'
 import { measureFlightAxis } from './measureFlightAxis'
 
 const CLIPS = /hidden|clip|scroll|auto/
@@ -100,11 +101,13 @@ export function captureFlightSource(sourceEl: HTMLElement): IFlightSource {
   }
 
   const frameRect = frame.getBoundingClientRect()
+  const rect = { x: frameRect.left, y: frameRect.top, w: frameRect.width, h: frameRect.height }
   return {
-    rect: { x: frameRect.left, y: frameRect.top, w: frameRect.width, h: frameRect.height },
+    rect,
     radius,
     src: mediaSrc(img),
     element: frame,
-    ...measureInner(img, frameRect)
+    ...measureInner(img, frameRect),
+    extras: captureFlightExtras(sourceEl, rect)
   }
 }

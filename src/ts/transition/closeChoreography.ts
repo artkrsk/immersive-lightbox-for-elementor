@@ -34,7 +34,9 @@ function mountCloseFlight(
   // The full-size image is what's on screen — paint the flight with it
   // so the swap is invisible; posters for videos, thumb fallback.
   const src = slideData?.type === 'image' ? slideData.src || closeSource.src : closeSource.src
-  ctx.flight.mount({ w: target.rect.w, h: target.rect.h }, { src })
+  // The landing element's own extras, captured fresh: what fades in is what
+  // the page shows once the flight is gone.
+  ctx.flight.mount({ w: target.rect.w, h: target.rect.h }, { src }, closeSource.extras)
   // The open's curve run backwards: progress 0 is the slide, 1 the page.
   ctx.flight.fly(
     (progress) => interpolateFlight(closeSource, target, 1 - progress),

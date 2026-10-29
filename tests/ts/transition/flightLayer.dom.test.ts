@@ -1,11 +1,12 @@
 // @vitest-environment happy-dom
 
-import type { IFlightBox, IFlightFrame } from '@ts/interfaces'
+import type { IFlightBox, IFlightExtra, IFlightFrame } from '@ts/interfaces'
 import { createFlightLayer } from '@ts/transition/flightLayer'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { installFrameClock } from '../helpers/frameClock'
 
 const frame: IFlightFrame = {
+  t: 0,
   x: 10,
   y: 20,
   w: 300,
@@ -87,6 +88,74 @@ describe('createFlightLayer', () => {
     layer.fly(() => frame, 800, 'power2.inOut')
 
     expect(cancel).toHaveBeenCalledTimes(3)
+  })
+
+  it('mounts the extras after the media and animates each on its own tracks', () => {
+    const animate = vi
+      .spyOn(HTMLElement.prototype, 'animate')
+      .mockImplementation(
+        () =>
+          ({ cancel: vi.fn(), finished: Promise.resolve(), effect: null }) as unknown as Animation
+      )
+    const caption = document.createElement('b')
+    caption.id = 'cap'
+    caption.textContent = 'Garden Curve'
+    caption.setAttribute('data-arts-lightbox-fly', 'caption')
+    const extras: IFlightExtra[] = [
+      {
+        kind: 'veil',
+        element: document.createElement('i'),
+        x: 0,
+        y: 0,
+        w: 1,
+        h: 1,
+        width: 300,
+        height: 400,
+        hover: false,
+        opacity: 0.3,
+        styles: { backgroundColor: 'rgb(35, 35, 35)' }
+      },
+      {
+        kind: 'caption',
+        element: caption,
+        x: 0.1,
+        y: 0.85,
+        w: 0.5,
+        h: 0.1,
+        width: 150,
+        height: 40,
+        hover: true,
+        opacity: 1,
+        styles: { color: 'rgb(255, 255, 255)' }
+      }
+    ]
+    const root = fakeRoot()
+    const layer = createFlightLayer(() => root)
+    layer.mount(box, { src: '/a.jpg' }, extras)
+    const el = root.querySelector('.arts-lightbox-flight') as HTMLElement
+    const children = [...el.children].map((child) => child.className)
+    expect(children).toEqual([
+      'arts-lightbox-flight__media',
+      'arts-lightbox-flight__veil',
+      'arts-lightbox-flight__extra arts-lightbox-flight__extra_hover'
+    ])
+    const veil = el.querySelector<HTMLElement>('.arts-lightbox-flight__veil')
+    expect(veil?.style.backgroundColor).toBe('rgb(35, 35, 35)')
+    const wrap = el.querySelector<HTMLElement>('.arts-lightbox-flight__extra')
+    expect(wrap?.style.width).toBe('150px')
+    const clone = wrap?.firstElementChild as HTMLElement
+    // A clone, not the element: the page keeps its caption. Ids never
+    // duplicate, the look travels inline, its own motion is neutralised.
+    expect(clone).not.toBe(caption)
+    expect(clone.textContent).toBe('Garden Curve')
+    expect(clone.hasAttribute('id')).toBe(false)
+    expect(clone.hasAttribute('data-arts-lightbox-fly')).toBe(false)
+    expect(clone.style.color).toBe('rgb(255, 255, 255)')
+    expect(clone.style.translate).toBe('none')
+
+    layer.fly(() => frame, 800, 'power2.inOut')
+    // outer, inner, radius, veil opacity, caption placement, caption opacity
+    expect(animate).toHaveBeenCalledTimes(6)
   })
 
   it('replaces a stale element on re-mount', () => {

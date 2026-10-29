@@ -112,6 +112,7 @@ Exactly one is always present on `<html>` after the gate runs:
 | `data-arts-lightbox-thumb="url"` | link | The strip / placeholder thumbnail for a trigger that wraps no media (a text link); wins over a contained `<img>` / `<video poster>`; a wrapped poster-less `<video>` falls back to a frame captured at open time |
 | `data-arts-lightbox-off` | link or ancestor | Opt out (wins over everything) |
 | `data-arts-lightbox-clone` | link or ancestor | Marks a duplicated instance: it joins the slide's DOM instances but never sets its position |
+| `data-arts-lightbox-fly="veil\|caption"` | an element inside the trigger | Rides the open and close flight: a `veil` (a tint layer over the picture, e.g. a hover overlay) dissolves over the first half of the open and returns on the close; a `caption` (text overlaid on the picture) is cloned at its corner, keeps its screen size and fades over the first third. The clone keeps its classes and inline custom properties; inherited text, box and background values are copied from the source so it looks the same cut off from its ancestors. `arts-lightbox-flight__extra_hover` on the clone's wrapper marks a trigger that was hovered, for CSS that pins a hover look |
 
 Video links need no attributes at all — YouTube/Vimeo URLs and video file
 extensions are detected from the href.

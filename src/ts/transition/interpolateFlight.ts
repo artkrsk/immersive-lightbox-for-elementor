@@ -17,6 +17,7 @@ export function interpolateFlight(from: IFlightSource, to: IFlightTarget, t: num
   const w = lerp(from.rect.w, to.rect.w, t)
   const scale = from.rect.w > 0 ? w / from.rect.w : 1
   return {
+    t,
     x: lerp(from.rect.x, to.rect.x, t),
     y: lerp(from.rect.y, to.rect.y, t),
     w,

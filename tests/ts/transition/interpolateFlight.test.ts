@@ -11,7 +11,8 @@ const from: IFlightSource = {
   innerOffsetYPct: -12,
   src: '/full.jpg',
   // Node env: interpolation never reads the element.
-  element: {} as HTMLElement
+  element: {} as HTMLElement,
+  extras: []
 }
 
 const to: IFlightTarget = {
@@ -23,6 +24,7 @@ describe('interpolateFlight', () => {
   it('returns the source geometry at t=0', () => {
     const f = interpolateFlight(from, to, 0)
     expect(f).toEqual({
+      t: 0,
       x: 100,
       y: 200,
       w: 300,
@@ -38,6 +40,7 @@ describe('interpolateFlight', () => {
   it('lands on the target with the parallax un-done at t=1', () => {
     const f = interpolateFlight(from, to, 1)
     expect(f).toEqual({
+      t: 1,
       x: 500,
       y: 100,
       w: 600,

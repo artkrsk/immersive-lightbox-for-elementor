@@ -117,7 +117,7 @@ describe('runCloseChoreography', () => {
       frames.step(200)
       frames.step(200)
 
-      expect(flight.mount).toHaveBeenCalledWith({ w: 800, h: 600 }, expect.anything())
+      expect(flight.mount).toHaveBeenCalledWith({ w: 800, h: 600 }, expect.anything(), [])
       expect(flight.fly).toHaveBeenCalledTimes(1)
       const frameAt = flight.fly.mock.calls[0]?.[0] as (p: number) => { x: number }
       // Progress 0 is the slide (pan 40), progress 1 the page element.

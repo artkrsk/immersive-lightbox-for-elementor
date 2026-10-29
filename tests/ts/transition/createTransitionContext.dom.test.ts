@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { fakePswp } from '../helpers/fakePswp'
 
 const FRAME: IFlightFrame = {
+  t: 0,
   x: 0,
   y: 0,
   w: 10,
@@ -26,7 +27,8 @@ const DEFAULT_OPEN_SOURCE = {
   innerHeightPct: 100,
   innerOffsetXPct: 0,
   innerOffsetYPct: 0,
-  src: ''
+  src: '',
+  extras: []
 }
 
 function request(type: 'image' | 'html'): { req: IOpenRequest; a: HTMLElement } {

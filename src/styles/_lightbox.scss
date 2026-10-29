@@ -99,6 +99,26 @@
       will-change: transform;
     }
 
+    // What the trigger overlays on its picture rides along (`data-arts-lightbox-fly`).
+    // The veil is a tint layer that inherits the box's motion; the extra is a
+    // caption clone that keeps its screen size at its corner through its own
+    // keyframes. Neither carries a compositor hint: their animations promote
+    // them for exactly the flight's duration, and a caption is text — a hint
+    // or a resting zero translate would keep a text layer alive for nothing.
+    @at-root .arts-lightbox-flight__veil {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    @at-root .arts-lightbox-flight__extra {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 0 0;
+      pointer-events: none;
+    }
+
     // The real slide stays hidden until the flight lands exactly on it.
     //
     // The container, NOT the scroll wrap. The wrap also holds the top bar and

@@ -1,3 +1,4 @@
+import type { IFlightExtra } from './IFlightExtra'
 import type { IRect } from './IRect'
 
 /**
@@ -23,4 +24,7 @@ export interface IFlightSource {
    *  one that hides while the flight covers it. Chrome around it (a caption,
    *  a counter) inside the same clicked element stays on the page. */
   element: HTMLElement
+  /** Marked descendants of the clicked element that ride the flight; empty
+   *  when nothing is marked. */
+  extras: IFlightExtra[]
 }

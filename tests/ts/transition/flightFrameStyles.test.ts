@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 const box: IFlightBox = { w: 600, h: 400 }
 
 const frame = (over: Partial<IFlightFrame> = {}): IFlightFrame => ({
+  t: 0,
   x: 10,
   y: 20,
   w: 300,

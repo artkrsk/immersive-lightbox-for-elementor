@@ -60,7 +60,7 @@ describe('runOpenChoreography', () => {
     expect(onSettled).not.toHaveBeenCalled()
     // The box is the landing rect; the flight is one animation, same duration
     // and curve as the clock the backdrop reads.
-    expect(flight.mount).toHaveBeenCalledWith({ w: 800, h: 600 }, { src: '/full-a.jpg' })
+    expect(flight.mount).toHaveBeenCalledWith({ w: 800, h: 600 }, { src: '/full-a.jpg' }, [])
     expect(flight.fly).toHaveBeenCalledTimes(1)
     expect(flight.fly).toHaveBeenCalledWith(expect.any(Function), 800, 'power2.inOut')
 
@@ -137,7 +137,7 @@ describe('runOpenChoreography', () => {
 
       runOpenChoreography(ctx, vi.fn())
 
-      expect(flight.mount).toHaveBeenCalledWith(expect.anything(), { src: '/full-warm.jpg' })
+      expect(flight.mount).toHaveBeenCalledWith(expect.anything(), { src: '/full-warm.jpg' }, [])
       settle()
       // Nothing to wait for: the hand-off is immediate.
       expect(flight.leave).toHaveBeenCalledTimes(1)
@@ -150,7 +150,7 @@ describe('runOpenChoreography', () => {
       })
 
       runOpenChoreography(ctx, vi.fn())
-      expect(flight.mount).toHaveBeenCalledWith(expect.anything(), { src: '/thumb-a.jpg' })
+      expect(flight.mount).toHaveBeenCalledWith(expect.anything(), { src: '/thumb-a.jpg' }, [])
 
       settle()
       // Landed, but the hand-off waits for the sharp slide to be decodable.

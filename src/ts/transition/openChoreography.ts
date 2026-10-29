@@ -73,7 +73,11 @@ export function runOpenChoreography(ctx: ITransitionContext, onSettled: () => vo
   if (flies && initialTarget) {
     const pick = pickFlightSrc(ctx)
     fullReady = pick.fullReady
-    flight.mount({ w: initialTarget.rect.w, h: initialTarget.rect.h }, { src: pick.src })
+    flight.mount(
+      { w: initialTarget.rect.w, h: initialTarget.rect.h },
+      { src: pick.src },
+      openSource.extras
+    )
     flight.fly(
       (progress) => interpolateFlight(openSource, initialTarget, progress),
       opts.transition.duration,

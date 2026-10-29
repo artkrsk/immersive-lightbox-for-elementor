@@ -1,6 +1,7 @@
 import type { TEasingName } from '../types'
 import type { TFlightMedia } from '../types/TFlightMedia'
 import type { IFlightBox } from './IFlightBox'
+import type { IFlightExtra } from './IFlightExtra'
 import type { IFlightFrame } from './IFlightFrame'
 
 /**
@@ -12,9 +13,14 @@ import type { IFlightFrame } from './IFlightFrame'
  *
  * It mounts inside the pswp root, between the slides and the controls, so the
  * travelling image passes under the chrome rather than over it.
+ *
+ * Extras ride inside it: a veil is a tint layer over the picture that
+ * inherits the box's motion, a caption is a clone that keeps its screen size
+ * at its corner. Both fade on the same clock, out on the open and back in on
+ * the close, so what the page overlays on the picture never cuts.
  */
 export interface IFlightLayer {
-  mount(box: IFlightBox, media: TFlightMedia): void
+  mount(box: IFlightBox, media: TFlightMedia, extras?: readonly IFlightExtra[]): void
   /**
    * Run the flight: `frameAt` is sampled over eased progress 0..1 and the
    * result handed to the compositor. Replaces any flight in progress.

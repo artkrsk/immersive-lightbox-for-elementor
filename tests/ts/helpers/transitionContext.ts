@@ -137,7 +137,8 @@ export function transitionContext(o: ITransitionCtxOptions = {}): {
     innerOffsetXPct: 0,
     innerOffsetYPct: 0,
     src: o.sourceSrc === false ? '' : (o.sourceSrc ?? '/thumb-a.jpg'),
-    element: sourceElement
+    element: sourceElement,
+    extras: []
   }
 
   const gallery: IGallery = {

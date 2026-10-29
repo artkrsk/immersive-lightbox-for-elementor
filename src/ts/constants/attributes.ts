@@ -13,3 +13,6 @@ export const ATTR_WIDTH = 'data-arts-lightbox-width'
 export const ATTR_HEIGHT = 'data-arts-lightbox-height'
 /** An author's own thumbnail URL for triggers that wrap no media (a text link). */
 export const ATTR_THUMB = 'data-arts-lightbox-thumb'
+/** Marks an element inside a trigger that rides the flight: `veil` (a tint
+ *  layer over the picture) or `caption` (a clone that keeps its screen size). */
+export const ATTR_FLY = 'data-arts-lightbox-fly'
