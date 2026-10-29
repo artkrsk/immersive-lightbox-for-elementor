@@ -100,6 +100,11 @@ Elementor's native lightbox returns exactly as it was, and so does WooCommerce's
 
 == Changelog ==
 
+= 1.0.4 =
+
+* added: a card's overlaid caption and hover tint now stay visible and travel with the picture as the lightbox opens and closes.
+* fixed: opening an image no longer flashes the page background where the picture was.
+
 = 1.0.3 – October 8, 2026 =
 
 * added: the lightbox now takes over the WooCommerce product gallery, including image and video items grouped per product, and hover zoom keeps working.
