@@ -3,14 +3,18 @@
  * must not move the page behind it. Touch inside the lightbox is already
  * claimed by the gesture layer's preventDefault; this covers native desktop
  * scrolling. The vanished scrollbar's width is compensated as root padding
- * so the page doesn't shift under the opening transition.
+ * so the page doesn't shift under the opening transition, unless the theme
+ * reserves it with `scrollbar-gutter: stable` (padding would count it twice).
  *
  * Returns the restore; values are put back exactly as found.
  */
 export function lockPageScroll(): () => void {
   const html = document.documentElement
   const body = document.body
-  const scrollbar = window.innerWidth - html.clientWidth
+  const gutterReserved = getComputedStyle(html)
+    .getPropertyValue('scrollbar-gutter')
+    .startsWith('stable')
+  const scrollbar = gutterReserved ? 0 : window.innerWidth - html.clientWidth
   const prevHtmlOverflow = html.style.overflow
   const prevBodyOverflow = body.style.overflow
   const prevPadding = html.style.paddingRight

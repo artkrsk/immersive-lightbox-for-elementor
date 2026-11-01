@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* fixed: opening the lightbox no longer narrows the page on themes that reserve the scrollbar's space with `scrollbar-gutter: stable`.
+
 ## 1.0.4 – October 29, 2026
 
 * added: a card's overlaid caption and hover tint now stay visible and travel with the picture as the lightbox opens and closes.
