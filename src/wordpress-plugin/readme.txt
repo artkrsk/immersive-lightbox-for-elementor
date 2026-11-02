@@ -4,7 +4,7 @@ Tags: lightbox, elementor, gallery, photoswipe, video lightbox
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0
 GitHub Plugin URI: https://github.com/artkrsk/immersive-lightbox-for-elementor/
@@ -99,6 +99,10 @@ Elementor's native lightbox returns exactly as it was, and so does WooCommerce's
 6. Every Elementor URL field gains an "Open in lightbox" checkbox — buttons, icons and text links, including YouTube and Vimeo URLs.
 
 == Changelog ==
+
+= 1.0.5 – November 2, 2026 =
+
+* fixed: the page no longer narrows or shifts while the lightbox opens on themes that reserve space for the scrollbar.
 
 = 1.0.4 – October 29, 2026 =
 

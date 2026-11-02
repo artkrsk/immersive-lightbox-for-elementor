@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.5 – November 2, 2026
 
-* fixed: opening the lightbox no longer narrows the page on themes that reserve the scrollbar's space with `scrollbar-gutter: stable`.
+* fixed: the page no longer narrows or shifts while the lightbox opens on themes that reserve space for the scrollbar.
 
 ## 1.0.4 – October 29, 2026
 
