@@ -100,6 +100,10 @@ Elementor's native lightbox returns exactly as it was, and so does WooCommerce's
 
 == Changelog ==
 
+= 1.0.5 =
+
+* fixed: the page no longer narrows or shifts while the lightbox opens on themes that reserve space for the scrollbar.
+
 = 1.0.4 – October 29, 2026 =
 
 * added: a card's overlaid caption and hover tint now stay visible and travel with the picture as the lightbox opens and closes.
