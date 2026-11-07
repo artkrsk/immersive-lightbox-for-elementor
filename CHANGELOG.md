@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.6 – November 7, 2026
+
+* fixed: on iPhone and iPad, a faint ghost of the neighbouring slide's caption no longer shows beside the current one.
+
 ## 1.0.5 – November 2, 2026
 
 * fixed: the page no longer narrows or shifts while the lightbox opens on themes that reserve space for the scrollbar.
