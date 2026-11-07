@@ -12,7 +12,6 @@
  * Requires Plugins: elementor
  * Text Domain: immersive-lightbox-for-elementor
  * Plugin URI: https://artemsemkin.com/plugins/immersive-lightbox-for-elementor/
- * Tested up to: 7.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
