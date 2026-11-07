@@ -85,6 +85,9 @@ export function registerCaption(pswp: PhotoSwipe, gallery: IGallery): void {
           item.painted = t
           item.node.style.setProperty('--arts-lightbox-caption-shift', String(-t * HIDDEN_SHIFT))
           item.node.style.setProperty('--arts-lightbox-caption-fade', String(1 - Math.abs(t)))
+          // iOS WebKit kept painting a caption faded to opacity 0 as a faint ghost beside the
+          // current one: out of range, it is not painted at all.
+          item.node.style.visibility = Math.abs(t) === 1 ? 'hidden' : ''
         }
       })
     }
