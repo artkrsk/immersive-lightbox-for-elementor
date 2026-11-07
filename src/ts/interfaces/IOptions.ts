@@ -25,7 +25,7 @@ export interface IOptions {
   explore: {
     /** Mousemove pans the zoomed slide (pointer-fine devices only). */
     enabled: boolean
-    /** Per-frame lerp factor toward the pointer-mapped pan target (0..1). */
+    /** Lerp factor per 60 Hz frame toward the pointer-mapped pan target (0..1), applied over elapsed time. */
     smoothing: number
   }
   zoom: {

@@ -1,3 +1,4 @@
+import { FRAME_60, MAX_STEP_DT } from '../constants'
 import type PhotoSwipe from '../photoswipe/photoswipe'
 import { aimNeighbors, isAboveFit } from './aimAtPointer'
 import { glideStep } from './glideStep'
@@ -28,15 +29,21 @@ export function createExploreGlide(
 } {
   let target: { x: number; y: number } | null = null
   let rafId = 0
+  /** rAF timestamp of the previous step; null while the loop is stopped. */
+  let lastStepAt: number | null = null
 
-  const step = (): void => {
+  const step = (now: number): void => {
     rafId = 0
+    const dt = lastStepAt === null ? FRAME_60 : Math.min(Math.max(now - lastStepAt, 0), MAX_STEP_DT)
+    lastStepAt = now
     const slide = pswp.currSlide
     if (!target || !slide || deps.isBlocked()) {
+      lastStepAt = null
       return
     }
-    const next = glideStep(slide.pan, target, smoothing)
+    const next = glideStep(slide.pan, target, smoothing, dt)
     if (!next) {
+      lastStepAt = null
       return
     }
     slide.panTo(next.x, next.y)
@@ -67,6 +74,7 @@ export function createExploreGlide(
       if (rafId) {
         cancelAnimationFrame(rafId)
       }
+      lastStepAt = null
     }
   }
 }

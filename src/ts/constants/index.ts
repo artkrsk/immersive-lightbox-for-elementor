@@ -25,3 +25,4 @@ export {
   CLONE_SELECTOR,
   WC_GALLERY_SELECTOR
 } from './selectors'
+export { FRAME_60, MAX_STEP_DT } from './timing'
