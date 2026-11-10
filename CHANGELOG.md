@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.7 – November 10, 2026
+
+* fixed: panning around a zoomed picture now follows the pointer at the same pace on high refresh rate screens.
+
 ## 1.0.6 – November 7, 2026
 
 * fixed: on iPhone and iPad, a faint ghost of the neighbouring slide's caption no longer shows beside the current one.
