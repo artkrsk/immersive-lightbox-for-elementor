@@ -100,6 +100,10 @@ Elementor's native lightbox returns exactly as it was, and so does WooCommerce's
 
 == Changelog ==
 
+= 1.0.7 =
+
+* fixed: panning around a zoomed picture now follows the pointer at the same pace on high refresh rate screens.
+
 = 1.0.6 – November 7, 2026 =
 
 * fixed: on iPhone and iPad, a faint ghost of the neighbouring slide's caption no longer shows beside the current one.
