@@ -24,7 +24,10 @@ Deviations from upstream 5.4.4:
   (keyboard.ts — focus goes back to the opener on close without scrolling
   it into view), `potentialIndexChange` (main-scroll.ts — dispatched from
   `moveIndexBy` once the destination is decided, with the loop-corrected
-  travel sign as `direction`; `change` stays the at-rest signal).
+  travel sign as `direction`; `change` stays the at-rest signal),
+  `artsReducedMotion` (photoswipe.ts — `false` drops `(prefers-reduced-motion)`
+  from the query that turns the stock open, close and zoom animations off, so a
+  site that forces full motion keeps them).
 
 Ground rules:
 

@@ -228,6 +228,13 @@ export interface PreparedPhotoSwipeOptions {
    * See gestures/drag-handler.
    */
   artsMouseDragNavigates?: boolean
+
+  /**
+   * @arts fork — false keeps the open, close and zoom animations for a
+   * visitor whose system asks for reduced motion; absent or true honours the
+   * setting as upstream does. `(update: slow)` turns them off either way.
+   */
+  artsReducedMotion?: boolean
 }
 
 export type { SlideData, ZoomLevelOption }

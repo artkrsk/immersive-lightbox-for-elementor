@@ -1,6 +1,8 @@
 import { power2InOut } from '../core/power2InOut'
+import type { IOptions } from '../interfaces'
 import type PhotoSwipe from '../photoswipe/photoswipe'
 import { createClock } from '../transition/clock'
+import { isReducedMotion } from '../utils/isReducedMotion'
 import { canSlideZoom } from './canSlideZoom'
 import { mapPointerToPan } from './mapPointerToPan'
 
@@ -19,6 +21,7 @@ const AIMED_ZOOM_EASE = power2InOut
  */
 export function createAimedZoomToggle(
   pswp: PhotoSwipe,
+  opts: IOptions,
   pointer01: { x: number; y: number },
   onStart: () => void
 ): { toggle(): void; cancel(): void; active(): boolean } {
@@ -47,24 +50,25 @@ export function createAimedZoomToggle(
       centerPoint: undefined,
       transitionDuration: AIMED_ZOOM_MS
     })
-    clock = createClock(
-      AIMED_ZOOM_MS,
-      AIMED_ZOOM_EASE,
-      (eased) => {
-        const s = pswp.currSlide
-        if (!s) {
-          return
-        }
-        s.setZoomLevel(from + (dest - from) * eased)
-        const aimed = mapPointerToPan(pointer01, s.bounds)
-        s.pan.x = aimed.x
-        s.pan.y = aimed.y
-        s.applyCurrentZoomPan()
-      },
-      () => {
-        clock = null
+    const paint = (eased: number): void => {
+      const s = pswp.currSlide
+      if (!s) {
+        return
       }
-    )
+      s.setZoomLevel(from + (dest - from) * eased)
+      const aimed = mapPointerToPan(pointer01, s.bounds)
+      s.pan.x = aimed.x
+      s.pan.y = aimed.y
+      s.applyCurrentZoomPan()
+    }
+    // Lands on the pointer at once; the clock never starts, so `active()` stays false.
+    if (isReducedMotion(opts)) {
+      paint(1)
+      return
+    }
+    clock = createClock(AIMED_ZOOM_MS, AIMED_ZOOM_EASE, paint, () => {
+      clock = null
+    })
   }
 
   return {

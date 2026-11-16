@@ -89,4 +89,11 @@ export interface IOptions {
   }
   /** Mouse-drag swipes between slides on desktop. */
   desktopDrag: boolean
+  /**
+   * Honour the visitor's `prefers-reduced-motion: reduce`: the open, the close
+   * and the click zoom cut to their end state; slide changes are unchanged.
+   * False plays everything in full. The system setting is read at each open,
+   * close and click, so a change applies without a reload.
+   */
+  reducedMotion: boolean
 }

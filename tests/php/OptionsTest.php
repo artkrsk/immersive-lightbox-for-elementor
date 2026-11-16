@@ -19,19 +19,20 @@ class OptionsTest extends TestCase {
 	public function test_builds_the_full_engine_default_partial_without_an_elementor_kit(): void {
 		self::assertSame(
 			array(
-				'transition' => array( 'preset' => 'curtain', 'edge' => 'straight', 'duration' => 800 ),
-				'zoom'       => array( 'mode' => 'fill', 'level' => 3.0, 'wheelToZoom' => false ),
-				'explore'    => array( 'enabled' => true ),
-				'video'      => array( 'autoplay' => true ),
-				'gallery'    => array( 'uniteAll' => false, 'loop' => true ),
-				'ui'         => array(
+				'transition'    => array( 'preset' => 'curtain', 'edge' => 'straight', 'duration' => 800 ),
+				'zoom'          => array( 'mode' => 'fill', 'level' => 3.0, 'wheelToZoom' => false ),
+				'explore'       => array( 'enabled' => true ),
+				'video'         => array( 'autoplay' => true ),
+				'gallery'       => array( 'uniteAll' => false, 'loop' => true ),
+				'ui'            => array(
 					'counter'            => true,
 					'thumbnails'         => false,
 					'thumbnailsPosition' => 'bottom',
 					'captions'           => true,
 					'backdropOpacity'    => 1.0,
 				),
-				'elementor'  => array( 'nativeFallback' => true ),
+				'elementor'     => array( 'nativeFallback' => true ),
+				'reducedMotion' => true,
 			),
 			Options::build()
 		);

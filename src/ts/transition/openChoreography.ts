@@ -1,6 +1,7 @@
 import { TRANSITIONING_CLASS } from '../constants'
 import { EASINGS } from '../core/easings'
 import type { IFlightTarget, ITransitionContext } from '../interfaces'
+import { isReducedMotion } from '../utils/isReducedMotion'
 import { playingSignal } from '../video/playingSignal'
 import { createClock } from './clock'
 import { computeSlideRect } from './computeSlideRect'
@@ -68,6 +69,19 @@ export function runOpenChoreography(ctx: ITransitionContext, onSettled: () => vo
   const { pswp, opts, flight, backdrop, hidden, openSource } = ctx
   const initialTarget = currentSlideTarget(pswp)
   const flies = Boolean(initialTarget && openSource.src)
+  // The settled state on this frame: no flight, no clock, no fade.
+  if (isReducedMotion(opts)) {
+    backdrop.current?.paint(1, false)
+    if (pswp.element) {
+      setChrome(pswp.element, 1)
+      pswp.element.classList.remove(TRANSITIONING_CLASS)
+    }
+    if (flies) {
+      hidden.hide(openSource.element)
+    }
+    onSettled()
+    return
+  }
   let fullReady: Promise<void> | null = null
   const ease = EASINGS[opts.transition.easing]
   if (flies && initialTarget) {

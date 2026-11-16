@@ -103,6 +103,9 @@ export function mapToPswpOptions(
     // Fork policy flag: with mousemove-pan active, mouse drags navigate
     // slides instead of panning (see photoswipe/gestures/drag-handler.ts).
     artsMouseDragNavigates: opts.explore.enabled,
+    // The fork's own zoom (wheel, pinch, a click without explore) follows the
+    // same switch as our transitions.
+    artsReducedMotion: opts.reducedMotion,
     // Slides center in the region the admin bar leaves visible — the bar
     // floats above the lightbox (z-drop in _lightbox.scss), and pswp
     // re-evaluates this on every updateSize, so resizes track for free.

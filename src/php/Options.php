@@ -18,29 +18,29 @@ class Options {
 	/** @return array<string, mixed> */
 	public static function build(): array {
 		$options = array(
-			'transition' => array(
+			'transition'    => array(
 				'preset'   => self::choice( 'arts_lightbox_preset', array( 'curtain', 'fade' ), 'curtain' ),
 				'edge'     => self::choice( 'arts_lightbox_edge', array( 'straight', 'curved' ), 'straight' ),
 				'duration' => (int) self::size_of( 'arts_lightbox_duration', 800 ),
 			),
-			'zoom'       => array(
+			'zoom'          => array(
 				'mode'        => self::choice( 'arts_lightbox_zoom', array( 'fill', 'fit', 'off' ), 'fill' ),
 				'level'       => self::size_of( 'arts_lightbox_zoom_level', 3 ),
 				'wheelToZoom' => self::is_on( 'arts_lightbox_wheel_zoom', false ),
 			),
-			'explore'    => array(
+			'explore'       => array(
 				// Only `enabled` travels: the payload is a deep-partial, so
 				// `smoothing` keeps whatever the engine defaults call for.
 				'enabled' => self::is_on( 'arts_lightbox_explore', true ),
 			),
-			'video'      => array(
+			'video'         => array(
 				'autoplay' => self::is_on( 'arts_lightbox_video_autoplay', true ),
 			),
-			'gallery'    => array(
+			'gallery'       => array(
 				'uniteAll' => self::is_on( 'arts_lightbox_unite', false ),
 				'loop'     => self::is_on( 'arts_lightbox_loop', true ),
 			),
-			'ui'         => array(
+			'ui'            => array(
 				// Elementor's own counter switch drives our counter chrome — a
 				// user's existing setting keeps meaning what it meant.
 				'counter'            => self::is_on( 'lightbox_enable_counter', true ),
@@ -53,12 +53,16 @@ class Options {
 				'captions'           => self::is_on( 'arts_lightbox_captions', true ),
 				'backdropOpacity'    => self::size_of( 'arts_lightbox_backdrop_opacity', 1 ),
 			),
-			'elementor'  => array(
+			'elementor'     => array(
 				// The kit's own master switch, resolved server-side: with it on,
 				// bare image links (no attributes at all) become candidates —
 				// exactly the links Elementor's native lightbox would claim.
 				'nativeFallback' => self::is_on( 'global_image_lightbox', true ),
 			),
+			// A filter shared across Arts plugins and themes, so one callback
+			// forces full motion everywhere. Not a kit control: the visitor's
+			// own system setting decides, read client-side at each open.
+			'reducedMotion' => (bool) apply_filters( 'arts/reduced_motion/enabled', true ),
 		);
 
 		$filtered = apply_filters( 'arts_immersive_lightbox/options', $options );

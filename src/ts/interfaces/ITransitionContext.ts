@@ -19,6 +19,8 @@ export interface ITransitionContext {
   backdrop: { current: IBackdrop | null }
   hidden: {
     hide(el: HTMLElement): void
+    /** Shows every hidden source again at once. */
+    restore(): void
   }
   /** Measured at click time, before any layout work. */
   openSource: IFlightSource

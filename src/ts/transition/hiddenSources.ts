@@ -10,7 +10,8 @@ import type PhotoSwipe from '../photoswipe/photoswipe'
  * and what it buys is the close: a return flight that lands on an element
  * nothing else paints.
  *
- * Everything restores on destroy, whatever path led there. Navigating away
+ * Everything restores on destroy, whatever path led there, or earlier
+ * through `restore()` for a close with no flight over it. Navigating away
  * from a slide restores its hidden source right away — the backdrop is
  * fully opaque mid-session, so the restore is invisible; without it,
  * closing from another slide reveals a hole where the originally-clicked
@@ -21,16 +22,21 @@ export function createHiddenSources(
   req: IOpenRequest
 ): {
   hide(el: HTMLElement): void
+  restore(): void
 } {
   const hidden = new Set<HTMLElement>()
   let live = true
 
-  pswp.on('destroy', () => {
-    live = false
+  const restore = (): void => {
     for (const el of hidden) {
       el.style.visibility = ''
     }
     hidden.clear()
+  }
+
+  pswp.on('destroy', () => {
+    live = false
+    restore()
   })
 
   pswp.on('change', () => {
@@ -56,6 +62,7 @@ export function createHiddenSources(
       }
       el.style.visibility = 'hidden'
       hidden.add(el)
-    }
+    },
+    restore
   }
 }

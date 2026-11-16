@@ -564,7 +564,12 @@ class PhotoSwipe extends PhotoSwipeBase {
   }
 
   private _prepareOptions(options: PhotoSwipeOptions): PreparedPhotoSwipeOptions {
-    if (window.matchMedia('(prefers-reduced-motion), (update: slow)').matches) {
+    // @arts fork — artsReducedMotion: false drops the reduced-motion query.
+    const query =
+      options.artsReducedMotion === false
+        ? '(update: slow)'
+        : '(prefers-reduced-motion), (update: slow)'
+    if (window.matchMedia(query).matches) {
       options.showHideAnimationType = 'none'
       options.zoomAnimationDuration = 0
     }

@@ -1,6 +1,7 @@
 import { CLOSING_CLASS, TRANSITIONING_CLASS } from '../constants'
 import { EASINGS } from '../core/easings'
 import type { IFlightSource, IFlightTarget, ISlideData, ITransitionContext } from '../interfaces'
+import { isReducedMotion } from '../utils/isReducedMotion'
 import { captureFlightSource } from './captureFlightSource'
 import { createClock } from './clock'
 import { findCloseSource } from './findCloseSource'
@@ -54,8 +55,33 @@ function mountCloseFlight(
 
 /** The close reveal: the same shared clock, run in reverse. */
 export function runCloseChoreography(ctx: ITransitionContext): Promise<void> {
-  const { pswp, opts, req, flight, backdrop } = ctx
+  const { pswp, opts, req, flight, backdrop, hidden } = ctx
   return new Promise((resolve) => {
+    const finish = (): void => {
+      backdrop.current?.destroy()
+      backdrop.current = null
+      // Out of the root before the root goes: the flight lives inside it so
+      // it paints under the chrome, but it has to survive the teardown.
+      flight.detach()
+      pswp.destroy() // restores hidden sources
+      flight.unmountLater(2)
+      requestAnimationFrame(() => {
+        resolve()
+      })
+    }
+    // Straight to the teardown, with no flight to cover it. PhotoSwipe removes
+    // the root a task later and a frame can paint in between (one does after a
+    // key press), so the root goes blank and the source comes back first: that
+    // frame shows the closed page rather than the slide over a page with a hole.
+    if (isReducedMotion(opts)) {
+      if (pswp.element) {
+        pswp.element.classList.add(TRANSITIONING_CLASS)
+        setChrome(pswp.element, 0)
+      }
+      hidden.restore()
+      finish()
+      return
+    }
     const target = currentSlideTarget(pswp)
     const sourceEl = findCloseSource(pswp, req)
     const slideData = req.gallery.slides[pswp.currIndex]
@@ -95,18 +121,7 @@ export function runCloseChoreography(ctx: ITransitionContext): Promise<void> {
           setChrome(pswp.element, rt)
         }
       },
-      () => {
-        backdrop.current?.destroy()
-        backdrop.current = null
-        // Out of the root before the root goes: the flight lives inside it so
-        // it paints under the chrome, but it has to survive the teardown.
-        flight.detach()
-        pswp.destroy() // restores hidden sources
-        flight.unmountLater(2)
-        requestAnimationFrame(() => {
-          resolve()
-        })
-      }
+      finish
     )
   })
 }

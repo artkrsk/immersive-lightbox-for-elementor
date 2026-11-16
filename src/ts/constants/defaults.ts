@@ -55,5 +55,6 @@ export const DEFAULT_OPTIONS: IOptions = {
   elementor: {
     nativeFallback: false
   },
-  desktopDrag: true
+  desktopDrag: true,
+  reducedMotion: true
 }

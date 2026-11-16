@@ -365,6 +365,7 @@ is the one thing switched off server-side (below).
 | --- | --- |
 | `arts_immersive_lightbox/enabled` | Return `false` to disable for a request: the gate never prints, `<html>` gets `no-arts-lightbox`, Elementor's native lightbox runs. |
 | `arts_immersive_lightbox/options` | The assembled options payload (a deep-partial of `IOptions`) right before printing. |
+| `arts/reduced_motion/enabled` | Return `false` to play the open, close and click zoom in full for visitors whose system asks for reduced motion (printed as `reducedMotion`). A name shared with other Arts plugins and themes, so one callback covers them all. |
 
 ### Recognized Elementor markup
 

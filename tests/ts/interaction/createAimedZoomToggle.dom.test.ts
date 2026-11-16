@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { DEFAULT_OPTIONS } from '@ts/constants/defaults'
 import { createAimedZoomToggle } from '@ts/interaction/createAimedZoomToggle'
 import type PhotoSwipe from '@ts/photoswipe/photoswipe'
 import { describe, expect, it, vi } from 'vitest'
@@ -39,7 +40,12 @@ function setup(
   }
   pswp.currSlide = slide as unknown as NonNullable<PhotoSwipe['currSlide']>
   const onStart = vi.fn()
-  const zoom = createAimedZoomToggle(pswp as unknown as PhotoSwipe, { x: 0.5, y: 0.5 }, onStart)
+  const zoom = createAimedZoomToggle(
+    pswp as unknown as PhotoSwipe,
+    DEFAULT_OPTIONS,
+    { x: 0.5, y: 0.5 },
+    onStart
+  )
   return { pswp, slide, zoom, onStart }
 }
 

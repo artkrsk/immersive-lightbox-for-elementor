@@ -52,7 +52,7 @@ export function attachExploreMode(
     onTakeover: clearSeed
   })
 
-  zoom = createAimedZoomToggle(pswp, pointer01, () => {
+  zoom = createAimedZoomToggle(pswp, opts, pointer01, () => {
     // The toggle takes over the aim: glide stops, seed re-inits stop.
     clearSeed()
     glide.release()
