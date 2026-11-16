@@ -4,7 +4,7 @@ Tags: lightbox, elementor, gallery, photoswipe, video lightbox
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.7
+Stable tag: 1.0.8
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0
 GitHub Plugin URI: https://github.com/artkrsk/immersive-lightbox-for-elementor/
@@ -100,7 +100,7 @@ Elementor's native lightbox returns exactly as it was, and so does WooCommerce's
 
 == Changelog ==
 
-= 1.0.8 =
+= 1.0.8 – November 16, 2026 =
 
 * added: the lightbox now opens, closes and click-zooms at once for visitors whose system asks for reduced motion; moving between slides is unchanged. Developers can switch this off with the arts/reduced_motion/enabled filter.
 
