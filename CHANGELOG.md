@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.8 – November 16, 2026
+
+* added: the lightbox now opens, closes and click-zooms at once for visitors whose system asks for reduced motion; moving between slides is unchanged. Developers can switch this off with the arts/reduced_motion/enabled filter.
+
 ## 1.0.7 – November 10, 2026
 
 * fixed: panning around a zoomed picture now follows the pointer at the same pace on high refresh rate screens.
