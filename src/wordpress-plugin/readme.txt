@@ -2,7 +2,7 @@
 Contributors: artemsemkin
 Tags: lightbox, elementor, gallery, photoswipe, video lightbox
 Requires at least: 6.2
-Tested up to: 7.1
+Tested up to: 7.2
 Requires PHP: 8.0
 Stable tag: 1.0.8
 License: GPLv3
