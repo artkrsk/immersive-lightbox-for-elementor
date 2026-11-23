@@ -24,3 +24,7 @@ define( 'ARTS_IMMERSIVE_LIGHTBOX_PLUGIN_FILE', __FILE__ );
 require_once __DIR__ . '/vendor/autoload.php';
 
 \Arts\ImmersiveLightbox\Plugin::instance();
+
+// Elementor's caches cleared once per version. Wired here rather than in src/php, which
+// can also ship inside a host product that has no copy of this prefixed class.
+\ArtsImmersiveLightbox\Arts\Base\Elementor\CacheClear::on_version( 'immersive-lightbox', ARTS_IMMERSIVE_LIGHTBOX_PLUGIN_VERSION );
