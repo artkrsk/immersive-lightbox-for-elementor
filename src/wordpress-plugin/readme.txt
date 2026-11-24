@@ -15,9 +15,9 @@ A PhotoSwipe lightbox that replaces Elementor's native one: cinematic transition
 
 Your Elementor images, galleries and videos already open in a lightbox. This plugin makes that moment the best part of the page. Activate it and the native lightbox is replaced with an immersive, PhotoSwipe-powered one: the kind of cinematic, premium feel that usually stays locked inside high-end portfolio themes, now on any Elementor site with zero setup.
 
-= ✅ Used in Velum theme =
+= ✅ Used in Velum and Trigger themes =
 
-Velum, my portfolio theme for architects and studios, opens its images and videos in this lightbox. [Velum's page](https://artemsemkin.com/themes/velum/?utm_source=wordpress.org&utm_medium=referral&utm_campaign=immersive-lightbox-for-elementor) has a live demo to try it.
+Velum, my portfolio theme for architects and studios, opens its images and videos in this lightbox. Trigger, my AJAX portfolio theme, installs it during setup for the same job. [Velum's page](https://artemsemkin.com/themes/velum/?utm_source=wordpress.org&utm_medium=referral&utm_campaign=immersive-lightbox-for-elementor) and [Trigger's page](https://artemsemkin.com/themes/trigger/?utm_source=wordpress.org&utm_medium=referral&utm_campaign=immersive-lightbox-for-elementor) have live demos to try it.
 
 = What you get =
 
