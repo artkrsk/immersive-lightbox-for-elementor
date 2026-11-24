@@ -4,7 +4,7 @@ Tags: lightbox, elementor, gallery, photoswipe, video lightbox
 Requires at least: 6.2
 Tested up to: 7.2
 Requires PHP: 8.0
-Stable tag: 1.0.8
+Stable tag: 1.0.9
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0
 GitHub Plugin URI: https://github.com/artkrsk/immersive-lightbox-for-elementor/
@@ -100,7 +100,7 @@ Elementor's native lightbox returns exactly as it was, and so does WooCommerce's
 
 == Changelog ==
 
-= 1.0.9 =
+= 1.0.9 – November 24, 2026 =
 
 * fixed: after an update, Elementor now clears its stored page styles and markup once, so changes to the lightbox settings and widgets show up on existing pages right away.
 
