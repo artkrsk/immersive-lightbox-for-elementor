@@ -55,7 +55,9 @@ class Keyboard {
         // not fully visible — a trigger taller than the fold, clicked while
         // partly off-screen, yanked the page on close, natively and behind
         // the smooth scroller's back. Focus goes back; the page stays put.
-        lastActiveElement.focus({ preventScroll: true })
+        // Deferred: later destroy listeners un-hide the flight source and
+        // un-inert the page, and neither can take focus before that.
+        queueMicrotask(() => lastActiveElement.focus({ preventScroll: true }))
       }
     })
   }

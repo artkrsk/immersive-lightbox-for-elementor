@@ -30,6 +30,12 @@ class OptionsTest extends TestCase {
 					'thumbnailsPosition' => 'bottom',
 					'captions'           => true,
 					'backdropOpacity'    => 1.0,
+					'labels'             => array(
+						'close'     => 'Close',
+						'prev'      => 'Previous',
+						'next'      => 'Next',
+						'thumbnail' => 'Go to slide %d',
+					),
 				),
 				'elementor'     => array( 'nativeFallback' => true ),
 				'reducedMotion' => true,
@@ -74,6 +80,12 @@ class OptionsTest extends TestCase {
 				'thumbnailsPosition' => 'left',
 				'captions'           => true,
 				'backdropOpacity'    => 0.45,
+				'labels'             => array(
+					'close'     => 'Close',
+					'prev'      => 'Previous',
+					'next'      => 'Next',
+					'thumbnail' => 'Go to slide %d',
+				),
 			),
 			$options['ui']
 		);

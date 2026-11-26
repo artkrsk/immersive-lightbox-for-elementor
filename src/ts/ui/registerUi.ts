@@ -36,12 +36,12 @@ export function registerUi(
 
   pswp.on('uiRegister', () => {
     if (navigable) {
-      registerArrows(pswp, api, opts.ui.icons, {
+      registerArrows(pswp, api, opts.ui.icons, opts.ui.labels, {
         total: gallery.slides.length,
         endStops: !opts.gallery.loop
       })
     }
-    registerCloseButton(pswp, api, opts.ui.icons.close)
+    registerCloseButton(pswp, api, opts.ui.icons.close, opts.ui.labels.close)
     if (opts.ui.counter && navigable) {
       registerCounter(pswp, gallery)
     }
@@ -50,7 +50,13 @@ export function registerUi(
       registerCaption(pswp, gallery)
     }
     if (showThumbs) {
-      registerThumbnailsStrip(pswp, gallery, api, opts.ui.thumbnailsPosition)
+      registerThumbnailsStrip(
+        pswp,
+        gallery,
+        api,
+        opts.ui.thumbnailsPosition,
+        opts.ui.labels.thumbnail
+      )
     }
   })
 }

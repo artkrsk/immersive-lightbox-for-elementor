@@ -44,6 +44,12 @@ export const DEFAULT_OPTIONS: IOptions = {
       prev: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
       next: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
       close: ''
+    },
+    labels: {
+      close: 'Close',
+      prev: 'Previous',
+      next: 'Next',
+      thumbnail: 'Go to slide %d'
     }
   },
   prefetch: {

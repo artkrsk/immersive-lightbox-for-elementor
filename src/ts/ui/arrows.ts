@@ -22,6 +22,7 @@ export function registerArrows(
   pswp: PhotoSwipe,
   api: ILightboxApi,
   icons: Pick<IOptions['ui']['icons'], 'prev' | 'next'>,
+  labels: Pick<IOptions['ui']['labels'], 'prev' | 'next'>,
   bounds?: { total: number; endStops: boolean }
 ): void {
   let prevEl: HTMLElement | null = null
@@ -42,6 +43,7 @@ export function registerArrows(
     className: 'arts-lightbox-arrow arts-lightbox-arrow_prev',
     order: 10,
     isButton: true,
+    ariaLabel: labels.prev,
     appendTo: 'wrapper',
     html: blinkMarkup(prevIcon),
     onInit: (el) => {
@@ -56,6 +58,7 @@ export function registerArrows(
     className: 'arts-lightbox-arrow arts-lightbox-arrow_next',
     order: 11,
     isButton: true,
+    ariaLabel: labels.next,
     appendTo: 'wrapper',
     html: blinkMarkup(nextIcon),
     onInit: (el) => {

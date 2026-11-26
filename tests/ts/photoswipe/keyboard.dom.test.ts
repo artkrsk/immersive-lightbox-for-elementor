@@ -32,7 +32,7 @@ function stubPswp(): { pswp: PhotoSwipe; fire: (name: string) => void } {
 }
 
 describe('Keyboard focus return', () => {
-  it('returns focus to the opener without scrolling it into view', () => {
+  it('returns focus to the opener without scrolling it into view', async () => {
     // The opener is the clicked anchor. A trigger taller than the fold is
     // usually clicked while partly off-screen, and a bare focus() on close
     // scrolls it fully into view — natively, instantly, behind any smooth
@@ -50,6 +50,7 @@ describe('Keyboard focus return', () => {
 
     const focus = vi.spyOn(link, 'focus')
     fire('destroy')
+    await Promise.resolve()
     expect(focus).toHaveBeenCalledWith({ preventScroll: true })
   })
 })

@@ -68,6 +68,16 @@ export interface IOptions {
       next: string
       close: string
     }
+    /**
+     * Accessible names of the built-in controls. `%d` in `thumbnail` is the
+     * tile's 1-based slide number. PHP prints them translated.
+     */
+    labels: {
+      close: string
+      prev: string
+      next: string
+      thumbnail: string
+    }
   }
   prefetch: {
     /** Warm the full-size image on thumbnail hover / press, pre-open. */
