@@ -13,7 +13,7 @@ function fakeApi(): ILightboxApi {
 describe('registerCloseButton', () => {
   it('builds two rotated bars, each carrying its own blink layers', () => {
     const pswp = fakePswp()
-    registerCloseButton(pswp as unknown as PhotoSwipe, fakeApi(), '')
+    registerCloseButton(pswp as unknown as PhotoSwipe, fakeApi(), '', 'Close')
     const element = pswp.uiElementAt(0)
 
     const bars = element.querySelectorAll('.arts-lightbox-close__bar')
@@ -30,7 +30,8 @@ describe('registerCloseButton', () => {
     registerCloseButton(
       pswp as unknown as PhotoSwipe,
       fakeApi(),
-      '<span data-testid="custom-x"></span>'
+      '<span data-testid="custom-x"></span>',
+      'Close'
     )
     const element = pswp.uiElementAt(0)
 
@@ -41,7 +42,7 @@ describe('registerCloseButton', () => {
   it('routes clicks through the api so the close choreography runs', () => {
     const pswp = fakePswp()
     const api = fakeApi()
-    registerCloseButton(pswp as unknown as PhotoSwipe, api, '')
+    registerCloseButton(pswp as unknown as PhotoSwipe, api, '', 'Close')
     const element = pswp.uiElementAt(0)
 
     element.dispatchEvent(new MouseEvent('click'))
@@ -51,7 +52,7 @@ describe('registerCloseButton', () => {
 
   it('carries no cursor-follower attributes — hints are that plugin’s to add', () => {
     const pswp = fakePswp()
-    registerCloseButton(pswp as unknown as PhotoSwipe, fakeApi(), '')
+    registerCloseButton(pswp as unknown as PhotoSwipe, fakeApi(), '', 'Close')
     const element = pswp.uiElementAt(0)
 
     expect(element.getAttribute('data-arts-cursor-follower-target')).toBeNull()

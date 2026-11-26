@@ -67,7 +67,8 @@ export function registerThumbnailsStrip(
   pswp: PhotoSwipe,
   gallery: IGallery,
   api: ILightboxApi,
-  position: IOptions['ui']['thumbnailsPosition']
+  position: IOptions['ui']['thumbnailsPosition'],
+  label: string
 ): void {
   const vertical = position === 'left' || position === 'right'
   pswp.ui?.registerElement({
@@ -81,6 +82,7 @@ export function registerThumbnailsStrip(
         const button = document.createElement('button')
         button.type = 'button'
         button.className = 'arts-lightbox-thumbs__item'
+        button.setAttribute('aria-label', label.replace('%d', String(i + 1)))
         const src = providerFrame(slide) ?? slide.msrc
         if (src) {
           button.appendChild(thumbnail(src))

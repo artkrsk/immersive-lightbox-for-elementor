@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fakePswp } from '../helpers/fakePswp'
 
 const ICONS = { prev: '<i data-testid="prev-icon"></i>', next: '<i data-testid="next-icon"></i>' }
+const LABELS = { prev: 'Previous', next: 'Next' }
 
 function fakeApi(): ILightboxApi {
   return { close: vi.fn(), next: vi.fn(), prev: vi.fn(), goTo: vi.fn() }
@@ -15,7 +16,7 @@ function fakeApi(): ILightboxApi {
 describe('registerArrows', () => {
   it('duplicates the configured icon into both blink layers', () => {
     const pswp = fakePswp()
-    registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS)
+    registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS, LABELS)
     const prevEl = pswp.uiElementAt(0)
     const nextEl = pswp.uiElementAt(1)
 
@@ -30,7 +31,7 @@ describe('registerArrows', () => {
 
   it('marks prev so its blink mirrors next', () => {
     const pswp = fakePswp()
-    registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS)
+    registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS, LABELS)
     const prevEl = pswp.uiElementAt(0)
     const nextEl = pswp.uiElementAt(1)
 
@@ -46,7 +47,7 @@ describe('registerArrows', () => {
     document.documentElement.setAttribute('dir', 'rtl')
     try {
       const pswp = fakePswp()
-      registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS)
+      registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS, LABELS)
       const prevEl = pswp.uiElementAt(0)
       const nextEl = pswp.uiElementAt(1)
 
@@ -64,7 +65,7 @@ describe('registerArrows', () => {
     try {
       const pswp = fakePswp()
       const api = fakeApi()
-      registerArrows(pswp as unknown as PhotoSwipe, api, ICONS)
+      registerArrows(pswp as unknown as PhotoSwipe, api, ICONS, LABELS)
       pswp.uiElementAt(0).dispatchEvent(new MouseEvent('click'))
 
       expect(api.prev).toHaveBeenCalledTimes(1)
@@ -77,7 +78,7 @@ describe('registerArrows', () => {
   it('routes clicks through the api rather than straight to pswp', () => {
     const pswp = fakePswp()
     const api = fakeApi()
-    registerArrows(pswp as unknown as PhotoSwipe, api, ICONS)
+    registerArrows(pswp as unknown as PhotoSwipe, api, ICONS, LABELS)
     const prevEl = pswp.uiElementAt(0)
     const nextEl = pswp.uiElementAt(1)
 
@@ -90,7 +91,10 @@ describe('registerArrows', () => {
 
   it('hides the dead arrow at each end when nothing loops or passes through', () => {
     const pswp = fakePswp()
-    registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS, { total: 3, endStops: true })
+    registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS, LABELS, {
+      total: 3,
+      endStops: true
+    })
     const prevEl = pswp.uiElementAt(0)
     const nextEl = pswp.uiElementAt(1)
     const hidden = (el: HTMLElement) => el.classList.contains('arts-lightbox-arrow_hidden')
@@ -114,7 +118,10 @@ describe('registerArrows', () => {
 
   it('keeps both arrows without end stops — loop or pass-through make them functional', () => {
     const pswp = fakePswp()
-    registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS, { total: 3, endStops: false })
+    registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS, LABELS, {
+      total: 3,
+      endStops: false
+    })
     pswp.mainScroll.slideWidth = 1000
     pswp.potentialIndex = 0
     pswp.emit('change', {})
@@ -123,7 +130,7 @@ describe('registerArrows', () => {
 
   it('carries no cursor-follower attributes — hints are that plugin’s to add', () => {
     const pswp = fakePswp()
-    registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS)
+    registerArrows(pswp as unknown as PhotoSwipe, fakeApi(), ICONS, LABELS)
     const prevEl = pswp.uiElementAt(0)
     const nextEl = pswp.uiElementAt(1)
 

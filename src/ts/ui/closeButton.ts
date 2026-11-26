@@ -17,12 +17,18 @@ const CLOSE_BARS =
  *
  * No cursor-follower attributes here — see `registerArrows`.
  */
-export function registerCloseButton(pswp: PhotoSwipe, api: ILightboxApi, icon: string): void {
+export function registerCloseButton(
+  pswp: PhotoSwipe,
+  api: ILightboxApi,
+  icon: string,
+  label: string
+): void {
   pswp.ui?.registerElement({
     name: 'arts-close',
     className: 'arts-lightbox-close',
     order: 20,
     isButton: true,
+    ariaLabel: label,
     appendTo: 'bar',
     html: icon || CLOSE_BARS,
     onClick: () => {

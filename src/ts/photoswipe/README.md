@@ -22,7 +22,8 @@ Deviations from upstream 5.4.4:
   `isMousePointer` (gestures/ — mouse drags navigate, never pan, while
   explore mode owns panning), `returnFocus` with `preventScroll`
   (keyboard.ts — focus goes back to the opener on close without scrolling
-  it into view), `potentialIndexChange` (main-scroll.ts — dispatched from
+  it into view, in a microtask after every `destroy` listener has restored
+  the page), `potentialIndexChange` (main-scroll.ts — dispatched from
   `moveIndexBy` once the destination is decided, with the loop-corrected
   travel sign as `direction`; `change` stays the at-rest signal),
   `artsReducedMotion` (photoswipe.ts — `false` drops `(prefers-reduced-motion)`

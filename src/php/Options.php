@@ -52,6 +52,14 @@ class Options {
 				),
 				'captions'           => self::is_on( 'arts_lightbox_captions', true ),
 				'backdropOpacity'    => self::size_of( 'arts_lightbox_backdrop_opacity', 1 ),
+				// Accessible names of the controls, here only to be translated.
+				'labels'             => array(
+					'close'     => __( 'Close', 'immersive-lightbox-for-elementor' ),
+					'prev'      => __( 'Previous', 'immersive-lightbox-for-elementor' ),
+					'next'      => __( 'Next', 'immersive-lightbox-for-elementor' ),
+					/* translators: %d: slide number. */
+					'thumbnail' => __( 'Go to slide %d', 'immersive-lightbox-for-elementor' ),
+				),
 			),
 			'elementor'     => array(
 				// The kit's own master switch, resolved server-side: with it on,

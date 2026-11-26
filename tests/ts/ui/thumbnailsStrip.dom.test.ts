@@ -50,7 +50,8 @@ describe('registerThumbnailsStrip', () => {
       pswp as unknown as PhotoSwipe,
       fakeGallery(['a.jpg', undefined, undefined], ['image', 'video', 'html']),
       fakeApi(),
-      'bottom'
+      'bottom',
+      'Slide %d'
     )
     const [withImage, video, html] = buttons(pswp.uiElementAt(0)) as [
       HTMLElement,
@@ -83,7 +84,8 @@ describe('registerThumbnailsStrip', () => {
       pswp as unknown as PhotoSwipe,
       vimeoGallery('2001'),
       fakeApi(),
-      'bottom'
+      'bottom',
+      'Slide %d'
     )
     const video = buttons(pswp.uiElementAt(0))[1] as HTMLElement
 
@@ -104,7 +106,7 @@ describe('registerThumbnailsStrip', () => {
     slide.videoEmbed = 'youtube'
     slide.videoId = 'dQw4w9WgXcQ'
     const pswp = fakePswp()
-    registerThumbnailsStrip(pswp as unknown as PhotoSwipe, gallery, fakeApi(), 'bottom')
+    registerThumbnailsStrip(pswp as unknown as PhotoSwipe, gallery, fakeApi(), 'bottom', 'Slide %d')
     const [image, video] = buttons(pswp.uiElementAt(0)) as [HTMLElement, HTMLElement]
 
     expect(video.querySelector('img')?.getAttribute('src')).toBe(
@@ -129,7 +131,7 @@ describe('registerThumbnailsStrip', () => {
     // that photo — indistinguishable from an image slide beside it.
     ;(gallery.slides[1] as ISlideData).msrc = 'author-photo.jpg'
     const pswp = fakePswp()
-    registerThumbnailsStrip(pswp as unknown as PhotoSwipe, gallery, fakeApi(), 'bottom')
+    registerThumbnailsStrip(pswp as unknown as PhotoSwipe, gallery, fakeApi(), 'bottom', 'Slide %d')
     const video = buttons(pswp.uiElementAt(0))[1] as HTMLElement
 
     expect(video.querySelector('img')?.getAttribute('src')).toBe('author-photo.jpg')
@@ -150,7 +152,8 @@ describe('registerThumbnailsStrip', () => {
       pswp as unknown as PhotoSwipe,
       vimeoGallery('2002'),
       fakeApi(),
-      'bottom'
+      'bottom',
+      'Slide %d'
     )
     const video = buttons(pswp.uiElementAt(0))[1] as HTMLElement
     await Promise.resolve()
@@ -166,14 +169,20 @@ describe('registerThumbnailsStrip', () => {
     const gallery = fakeGallery(['a.jpg', undefined], ['image', 'video'])
     ;(gallery.slides[1] as ISlideData).videoEmbed = 'youtube'
     const pswp = fakePswp()
-    registerThumbnailsStrip(pswp as unknown as PhotoSwipe, gallery, fakeApi(), 'bottom')
+    registerThumbnailsStrip(pswp as unknown as PhotoSwipe, gallery, fakeApi(), 'bottom', 'Slide %d')
 
     expect(fetch).not.toHaveBeenCalled()
   })
 
   it('carries the position as a modifier so CSS can place the rail', () => {
     const pswp = fakePswp()
-    registerThumbnailsStrip(pswp as unknown as PhotoSwipe, fakeGallery(['a']), fakeApi(), 'left')
+    registerThumbnailsStrip(
+      pswp as unknown as PhotoSwipe,
+      fakeGallery(['a']),
+      fakeApi(),
+      'left',
+      'Slide %d'
+    )
 
     expect(pswp.uiElementAt(0).className).toContain('arts-lightbox-thumbs_left')
   })
@@ -185,7 +194,8 @@ describe('registerThumbnailsStrip', () => {
       pswp as unknown as PhotoSwipe,
       fakeGallery(['a', 'b', 'c']),
       api,
-      'bottom'
+      'bottom',
+      'Slide %d'
     )
     buttons(pswp.uiElementAt(0))[2]?.dispatchEvent(new MouseEvent('click'))
 
@@ -199,7 +209,8 @@ describe('registerThumbnailsStrip', () => {
       pswp as unknown as PhotoSwipe,
       fakeGallery(['a', 'b', 'c']),
       api,
-      'bottom'
+      'bottom',
+      'Slide %d'
     )
     const strip = pswp.uiElementAt(0)
     document.body.appendChild(strip)
@@ -224,7 +235,8 @@ describe('registerThumbnailsStrip', () => {
       pswp as unknown as PhotoSwipe,
       fakeGallery(['a', 'b', 'c']),
       fakeApi(),
-      'bottom'
+      'bottom',
+      'Slide %d'
     )
     const items = buttons(pswp.uiElementAt(0))
 
@@ -254,7 +266,8 @@ describe('registerThumbnailsStrip', () => {
       pswp as unknown as PhotoSwipe,
       fakeGallery(['a', 'b', 'c']),
       fakeApi(),
-      'right'
+      'right',
+      'Slide %d'
     )
     const el = pswp.uiElementAt(0)
     // happy-dom reports zero layout, so assert the axis rather than the value.

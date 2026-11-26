@@ -8,6 +8,7 @@ import { registerUi } from '../ui/registerUi'
 import { measureAdminBarOffset } from '../utils/measureAdminBarOffset'
 import { attachInteractions } from './attachInteractions'
 import { attachLightboxEvents } from './attachLightboxEvents'
+import { attachModal } from './attachModal'
 import { engineState } from './engineState'
 import { holdHeader, releaseHeader } from './headerHold'
 import { createPswp } from './pswpFactory'
@@ -45,6 +46,7 @@ export function createOpener(deps: {
       attachInteractions(pswp, opts, point)
       registerContent(pswp, opts, req.index)
       registerUi(pswp, req.gallery, opts, deps.api)
+      attachModal(pswp, deps.close)
       // The page behind the lightbox holds still: native scroll locked with
       // scrollbar compensation, and the Lenis-family contract stamped so
       // smooth-scroll libraries release the overlay too.
